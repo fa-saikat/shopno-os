@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=System Information
+Comment=Show basic information of the system
+Exec=/usr/local/bin/shopno-os-system-info
+Icon=xfce-system-info
+Terminal=false
+Categories=Utility;System;
+StartupNotify=false

@@ -1,0 +1,215 @@
+#!/bin/bash
+
+# Colors and styles
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+MAGENTA='\033[0;35m'
+CYAN='\033[0;36m'
+WHITE='\033[0;37m'
+BOLD='\033[1m'
+UNDERLINE='\033[4m'
+ITALIC='\033[3m'
+NC='\033[0m' # No Color
+
+dependencies() {
+    local missing=()
+    for cmd in gum jq; do
+        if ! command -v "$cmd" &> /dev/null; then
+            missing+=("$cmd")
+        fi
+    done
+
+    if [[ ${#missing[@]} -gt 0 ]]; then
+        gum log --structured --level error "The following required commands are not installed: ${missing[*]}"
+        exit 1
+    fi
+}
+
+_exit() {
+    clear
+    gum style \
+        --foreground "#e57474" --border-foreground "#e57474" --border double \
+        --align center --width 50 --margin "0 0" --padding "1 2" \
+        'Device Registration Failed!'
+    sleep 2
+    exit 1
+}
+
+_success(){
+    clear
+    gum style \
+        --foreground "#04B575" --border-foreground "#04B575" --border double \
+        --align center --width 50 --margin "0 0" --padding "1 2" \
+        'Device Registered!'
+    sleep 2
+    exit 0
+}
+
+# ASCII art title
+print_header() {
+    clear
+    gum style \
+        --foreground "#c47fd5" --border-foreground "#6cbfbf" --border double \
+        --align center --width 50 --margin "0 0" --padding "1 2" \
+        'JaduPc Device Registration'
+}
+
+
+get_mac_address() {
+    gum spin --spinner dot --title "Detecting MAC Address" -- sleep 1
+
+    MAC=$(ip link show | awk '/ether/ {print $2}' | grep -v '00:00:00:00:00:00' | paste -sd '_')
+
+    if [[ -n "$MAC" ]]; then
+        check_device_status "$MAC"
+    else
+        clear
+        gum log --structured --level error "✗ Network interfaces not found!"
+        _exit
+    fi
+}
+
+
+# Function for manual input
+manual_input() {
+    MAC=$(gum input --placeholder "<Interface>_<Interface>_...")
+    MAC=${MAC:-""}
+    
+    if [[ -n "$MAC" ]]; then
+        check_device_status "$MAC"
+    else
+        gum log --structured --level error "MAC Address can not be empty!"; sleep 2
+        print_header
+        manual_input
+    fi
+}
+
+# Function to check device status using the API
+check_device_status() {
+    local MAC_ADDRESS="$1"
+    
+    # Show loading animation
+    gum spin --spinner dot --title "Checking Device Status" -- sleep 1
+    
+    API_URL="http://192.168.0.2:3000/check-status?mac=$MAC_ADDRESS"
+    RESPONSE=$(curl -s "$API_URL")
+    
+    if [[ -z "$RESPONSE" ]]; then
+        clear
+        gum log --structured --level error "No response from server!"; sleep 2
+        _exit
+    fi
+    
+    # Check status
+    STATUS=$(echo "$RESPONSE" | jq -r '.status')
+    
+    if [[ "$STATUS" == "registered" ]]; then
+        SERIAL_NUMBER=$(echo "$RESPONSE" | jq -r '.serialNumber')
+        clear
+        gum style \
+        --foreground "#04B575" --border-foreground "#04B575" --border double \
+        --align center --width 50 --margin "0 0" --padding "1 2" \
+        'Device Registered!' "Serial Number: $SERIAL_NUMBER"
+    elif [[ "$STATUS" == "new" ]]; then
+        gum spin --spinner dot --title "Proceeding to registration" -- sleep 1
+        register_device "$MAC_ADDRESS"
+    else
+        clear
+        gum log --structured --level warn "Unknown status"
+        _exit
+    fi
+}
+
+# Function to register the device
+register_device() {
+    local MAC_ADDRESS="$1"
+    
+    # Select variant
+    VARIANT=$(gum choose --limit 1 --header "Choose Variant" "Pro" "Starter")
+    
+    
+    # Get OS information
+    OS_NAME=$(grep "^NAME=" /etc/os-release | cut -d= -f2 | tr -d '"')
+    
+    # Optional customer information
+    PRODUCTION_NUMBER=$(gum input --placeholder "Production Number (Required)")
+    
+    if [[ -z $PRODUCTION_NUMBER ]]; then
+        gum log --structured --level error "Production Number can not be empty!"; sleep 2
+        _exit
+    fi
+    
+    CUSTOMER_NAME=$(gum input --placeholder "Customer Name (Optional)") 
+    CUSTOMER_NUMBER=$(gum input --placeholder "Customer Number (Optional)") 
+    CUSTOMER_ADDRESS=$(gum input --placeholder "Customer Address (Optional)")
+    
+    # Show registration details
+#     echo -e "\n${UNDERLINE}Registration Details:${NC}"
+#     echo -e "${BOLD}MAC Address: ${GREEN}$MAC_ADDRESS${NC}"
+#     echo -e "${BOLD}OS: ${CYAN}$OS_NAME${NC}"
+#     echo -e "${BOLD}Variant: ${YELLOW}$VARIANT${NC}"
+#     if [[ -n "$PRODUCTION_NUMBER" ]]; then
+#         echo -e "${BOLD}Production Number: ${MAGENTA}$PRODUCTION_NUMBER${NC}"
+#     fi
+#     if [[ -n "$CUSTOMER_NAME" ]]; then
+#         echo -e "${BOLD}Customer Name: ${MAGENTA}$CUSTOMER_NAME${NC}"
+#     fi
+#     if [[ -n "$CUSTOMER_ADDRESS" ]]; then
+#         echo -e "${BOLD}Customer Address: ${MAGENTA}$CUSTOMER_ADDRESS${NC}"
+#     fi
+#     if [[ -n "$CUSTOMER_NUMBER" ]]; then
+#         echo -e "${BOLD}Phone Number: ${MAGENTA}$CUSTOMER_NUMBER${NC}"
+#     fi
+    
+    # Proceed with registration
+    gum spin --spinner dot --title "Registering Device" -- sleep 2
+    
+    # Prepare JSON body
+    JSON_BODY=$(jq -n \
+        --arg variant "$VARIANT" \
+        --arg mac "$MAC_ADDRESS" \
+        --arg os "$OS_NAME" \
+        --arg status "registered" \
+        --arg productionNumber "$PRODUCTION_NUMBER" \
+        --arg customerName "$CUSTOMER_NAME" \
+        --arg customerAddress "$CUSTOMER_ADDRESS" \
+        --arg customerNumber "$CUSTOMER_NUMBER" \
+        '{
+            Verient: $variant,
+            mac: $mac,
+            os: $os,
+            status: $status,
+            productionNumber: $productionNumber,
+            customerName: $customerName,
+            customerAddress: $customerAddress,
+            customerNumber: $customerNumber
+        }')
+    
+    # Send registration request
+    REGISTER_URL="http://192.168.0.2:3000/upload"
+    REGISTER_RESPONSE=$(curl -s -X POST -H "Content-Type: application/json" -d "$JSON_BODY" "$REGISTER_URL")
+    
+    if [[ -n "$REGISTER_RESPONSE" ]]; then
+        _success
+    else
+        gum log --structured --level error "No response from server!"; sleep 2
+        _exit
+    fi
+}
+
+# Main menu
+show_menu() {
+    CHOICE=$(gum choose --limit 1 --header "Get MAC Address" "Automatic" "Manual" --header.foreground "#67b0e8" --selected.foreground "#e5c76b")
+    
+    case $CHOICE in
+        "Automatic") get_mac_address ;;
+        *) manual_input ;;
+    esac
+}
+
+
+dependencies
+print_header
+show_menu

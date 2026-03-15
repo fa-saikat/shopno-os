@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+<action>
+	<icon>view-refresh</icon>
+	<name>Refresh</name>
+	<unique-id>1723290032250803-1</unique-id>
+	<command>refresh-desktop</command>
+	<description>Refresh current content</description>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Terminal Here</name>
+	<unique-id>1723290032250931-2</unique-id>
+	<command>exo-open --working-directory %f --launch TerminalEmulator</command>
+	<description>Example for a custom action</description>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>folder-red</icon>
+	<name>Open Directory as Root</name>
+	<unique-id>1726987317233507-2</unique-id>
+	<command>pkexec thunar %f</command>
+	<description>Open filemanager with root privilage</description>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+</actions>

@@ -1,0 +1,15 @@
+[Unit]
+Description=Clean junk files when storage is low
+After=local-fs.target
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/shopno-os-diskcleanup
+StandardOutput=journal
+StandardError=journal
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+APP_NAME="$1"
+
+zenity --question \
+    --title="Uninstall Application" \
+    --text="Do you really want to uninstall $APP_NAME?" \
+    --width=280
+
+if [ $? -eq 0 ]; then
+    (
+        echo "# Please wait while '$APP_NAME' is being uninstalled."
+        echo "0"
+
+        pkexec apt-get remove --purge -y "$APP_NAME" > /dev/null 2>&1
+        UNINSTALL_STATUS=$? 
+
+        echo "100" 
+    ) | zenity --progress \
+        --title="Uninstallation Progress" \
+        --pulsate \
+        --text="Uninstalling '$APP_NAME'..." \
+        --auto-close \
+        --auto-kill \
+	--no-cancel \
+	--width=280
+
+    if [[ $UNINSTALL_STATUS -eq 0 ]]; then
+        zenity --info \
+            --title="Uninstallation Complete" \
+            --text="'$APP_NAME' has been uninstalled successfully." \
+	    --width=280
+    else
+        zenity --error \
+            --title="Error" \
+            --text="Failed to uninstall '$APP_NAME'" \
+	    --width=280
+    fi
+
+else
+    zenity --info \
+        --title="Uninstallation Cancelled" \
+        --text="Uninstallation of '$APP_NAME' cancelled." \
+	--width=280
+fi
+
+exit 0

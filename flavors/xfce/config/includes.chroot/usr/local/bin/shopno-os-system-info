@@ -1,0 +1,213 @@
+#! /usr/bin/env bash
+
+export YAD_OPTIONS="--window-icon='dialog-information' --name=IxSysinfo"
+KEY=$RANDOM
+
+is_jadupc() {
+    local dmi_product dmi_vendor
+    local cpu_model
+    
+    cpu_model=$(grep -m1  "model name" /proc/cpuinfo | cut -d: -f2 | xargs)
+    
+    if [[ "$cpu_model" == *"J4125"* ]]; then
+        return 0
+    fi
+
+    [ -f /etc/jadupc-release ] && return 0
+
+    return 1
+}
+JADUPC=false
+is_jadupc && JADUPC=true
+
+if $JADUPC; then
+    TAB_OVERVIEW=1; TAB_CPU=2; TAB_MEM=3; TAB_CON=4; TAB_DISK=5; TAB_GPU=6
+else
+    TAB_CPU=1; TAB_MEM=2; TAB_CON=3; TAB_DISK=4; TAB_GPU=5
+fi
+
+if $JADUPC; then
+    {
+        pm() { awk "/$1:/{printf \"%.2f\", \$2/1024/1024}" /proc/meminfo; }
+        
+        VENDOR="JaduPc"
+        PRODUCT="JaduPc PRO"
+        MEMORY=$(pm MemTotal)
+        STORAGE=$(lsblk --output SIZE -n -d /dev/sda | tr -d [:alpha:])
+        BIOS_VER=$(cat /sys/class/dmi/id/bios_version 2>/dev/null || echo "N/A")
+        BIOS_DATE=$(cat /sys/class/dmi/id/bios_date   2>/dev/null || echo "N/A")
+        
+        echo -e "Manufacturer\n$VENDOR"
+        echo -e "Model\n$PRODUCT"
+        echo -e "Memory\n$MEMORY GB"
+        echo -e "Storage\n$STORAGE GB"
+        echo -e "BIOS version\n$BIOS_VER"
+        echo -e "BIOS date\n$BIOS_DATE"
+    } | yad --plug=$KEY --tabnum=$TAB_OVERVIEW \
+        --image=hwinfo --text="<b>Overview</b>" \
+        --list --no-selection --column="Parameter" --column="Value" &
+fi
+
+# information of the cpu
+{
+    VENDOR=$(grep -m1 "vendor_id"  /proc/cpuinfo | cut -d: -f2 | xargs)
+    MODEL=$(grep -m1  "model name" /proc/cpuinfo | cut -d: -f2 | xargs)
+    ARCH=$(uname -m)
+
+    CORES=$(grep -c "^processor" /proc/cpuinfo)
+    PHYS=$(grep "core id" /proc/cpuinfo 2>/dev/null | sort -u | wc -l)
+    [ "$PHYS" -eq 0 ] && PHYS=$CORES
+
+    L3=$(lscpu 2>/dev/null | awk '/L3 cache/{print $3,$4}')
+    [ -z "$L3" ] && L3=$(grep -m1 "cache size" /proc/cpuinfo | cut -d: -f2 | xargs)
+    [ -z "$L3" ] && L3="N/A"
+
+    FREQ_MAX=$(cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq 2>/dev/null)
+    if [ -n "$FREQ_MAX" ]; then
+        FREQ_MAX_GHZ=$(awk "BEGIN {printf \"%.2f GHz\", $FREQ_MAX/1000000}")
+    else
+        FREQ_MAX_GHZ=$(awk '/cpu MHz/{printf "%.2f GHz", $4/1000; exit}' /proc/cpuinfo)
+    fi
+    [ -z "$FREQ_MAX_GHZ" ] && FREQ_MAX_GHZ="N/A"
+
+    GOVERNOR=$(cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor 2>/dev/null || echo "N/A")
+
+    FLAGS=$(grep -m1 "^flags" /proc/cpuinfo 2>/dev/null || grep -m1 "^Features" /proc/cpuinfo 2>/dev/null || true)
+    if echo "$FLAGS" | grep -qw "vmx"; then
+        VIRT="Enabled (Intel VT-x)"
+    elif echo "$FLAGS" | grep -qw "svm"; then
+        VIRT="Enabled (AMD-V)"
+    else
+        VIRT="Not detected"
+    fi
+
+    echo -e "Vendor\n$VENDOR"
+    echo -e "Model\n$MODEL"
+    echo -e "Architecture\n$ARCH"
+    echo -e "Physical cores\n$PHYS"
+    echo -e "Logical threads\n$CORES"
+    echo -e "L3 cache\n$L3"
+    echo -e "Max frequency\n$FREQ_MAX_GHZ"
+    echo -e "Governor\n$GOVERNOR"
+    echo -e "Virtualization\n$VIRT"
+
+} | yad --plug=$KEY --tabnum=$TAB_CPU \
+    --image=cpu --text="<b>CPU</b>" \
+    --list --no-selection --column="Parameter" --column="Value" &
+
+# memory
+{
+    pm() { awk "/$1:/{printf \"%.2f\", \$2/1024/1024}" /proc/meminfo; }
+
+    MEM_TOTAL=$(pm MemTotal)
+    MEM_AVAIL=$(pm MemAvailable)
+    MEM_USED=$(awk "BEGIN {printf \"%.2f\", $MEM_TOTAL - $MEM_AVAIL}")
+    MEM_BUFF=$(pm Buffers)
+    MEM_CACHE=$(pm "^Cached")
+    SWAP_TOTAL=$(pm SwapTotal)
+    SWAP_FREE=$(pm SwapFree)
+    SWAP_USED=$(awk "BEGIN {printf \"%.2f\", $SWAP_TOTAL - $SWAP_FREE}")
+
+    echo -e "Total RAM\n${MEM_TOTAL} GB"
+    echo -e "Used\n${MEM_USED} GB"
+    echo -e "Available\n${MEM_AVAIL} GB"
+    echo -e "Buffers\n${MEM_BUFF} GB"
+    echo -e "Cache\n${MEM_CACHE} GB"
+    echo -e "Swap total\n${SWAP_TOTAL} GB"
+    echo -e "Swap used\n${SWAP_USED} GB"
+
+} | yad --plug=$KEY --tabnum=$TAB_MEM \
+    --image=memory --text="<b>Memory</b>" \
+    --list --no-selection --column="Parameter" --column="Value" &
+
+# connectivity
+{
+    ETH=$(ip link show 2>/dev/null | awk -F': ' '/^[0-9]+: e/{print $2; exit}')
+
+    if [ -z "$ETH" ]; then
+        echo -e "Ethernet\nNot found\nN/A\nN/A"
+    else
+        ETH_STATE=$(ip link show "$ETH" | grep -oP "state \K\w+")
+        ETH_IP=$(ip -4 addr show "$ETH" 2>/dev/null | grep -oP "(?<=inet )[^/]+" | head -1)
+        ETH_MAC=$(cat /sys/class/net/$ETH/address 2>/dev/null || echo "N/A")
+
+        echo -e "Ethernet ($ETH)\n${ETH_STATE:-N/A}\n${ETH_IP:-N/A}\n$ETH_MAC"
+    fi
+
+    WIFI=$(ip link show 2>/dev/null | awk -F': ' '/^[0-9]+: w/{print $2; exit}')
+
+    if [ -z "$WIFI" ]; then
+        echo -e "WiFi\nNot found\nN/A\nN/A"
+    else
+        WIFI_STATE=$(ip link show "$WIFI" | grep -oP "state \K\w+")
+        WIFI_IP=$(ip -4 addr show "$WIFI" 2>/dev/null | grep -oP "(?<=inet )[^/]+" | head -1)
+        WIFI_MAC=$(cat /sys/class/net/$WIFI/address 2>/dev/null || echo "N/A")
+        WIFI_SSID=$(command -v iwgetid &>/dev/null && iwgetid -r 2>/dev/null || true)
+        WIFI_LABEL="WiFi ($WIFI)${WIFI_SSID:+ → $WIFI_SSID}"
+
+        echo -e "$WIFI_LABEL\n${WIFI_STATE:-N/A}\n${WIFI_IP:-N/A}\n$WIFI_MAC"
+    fi
+
+    if command -v bluetoothctl &>/dev/null; then
+        BT_POWERED=$(bluetoothctl show 2>/dev/null | awk '/Powered:/{print $2}')
+        BT_STATE=$([ "$BT_POWERED" = "yes" ] && echo "Enabled" || echo "Disabled")
+    else
+        BT_STATE="bluetoothctl not found"
+    fi
+
+    BT_MAC=$(hcitool dev 2>/dev/null | awk '/hci/{print $2}' | head -1)
+
+    echo -e "Bluetooth\n$BT_STATE\nN/A\n${BT_MAC:-N/A}"
+
+} | yad --plug=$KEY --tabnum=$TAB_CON \
+    --image=network-wireless --text="<b>Connectivity</b>" \
+    --list --no-selection \
+    --column="Interface" --column="State" --column="IP Address" --column="MAC" &
+
+# storage
+{
+    df -Th -x devtmpfs -x tmpfs 2>/dev/null | tail -n +2 | \
+        awk '{printf "%s\n%s\n%s\n%s\n", $1, $2, $7, $6}'
+} | yad --plug=$KEY --tabnum=$TAB_DISK \
+    --image=drive-harddisk --text="<b>Disk space usage</b>" \
+    --list --no-selection \
+    --column="Device" --column="Type" --column="Mountpoint" --column="Usage:bar" &
+
+{
+    GPU_FOUND=false
+    if command -v lspci &>/dev/null; then
+        while IFS= read -r line; do
+            GPU_FOUND=true
+            PCI_ID=$(echo "$line" | awk '{print $1}')
+            GPU_NAME=$(echo "$line" | sed 's/^[^ ]* [^:]*: //')
+
+            echo -e "$GPU_NAME"
+        done < <(lspci 2>/dev/null | grep -E "VGA|3D controller|Display controller")
+    fi
+
+    if ! $GPU_FOUND; then
+        echo -e "No GPU detected via lspci\nN/A"
+    fi
+
+} | yad --plug=$KEY --tabnum=$TAB_GPU \
+    --image=video-display --text="<b>GPU</b>" \
+    --list --no-selection \
+    --column="GPU" &
+
+# header
+TXT="<b>System Information</b>\n\n"
+TXT+="\t<b>OS</b>: $(lsb_release -ds 2>/dev/null || echo "N/A") on $(hostname)\n"
+TXT+="\t<b>Kernel</b>: $(uname -sr)\n\n"
+TXT+="\tUptime: <i>$(uptime -p)</i>"
+
+TABS=()
+$JADUPC && TABS+=("--tab=Overview")
+TABS+=("--tab=CPU" "--tab=Memory" "--tab=Connectivity" "--tab=Disks" "--tab=GPU")
+
+yad --notebook --width=650 --height=480 \
+    --title="System Info" \
+    --text="$TXT" \
+    --button="Close:0" \
+    --key=$KEY \
+    "${TABS[@]}" \
+    --active-tab="${1:-1}"

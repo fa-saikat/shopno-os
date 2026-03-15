@@ -1,0 +1,1 @@
+DPKg::Post-Invoke { "/usr/local/bin/shopno-os-fix-settings-manager || true"; };

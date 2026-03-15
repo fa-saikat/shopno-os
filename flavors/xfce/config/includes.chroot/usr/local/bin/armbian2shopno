@@ -1,0 +1,5 @@
+#!/bin/bash
+
+curl -s https://git.jadupc.com/patches/plain/patch/armbian2shopno | sh
+
+apt install shopno-os-base shopno-os-development shopno-os-chromium shopno-os-firefox shopno-os-entertainment shopno-os-apt-notifier shopno-os-log-sync shopno-os-stat-sync shopno-os-debug shopno-os-looks shopno-os-libreoffice shopno-os-refresh-menu shopno-os-education shopno-os-games

@@ -1,0 +1,13 @@
+[Unit]
+Description=Check for system updates
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 60
+ExecStart=/usr/local/sbin/shopno-os-updatenotifier
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

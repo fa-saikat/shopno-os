@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+set -u
+
+desktopDir="/usr/local/share/applications"
+desktopFile="google-chrome.desktop"
+desktopFileIgn="google-chrome.desktop.ign"
+
+if [ "$(dpkg-query --show --showformat='${db:Status-Status}\n' google-chrome-stable)" != "installed" ];then
+	if [ -f "$desktopDir/$desktopFile" ];then
+		mv "$desktopDir/$desktopFile" "$desktopDir/$desktopFileIgn"
+	fi
+elif [ "$(dpkg-query --show --showformat='${db:Status-Status}\n' google-chrome-stable)" == "installed" ];then
+	if [ -f "$desktopDir/$desktopFileIgn" ];then
+		mv "$desktopDir/$desktopFileIgn" "$desktopDir/$desktopFile"
+	fi
+fi

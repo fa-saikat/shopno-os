@@ -1,0 +1,42 @@
+#!/bin/bash
+# /usr/local/bin/check-updates.sh
+
+# Check which package manager is available
+if command -v apt &> /dev/null; then
+    # Debian/Ubuntu
+    apt update -qq 2>/dev/null
+    UPDATES=$(apt list --upgradable 2>/dev/null | grep -c upgradable)
+    UPDATES=$((UPDATES - 1)) # Subtract header line
+elif command -v dnf &> /dev/null; then
+    # Fedora/RHEL
+    UPDATES=$(dnf check-update -q 2>/dev/null | grep -v "^$" | wc -l)
+elif command -v pacman &> /dev/null; then
+    # Arch Linux
+    pacman -Sy &> /dev/null
+    UPDATES=$(pacman -Qu 2>/dev/null | wc -l)
+elif command -v zypper &> /dev/null; then
+    # openSUSE
+    zypper ref &> /dev/null
+    UPDATES=$(zypper list-updates 2>/dev/null | grep -c "v |")
+else
+    echo "No supported package manager found"
+    exit 1
+fi
+
+# Send notification if updates are available
+if [ "$UPDATES" -gt 0 ]; then
+    # Get the user running the desktop session
+    USER_NAME=$(who | grep '(:0)' | awk '{print $1}' | head -n 1)
+    USER_ID=$(id -u "$USER_NAME" 2>/dev/null)
+    
+    if [ -n "$USER_ID" ]; then
+        # Send notification to the desktop user
+        sudo -u "$USER_NAME" DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$USER_ID/bus \
+            notify-send "System Updates" "$UPDATES update(s) available" \
+            --icon=system-software-update --urgency=normal
+    fi
+    
+    echo "$UPDATES updates available"
+else
+    echo "System is up to date"
+fi

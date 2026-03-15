@@ -1,0 +1,11 @@
+gir1.2-ibus-1.0
+ibus
+ibus-avro
+ibus-gtk
+ibus-gtk3
+ibus-data
+libibus-1.0-5
+python3-ibus-1.0
+xcape
+xclip
+dconf-cli

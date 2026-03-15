@@ -1,0 +1,90 @@
+#!/bin/bash
+
+export LANG="en_US.UTF-8"
+export LANGUAGE="en_US.UTF-8"
+export LC_ALL="en_US.UTF-8"
+export DISPLAY="${DISPLAY:-:0}"
+export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
+
+DIRECTORY="$(readlink -f "$(dirname "$0")")"
+
+# progress bar 
+(
+  echo "10"
+  echo "# \nChecking for updates...\n"; sleep 0.3
+  echo "30"
+  output="$(apt update 2>&1)"
+  exitcode=$?
+  echo "70"
+  echo "# \nProcessing package information...\n"; sleep 0.3
+  echo "100"
+  echo "$exitcode" > /tmp/apt_update_exit.tmp
+  echo "$output" > /tmp/apt_update_output.tmp
+) | yad --progress --title="ShopnoOS Update Helper" \
+      --width=400 --height=150 --borders=10 --window-icon="${DIRECTORY}/logo.png" \
+      --buttons-layout="center" \
+      --percentage=0 \
+      --auto-close --no-cancel 2>/dev/null
+
+exitcode=$(cat /tmp/apt_update_exit.tmp 2>/dev/null)
+output=$(cat /tmp/apt_update_output.tmp 2>/dev/null)
+rm -f /tmp/apt_update_exit.tmp /tmp/apt_update_output.tmp
+
+# failure hanfling
+if [ "$exitcode" != "0" ]; then
+  yad --center --title="Fetching Failed" \
+      --width=400 --height=150 --borders=10 --window-icon="${DIRECTORY}/logo.png" \
+      --image="package-broken" \
+      --text=" Failed to fetch package information.\nPlease check your internet connection and try again." \
+      --text-align="center" \
+      --buttons-layout="center" \
+      --button="OK":0 2>/dev/null
+  exit 1
+fi
+
+if echo "$output" | grep -q 'Temporary failure resolving'; then
+  yad --center --title="Network Error" \
+      --width=400 --height=150 --borders=10 --window-icon="${DIRECTORY}/logo.png" \
+      --image="package-broken" \
+      --text=" Could not resolve package servers.\nCheck your connection." \
+      --buttons-layout="center" \
+      --button="OK":0 2>/dev/null
+  exit 1
+fi
+
+# list excluding held packages
+LIST="$(apt list --upgradable 2>/dev/null | cut -d/ -f1 | tail -n +2 | \
+  grep -vx "$(dpkg --get-selections | grep '\<hold$' | tr -d ' \t' | \
+  sed 's/hold//g' | sed -z 's/\n/\\|/g' | sed -z 's/\\|$/\n/g')")"
+
+
+if [ -z "$LIST" ]; then
+  yad --center --title="ShopnoOS Update Helper" \
+      --width=400 --height=150 --borders=10 --window-icon="${DIRECTORY}/logo.png" \
+      --image="checkmark" \
+      --text=" System is up to date!\n Check for updates later." \
+      --buttons-layout="center" \
+      --button="OK":0 2>/dev/null
+  exit 0
+fi
+
+# upgradable packages
+echo -e "$LIST" | yad --center --title='ShopnoOS Update Helper' \
+  --width=400 --height=300 --no-headers --no-selection \
+  --list --separator='\n' --window-icon="${DIRECTORY}/logo.png" \
+  --text='Upgradable Packages' --text-align="center" \
+  --column=Package \
+  --buttons-layout="center" \
+  --button='Upgrade':0 \
+  --button='Skip':1 \
+  2>/dev/null
+
+response=$?
+
+if [ "$response" != "0" ]; then
+  exit 0
+fi
+
+"${DIRECTORY}/updatehelper-term" \
+  'apt -y full-upgrade --allow-downgrades; echo "Closing in 10 seconds."; sleep 10' \
+  'Upgrading packages'

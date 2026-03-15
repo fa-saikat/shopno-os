@@ -1,0 +1,14 @@
+[Desktop Entry]
+Version=2.0
+Name=Update Helper
+Comment=Check available updates
+Exec=/usr/local/bin/update-helper
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=update-notifier
+Categories=System;
+MimeType=text/html;text/xml;application/xhtml_xml;application/x-mimearchive;x-scheme-handler/http;x-scheme-handler/https;
+StartupWMClass=update_notifier
+StartupNotify=true
+Keywords=update;apt

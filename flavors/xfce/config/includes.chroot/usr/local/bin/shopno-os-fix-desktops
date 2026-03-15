@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+set -u
+
+DESKTOPDIR="/usr/local/share/applications"
+
+declare -A PKGS=(
+	["google-chrome-stable"]="google-chrome.desktop"
+	["onlyoffice-desktopeditors"]="onlyoffice-docs.desktop onlyoffice-presentation.desktop onlyoffice-sheet.desktop"
+	["gdebi"]="gdebi.desktop"
+)
+
+cd $DESKTOPDIR || exit 1
+
+for PKG in "${!PKGS[@]}"; do
+	if dpkg -s "$PKG" &> /dev/null; then
+		INSTALLED=true
+	else
+		INSTALLED=false
+	fi
+
+	for FILE in ${PKGS[$PKG]}; do
+		if [ "$INSTALLED" = true ]; then
+			if [ -f "$FILE.ign" ]; then
+			       mv "$FILE.ign" "$FILE"
+			fi
+		else
+			if [ -f "$FILE" ]; then
+			       mv "$FILE" "$FILE.ign"
+			fi
+		fi
+	done
+done
+
+
+

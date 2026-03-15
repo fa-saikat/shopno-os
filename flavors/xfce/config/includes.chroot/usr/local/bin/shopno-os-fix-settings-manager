@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -e
+set -o pipefail
+set -u
+
+desktop_dir="/usr/share/applications"
+tag="X-XFCE-SettingsDialog;X-XFCE-SystemSettings;"
+
+add_settings_tag() {
+    local file="$1"
+    if [[ -f "$file" ]]; then
+        if grep -q "^Categories=.*${tag}" "$file"; then
+            echo "Tag already present in $file, skipping."
+        else
+            sed -i -E "/^Categories=/s|$|${tag}|" "$file"
+            echo "Tag added to $file"
+        fi
+    fi
+}
+
+add_settings_tag "$desktop_dir/nm-connection-editor.desktop"
+add_settings_tag "$desktop_dir/time.desktop"
+add_settings_tag "$desktop_dir/users.desktop"
+add_settings_tag "$desktop_dir/system-config-printer.desktop"
+
+
+# sed -E '/^Categories=/s/$/X-XFCE-SystemSettings;/' $desktop_dir/nm-connection-editor.desktop 

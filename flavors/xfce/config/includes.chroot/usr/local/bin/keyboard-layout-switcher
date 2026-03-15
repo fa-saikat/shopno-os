@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ENGINE_ENG="xkb:us::eng"
+ENGINE_BEN="ibus-avro"
+
+ENGINE=$(ibus engine)
+
+
+if [[ $ENGINE == $ENGINE_ENG ]]; then
+	ibus engine "$ENGINE_BEN" && notify-send -i "/usr/share/icons/skls-avro.png" "Keyboard" "Changed to Avro"
+elif [[ $ENGINE == $ENGINE_BEN ]]; then
+	ibus restart && notify-send -i "/usr/share/icons/skls-eng.png" "Keyboard" "Changed to English"
+fi

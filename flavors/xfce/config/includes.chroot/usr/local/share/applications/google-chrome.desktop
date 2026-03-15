@@ -1,0 +1,18 @@
+[Desktop Entry]
+Version=1.0
+Name=Google Chrome
+GenericName=Web Browser
+Exec=/usr/bin/google-chrome-stable --password-store=basic %U
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Icon=google-chrome
+Categories=Network;WebBrowser;
+MimeType=text/html;text/xml;application/xhtml_xml;application/x-mimearchive;x-scheme-handler/http;x-scheme-handler/https;
+StartupNotify=true
+Keywords=browser
+
+[Desktop Action Uninstall]
+Name=Uninstall
+Exec=bash -c "/usr/local/bin/uninstall-button-gui google-chrome-stable"
+OnlyShowIn=XFCE;
