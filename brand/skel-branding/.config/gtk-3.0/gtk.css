@@ -1,0 +1,23 @@
+#pulseaudioxra-button {
+	margin: 4px;
+	padding: 4px;
+}
+
+widget>box>widget:hover image,
+#pulseaudio-button:hover image,
+#whiskermenu-button:hover image,
+#launcher-arrow:hover image,
+#showdesktop-button:hover image,
+.tasklist button:not(:first-child):hover image {
+-gtk-icon-transform: scale(1.0);
+}
+
+widget>box>widget image,
+#pulseaudio-button image,
+#whiskermenu-button image,
+#launcher-arrow image, 
+#showdesktop-button image,
+.tasklist button:not(:first-child) image {
+transition: all 125ms ease-in-out;
+-gtk-icon-transform: scale(0.9);
+}
