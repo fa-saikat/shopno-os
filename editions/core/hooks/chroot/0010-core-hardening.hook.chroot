@@ -1,0 +1,109 @@
+#!/bin/bash
+# =============================================================================
+# 0010-core-hardening.hook.chroot
+# Layer:   editions/core
+# Stage:   chroot (runs inside the built rootfs)
+# Purpose: Apply security hardening appropriate for a server/CLI edition
+# Number:  0010 — runs early, before any edition-specific app setup
+# =============================================================================
+set -euo pipefail
+
+echo ">>> [core/0010-core-hardening] Starting..."
+
+# --- Disable unnecessary services for a minimal core image ------------------
+SERVICES_TO_DISABLE=(
+    bluetooth.service
+    ModemManager.service
+    avahi-daemon.service
+    cups.service
+    cups-browsed.service
+    wpa_supplicant.service    # headless servers manage networking via nmcli/ip
+)
+
+for svc in "${SERVICES_TO_DISABLE[@]}"; do
+    if systemctl list-unit-files "${svc}" &>/dev/null; then
+        systemctl disable "${svc}" 2>/dev/null || true
+        echo "  - Disabled: ${svc}"
+    fi
+done
+
+# --- Enable services that should be on by default ---------------------------
+SERVICES_TO_ENABLE=(
+    ssh.service
+    fail2ban.service
+    chrony.service
+    rsyslog.service
+    fstrim.timer               # SSD-friendly
+    systemd-timesyncd.service
+)
+
+for svc in "${SERVICES_TO_ENABLE[@]}"; do
+    if systemctl list-unit-files "${svc}" &>/dev/null; then
+        systemctl enable "${svc}" 2>/dev/null || true
+        echo "  + Enabled: ${svc}"
+    fi
+done
+
+# --- SSH hardening (live image safe defaults) --------------------------------
+SSH_CONFIG="/etc/ssh/sshd_config.d/90-abrar-core.conf"
+cat > "${SSH_CONFIG}" <<'EOF'
+# Abrar Linux — core edition SSH hardening
+# Applied during build; can be overridden by admin post-install
+
+PermitRootLogin no
+PasswordAuthentication yes       # live image needs password auth; change post-install
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+X11Forwarding no
+AllowAgentForwarding no
+AllowTcpForwarding no
+MaxAuthTries 3
+LoginGraceTime 30
+ClientAliveInterval 300
+ClientAliveCountMax 2
+EOF
+echo "  * SSH hardening config written: ${SSH_CONFIG}"
+
+# --- Kernel sysctl hardening -------------------------------------------------
+SYSCTL_FILE="/etc/sysctl.d/90-abrar-core.conf"
+cat > "${SYSCTL_FILE}" <<'EOF'
+# Abrar Linux — core edition sysctl hardening
+
+# Network
+net.ipv4.conf.all.rp_filter = 1
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+net.ipv4.tcp_syncookies = 1
+
+# IPv6
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# Kernel hardening
+kernel.dmesg_restrict = 1
+kernel.kptr_restrict = 2
+kernel.yama.ptrace_scope = 1
+fs.protected_hardlinks = 1
+fs.protected_symlinks = 1
+EOF
+echo "  * sysctl hardening config written: ${SYSCTL_FILE}"
+
+# --- UFW default policy (if installed via base security list) ----------------
+if command -v ufw &>/dev/null; then
+    ufw --force reset
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw allow ssh
+    echo "  * UFW configured: deny incoming, allow SSH"
+fi
+
+# --- Remove live-session leftover files we don't want in base ----------------
+# (live-config handles most of this, belt-and-suspenders)
+rm -f /etc/resolv.conf.bak 2>/dev/null || true
+
+echo ">>> [core/0010-core-hardening] Done."

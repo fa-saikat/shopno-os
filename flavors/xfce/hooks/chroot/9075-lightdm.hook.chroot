@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+set -e
+set -x
+
+# greeter-hide-users=false
+sed -i -e 's|#greeter-hide-users|greeter-hide-users|g' /etc/lightdm/lightdm.conf
+
+# greeter-show-manual-login=true
+sed -i -e 's|#greeter-show-manual-login=false|greeter-show-manual-login=true|g' /etc/lightdm/lightdm.conf
+
+sed -i -e 's|#greeter-session=example-gtk-session|greeter-session=slick-greeter|g' /etc/lightdm/lightdm.conf
+
+cat << EOF > /etc/lightdm/slick-greeter.conf
+[Greeter]
+background=/usr/share/backgrounds/login.jpeg
+clock-format=%a, %H:%M
+theme-name=Shopno GTK Theme-Light
+icon-theme-name=Shopno Icon Theme-Purple-Light
+font-name=Quicksand Medium, Medium 10
+default-user-image=/etc/skel/.face
+draw-grid=true
+EOF

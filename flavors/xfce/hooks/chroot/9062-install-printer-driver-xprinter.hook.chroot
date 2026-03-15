@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Install printer-driver-xprinter from direct download URL
+# TODO: Replace with package from ShopnoOS apt repo once packaged
+# Track: https://github.com/fa-saikat/shopno-os/issues/3
+# =============================================================================
+set -euo pipefail
+
+PACKAGE_NAME="printer-driver-xprinter"
+PACKAGE_VERSION="3.13.3"
+DOWNLOAD_URL="https://dev.jadupc.com/builds/xprinter/${PACKAGE_NAME}_${PACKAGE_VERSION}_all.deb"
+DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
+
+echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from upstream..."
+
+wget --quiet --show-progress \
+     --timeout=60 \
+     --tries=3 \
+     -O "${DEB_FILE}" \
+     "${DOWNLOAD_URL}"
+
+dpkg -i "${DEB_FILE}" || apt-get install -f -y
+
+rm -f "${DEB_FILE}"
+
+echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."
+
