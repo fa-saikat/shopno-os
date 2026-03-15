@@ -1,0 +1,32 @@
+componentName: ShopnoOS
+welcomeStyleCalamares: false
+welcomeExpandingLogo: false
+windowPlacement: center
+sidebar: widget
+navigation: widget
+
+strings:
+    productName:         ShopnoOS 2.0 (trixie)
+    shortProductName:    ShopnoOS
+    version:             2.0
+    shortVersion:        2.0
+    versionedName:       ShopnoOS 2.0
+    shortVersionedName:  ShopnoOS
+    bootloaderEntryName: ShopnoOS
+    productUrl:          https://dev.jadupc.com/builds/iso/ShopnoOS-Beta-amd64.hybrid.iso
+    knownIssuesUrl:      https://github.com/JaduPC/shopno-os
+
+images:
+    productLogo:         "logo.png"
+    productIcon:         "icon.png"
+    productWelcome:      "language.png"
+
+slideshow:               "show.qml"
+slideshowAPI:           2
+
+style:
+   SidebarBackground:       "#292F34"
+   SidebarText:             "#FFFFFF"
+   SidebarTextCurrent:      "#292F34"
+   SidebarBackgroundCurrent: "#8a67b8"
+
