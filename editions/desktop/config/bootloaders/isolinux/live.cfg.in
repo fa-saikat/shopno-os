@@ -1,0 +1,15 @@
+prompt 0
+
+MENU HIDDEN
+timeout 50
+
+label live-@FLAVOUR@
+	menu label ^Try or install ShopnoOS
+	menu default
+	linux @LINUX@
+	initrd @INITRD@
+	append @APPEND_LIVE@
+
+label check
+	menu label ^Check disk for defects
+	linux @LINUX@

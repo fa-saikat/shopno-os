@@ -1,0 +1,16 @@
+# =============================================================================
+# shopno-os-core.list.chroot
+# Layer:   editions/core
+# Purpose: Core edition — essential CLI packages beyond base
+#          No GUI, no X, no display manager — TTY only
+# Rule:    Do NOT add packages that belong in base/ or hardware/
+# =============================================================================
+
+# =============================================================================
+# shopno-os-core-tools.list.chroot
+# Layer:   editions/core
+# Purpose: Convenient but non-essential CLI tools for the core edition
+#          Split from shopno-os-core.list.chroot to allow leaner builds
+#          that source only the first list.
+# =============================================================================
+
