@@ -1,0 +1,16 @@
+efibootmgr 
+grub-common 
+grub-pc-bin 
+grub2-common 
+grub-efi-amd64 
+grub-efi-amd64-bin 
+grub-efi-amd64-signed 
+grub-efi-ia32-bin 
+libefiboot1 
+libefivar1 
+mokutil 
+os-prober 
+shim-helpers-amd64-signed 
+shim-signed 
+shim-signed-common 
+shim-unsigned
