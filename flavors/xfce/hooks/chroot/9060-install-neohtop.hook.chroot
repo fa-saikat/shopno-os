@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Install NeoHtop from direct download URL
+# TODO: Replace with 'neohtop' from ShopnoOS apt repo once packaged
+# Track: https://github.com/fa-saikat/shopno-os/issues/1
+# =============================================================================
+set -euo pipefail
+
+PACKAGE_NAME="neohtop"
+PACKAGE_VERSION="1.2.0"
+DOWNLOAD_URL="https://github.com/Abdenasser/neohtop/releases/download/v${PACKAGE_VERSION}/NeoHtop_${PACKAGE_VERSION}_x86_64.deb"
+DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
+
+echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from upstream..."
+
+wget --quiet --show-progress \
+     --timeout=60 \
+     --tries=3 \
+     -O "${DEB_FILE}" \
+     "${DOWNLOAD_URL}"
+
+dpkg -i "${DEB_FILE}" || apt-get install -f -y
+
+rm -f "${DEB_FILE}"
+
+echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# 0090-stamp-build-info.hook.chroot
+# Generates /etc/os-release and related files from brand identity vars.
+# Sourced vars: DISTRO_NAME, DISTRO_CODENAME, DISTRO_VERSION, DISTRO_ID,
+#               DISTRO_ID_LIKE, DISTRO_WEBSITE
+
+set -euo pipefail
+
+# These are exported by prepare-lb-config.sh from brand/identity/name.env
+source /etc/shopno-os/build-vars.env
+
+BUILD_DATE="$(date +%Y%m%d)"
+
+# /etc/os-release (systemd standard)
+cat > /usr/lib/os-release <<EOF
+NAME="${DISTRO_NAME}"
+VERSION="${DISTRO_VERSION} (${DISTRO_CODENAME})"
+ID=${DISTRO_ID}
+ID_LIKE=${DISTRO_ID_LIKE}
+PRETTY_NAME="${DISTRO_NAME} ${DISTRO_VERSION} (${DISTRO_CODENAME})"
+VERSION_ID="${DISTRO_VERSION}"
+VERSION_CODENAME="${DISTRO_CODENAME,,}"
+HOME_URL="${DISTRO_WEBSITE}"
+SUPPORT_URL="${DISTRO_WEBSITE}/support"
+BUG_REPORT_URL="${DISTRO_BUGTRACKER:-${DISTRO_WEBSITE}/issues}"
+EOF
+
+# /etc/lsb-release (LSB compat, expected by many tools)
+cat > /etc/lsb-release <<EOF
+DISTRIB_ID=${DISTRO_NAME}
+DISTRIB_RELEASE=${DISTRO_VERSION}
+DISTRIB_CODENAME=${DISTRO_CODENAME,,}
+DISTRIB_DESCRIPTION="${DISTRO_NAME} ${DISTRO_VERSION} (${DISTRO_CODENAME})"
+EOF
+
+# /etc/issue and /etc/issue.net (login banner)
+echo "${DISTRO_NAME} ${DISTRO_VERSION} \n \l" > /etc/issue
+echo "${DISTRO_NAME} ${DISTRO_VERSION}" > /etc/issue.net
+
+# /etc/debian_version — keep for compatibility but stamp it
+echo "${DISTRO_CODENAME}/sid" > /etc/debian_version
+
+# Custom release file (your architecture spec)
+cat > /etc/shopno-os-release <<EOF
+SHOPNOOS_NAME="${DISTRO_NAME}"
+SHOPNOOS_VERSION="${DISTRO_VERSION}"
+SHOPNOOS_CODENAME="${DISTRO_CODENAME}"
+SHOPNOOS_BUILD_DATE="${BUILD_DATE}"
+EOF
+
+# /usr/share/shopno-os/base-version
+mkdir -p /usr/share/shopno-os
+echo "${DISTRO_VERSION}-${BUILD_DATE}" > /usr/share/shopno-os/base-version
+echo "[stamp-build-info] Release files written for ${DISTRO_NAME} ${DISTRO_VERSION}"
