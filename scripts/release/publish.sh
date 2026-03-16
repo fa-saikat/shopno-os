@@ -92,7 +92,7 @@ done
 load_profile "${PROFILE_NAME}"
 
 ISO_FILENAME="$(iso_name)"
-OUTPUT_DIR="${OPT_OUTPUT_DIR:-${ABRAR_REPO_ROOT}/build/output}"
+OUTPUT_DIR="${OPT_OUTPUT_DIR:-${LIB_REPO_ROOT}/build/output}"
 
 # ---------------------------------------------------------------------------
 # Locate artifacts

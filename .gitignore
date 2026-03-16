@@ -14,8 +14,8 @@ build/
 # --- Live-build internal state -------------------------------------
 # -------------------------------------------------------------------
 .build/
-chroot/
-binary/
+#chroot/
+#binary/
 cache/
 config/chroot_apt/
 

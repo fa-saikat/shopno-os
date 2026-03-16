@@ -89,7 +89,7 @@ fi
 # ---------------------------------------------------------------------------
 require_command git
 
-cd "${_REPO_ROOT}"
+cd "${LIB_REPO_ROOT}"
 
 if [[ -z "${REF_FROM}" ]]; then
     # Find the most recent tag
@@ -242,7 +242,7 @@ fi
 # Output
 # ---------------------------------------------------------------------------
 if [[ "${OPT_UPDATE}" -eq 1 ]]; then
-    CHANGELOG="${_REPO_ROOT}/CHANGELOG.md"
+    CHANGELOG="${LIB_REPO_ROOT}/CHANGELOG.md"
     if [[ -f "${CHANGELOG}" ]]; then
         TMP="$(mktemp)"
         echo "${OUTPUT_BUFFER}" > "${TMP}"
