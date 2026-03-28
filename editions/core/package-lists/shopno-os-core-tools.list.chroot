@@ -1,1 +1,20 @@
-bc curl git gnupg2 pass rsync screen tmux wget atop dstat ncdu nethogs nload strace chkrootkit lynis at  dos2unix file lsb-release mtr-tiny pv rename tree whois
+gnupg2
+pass
+rsync
+screen
+tmux
+atop
+dstat
+ncdu
+nethogs
+nload
+strace
+chkrootkit
+lynis
+at
+dos2unix
+file
+mtr-tiny
+pv
+rename
+whois

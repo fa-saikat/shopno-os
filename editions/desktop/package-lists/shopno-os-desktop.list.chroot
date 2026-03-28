@@ -1,7 +1,6 @@
 calamares
 calamares-settings-debian
 desktop-base
-efibootmgr
 flatpak
 im-config
 isolinux
@@ -27,5 +26,36 @@ xserver-xorg-input-wacom
 xserver-xorg-video-all
 xserver-xorg-video-intel
 squashfs-tools
-xcvt update-inetd tcl tdb-tools t1utils systemd-container sane-utils publicsuffix plzip pcscd pigz partimage
-partclone p11-kit ncurses-term manpages media-player-info lzop lynx locales live-tools libxcb-xtest0 libxcb-composite0  ipcalc iperf3 ipp-usb gnupg-utils gdisk diffstat colord  avahi-daemon avahi-utils appstream arch-test
+xcvt
+update-inetd
+tcl
+tdb-tools
+t1utils
+systemd-container
+sane-utils
+publicsuffix
+plzip
+pcscd
+pigz
+partimage
+partclone
+p11-kit
+ncurses-term
+manpages
+media-player-info
+lzop
+lynx
+live-tools
+libxcb-xtest0
+libxcb-composite0
+ipcalc
+iperf3
+ipp-usb
+gnupg-utils
+gdisk
+diffstat
+colord
+avahi-daemon
+avahi-utils
+appstream
+arch-test
