@@ -1,6 +1,5 @@
 efibootmgr 
 grub-common 
-grub-pc
 grub-pc-bin 
 grub2-common 
 grub-efi-amd64 
