@@ -31,7 +31,6 @@ gawk
 grep
 sed
 vim-tiny
-chrony
 cron
 rsyslog
 live-boot
