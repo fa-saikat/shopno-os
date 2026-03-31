@@ -34,8 +34,8 @@ fi
 # Add to these arrays when extending the distro.
 # =============================================================================
 
-readonly _VALID_EDITIONS=(core desktop pro edu)
-readonly _VALID_FLAVORS=(none gnome kde xfce minimal-x)
+readonly _VALID_EDITIONS=(core desktop kiosk pro edu)
+readonly _VALID_FLAVORS=(none gnome kde xfce minimal-x openbox)
 readonly _VALID_HARDWARE=(generic nvidia amd rpi vm)
 readonly _VALID_ARCHES=(amd64 arm64 i386)
 
