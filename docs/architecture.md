@@ -193,19 +193,23 @@ shopno-os/
 │   │   ├── common.sh               # logging, error traps, utility functions
 │   │   ├── brand.sh                # loads brand/identity/*.env, exports DISTRO_* vars
 │   │   ├── profile.sh              # profile loading and validation
-│   │   └── iso-name.sh             # ISO naming - the single source of truth
+│   │   ├── iso-name.sh             # ISO naming - the single source of truth
+│   │   └── secrets.sh              # Loads secrets/*.env, exports vars, prints capability summary
+│	│
 │   ├── build/
 │   │   ├── build.sh                # MAIN ENTRY POINT
 │   │   ├── clean.sh
 │   │   ├── prepare-lb-config.sh    # assembles live-build config from profile
 │   │   ├── inject-packages.sh      # symlinks package lists into lb config tree
 │   │   └── stamp-iso.sh            # embeds build metadata into ISO
+│	│
 │   ├── dev/
 │   │   ├── new-edition.sh          # scaffold a new edition
 │   │   ├── new-flavor.sh           # scaffold a new flavor
 │   │   ├── new-profile.sh          # scaffold a new profile from _template
 │   │   ├── lint-packages.sh        # check for duplicate packages across all lists
 │   │   └── diff-editions.sh        # compare package sets between two editions
+│	│
 │   └── release/
 │       ├── sign-iso.sh
 │       ├── publish.sh
@@ -225,6 +229,16 @@ shopno-os/
 ├── vars/
 │   ├── defaults.env                # Default ARCH, DISTRIBUTION, BOOTLOADERS, etc.
 │   └── distributions.env           # Known Debian/Ubuntu base distributions
+│
+├── secrets/                        # LOCAL SECRETS - never committed, gitignored
+│   ├── .gitkeep                    # Keeps the empty directory tracked
+│   ├── signing.env					# ISO GPG signing key (copied from _template/signing.env.example)
+│   └── _template                 	# Contains commited templates
+│   	├── signing.env.example
+│   	├── repo-signing.env.example
+│   	├── mirror-credentials.env.example
+│   	├── notary.env.example
+│   	└── github-token.env.example
 │
 ├── docs/
 ├── .envrc                          # direnv: auto-load brand vars on cd
