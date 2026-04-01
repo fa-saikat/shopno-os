@@ -47,6 +47,8 @@ source "${LIB_DIR}/common.sh"
 source "${LIB_DIR}/brand.sh"
 # shellcheck source=../lib/iso-name.sh
 source "${LIB_DIR}/iso-name.sh"
+# shellcheck source=../lib/secrets.sh
+source "${LIB_DIR}/secrets.sh"
 
 # ---------------------------------------------------------------------------
 # Argument parsing
@@ -57,7 +59,7 @@ OPT_DRY_RUN=0
 OPT_SKIP_LINT=0
 OPT_SKIP_SIGN=0
 OPT_JOBS="$(nproc)"
-OPT_OUTPUT_DIR="${LIB_REPO_ROOT}/build/output"
+OPT_OUTPUT_DIR="${OS_REPO_ROOT}/build/output"
 
 _usage() {
     cat >&2 <<EOF
@@ -108,9 +110,14 @@ source "${LIB_DIR}/profile.sh"
 load_profile "${PROFILE_NAME}"
 
 # ---------------------------------------------------------------------------
+# Load secrets and print capability summary
+# ---------------------------------------------------------------------------
+load_secrets
+
+# ---------------------------------------------------------------------------
 # Derived paths
 # ---------------------------------------------------------------------------
-BUILD_DIR="${LIB_REPO_ROOT}/build/${PROFILE_NAME}"
+BUILD_DIR="${OS_REPO_ROOT}/build/${PROFILE_NAME}"
 LB_CONFIG_DIR="${BUILD_DIR}/config"
 ISO_FILENAME="$(iso_name)"
 ISO_STEM="$(iso_stem)"
