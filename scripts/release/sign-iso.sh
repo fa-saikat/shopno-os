@@ -7,8 +7,8 @@
 #   ./scripts/release/sign-iso.sh <path/to/shopno-os-*.iso>
 #
 # ENVIRONMENT VARIABLES:
-#   SHOPNOOS_GPG_KEY     GPG key ID or fingerprint to sign with (required)
-#   SHOPNOOS_GPG_BATCH   Set to '1' for non-interactive/CI signing (uses gpg-agent)
+#   OS_GPG_KEY     GPG key ID or fingerprint to sign with (required)
+#   OS_GPG_BATCH   Set to '1' for non-interactive/CI signing (uses gpg-agent)
 #
 # WHAT IT DOES:
 #   1. Verifies the ISO exists and is a valid ISO 9660 image
@@ -36,7 +36,7 @@ ISO_PATH="${1:-}"
 
 if [[ -z "${ISO_PATH}" ]]; then
     log_error "Usage: $0 <path/to/shopno-os-*.iso>"
-    log_error "  Environment: SHOPNOOS_GPG_KEY=<key-id>"
+    log_error "  Environment: OS_GPG_KEY=<key-id>"
     exit 1
 fi
 
@@ -50,13 +50,13 @@ ISO_STEM="${ISO_FILE%.iso}"
 # ---------------------------------------------------------------------------
 # Validate GPG key
 # ---------------------------------------------------------------------------
-GPG_KEY="${SHOPNOOS_GPG_KEY:-}"
-GPG_BATCH="${SHOPNOOS_GPG_BATCH:-0}"
+GPG_KEY="${OS_GPG_KEY:-}"
+GPG_BATCH="${OS_GPG_BATCH:-0}"
 
 if [[ -z "${GPG_KEY}" ]]; then
-    log_error "SHOPNOOS_GPG_KEY is not set."
+    log_error "OS_GPG_KEY is not set."
     log_error "  Export the signing key ID before running:"
-    log_error "    export SHOPNOOS_GPG_KEY=ABCD1234EFGH5678"
+    log_error "    export OS_GPG_KEY=ABCD1234EFGH5678"
     log_error "  To list available keys: gpg --list-secret-keys"
     exit 1
 fi

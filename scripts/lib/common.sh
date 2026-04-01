@@ -219,8 +219,8 @@ _repo_root() {
 }
 
 # Convenience export — most scripts will want this
-LIB_REPO_ROOT="$(_repo_root)"
-export LIB_REPO_ROOT
+OS_REPO_ROOT="$(_repo_root)"
+export OS_REPO_ROOT
 
 # =============================================================================
 # GENERAL UTILITIES

@@ -54,7 +54,7 @@ if ! [[ "${FLAVOR_NAME}" =~ ^[a-z][a-z0-9\-]*$ ]]; then
     exit 1
 fi
 
-FLAVOR_DIR="${ABRAR_REPO_ROOT}/flavors/${FLAVOR_NAME}"
+FLAVOR_DIR="${OS_REPO_ROOT}/flavors/${FLAVOR_NAME}"
 
 if [[ -d "${FLAVOR_DIR}" ]]; then
     log_error "Flavor already exists: ${FLAVOR_DIR}"

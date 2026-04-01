@@ -36,8 +36,8 @@ source "${LIB_DIR}/profile.sh"
 # shellcheck source=../lib/iso-name.sh
 source "${LIB_DIR}/iso-name.sh"
 
-source "${LIB_REPO_ROOT}/brand/identity/name.env"
-source "${LIB_REPO_ROOT}/brand/identity/urls.env" 2>/dev/null || true
+source "${OS_REPO_ROOT}/brand/identity/name.env"
+source "${OS_REPO_ROOT}/brand/identity/urls.env" 2>/dev/null || true
 
 # ---------------------------------------------------------------------------
 # Args
@@ -63,7 +63,7 @@ cd "${BUILD_DIR}"
 # Run lb config via the profile's own lb_config.sh
 # ---------------------------------------------------------------------------
 log_step "Running lb config for profile: ${PROFILE_NAME}"
-PROFILE_LB_CONFIG="${LIB_REPO_ROOT}/profiles/${PROFILE_NAME}/lb_config.sh"
+PROFILE_LB_CONFIG="${OS_REPO_ROOT}/profiles/${PROFILE_NAME}/lb_config.sh"
 require_file "${PROFILE_LB_CONFIG}"
 
 _run bash "${PROFILE_LB_CONFIG}"
@@ -92,15 +92,15 @@ _merge_config_overlay() {
     log_debug "  Merged: ${config_subdir} → ${BUILD_DIR}/config/"
 }
 
-_merge_config_overlay "${LIB_REPO_ROOT}/base"                           "base"
-_merge_config_overlay "${LIB_REPO_ROOT}/editions/${DISTRO_EDITION}"     "edition/${DISTRO_EDITION}"
+_merge_config_overlay "${OS_REPO_ROOT}/base"                           "base"
+_merge_config_overlay "${OS_REPO_ROOT}/editions/${DISTRO_EDITION}"     "edition/${DISTRO_EDITION}"
 
 if profile_has_flavor; then
-    _merge_config_overlay "${LIB_REPO_ROOT}/flavors/${DISTRO_FLAVOR}"   "flavor/${DISTRO_FLAVOR}"
+    _merge_config_overlay "${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}"   "flavor/${DISTRO_FLAVOR}"
 fi
 
 if profile_has_hardware_overlay; then
-    _merge_config_overlay "${LIB_REPO_ROOT}/hardware/${DISTRO_HARDWARE}" "hardware/${DISTRO_HARDWARE}"
+    _merge_config_overlay "${OS_REPO_ROOT}/hardware/${DISTRO_HARDWARE}" "hardware/${DISTRO_HARDWARE}"
 fi
 
 log_success "Config overlays merged."
@@ -144,15 +144,15 @@ _merge_hooks() {
     [[ "${count}" -gt 0 ]] && log_info "  ${label}: ${count} hook(s) merged"
 }
 
-_merge_hooks "${LIB_REPO_ROOT}/base/hooks/chroot"                             "base"
-_merge_hooks "${LIB_REPO_ROOT}/editions/${DISTRO_EDITION}/hooks/chroot"       "edition/${DISTRO_EDITION}"
+_merge_hooks "${OS_REPO_ROOT}/base/hooks/chroot"                             "base"
+_merge_hooks "${OS_REPO_ROOT}/editions/${DISTRO_EDITION}/hooks/chroot"       "edition/${DISTRO_EDITION}"
 
 if profile_has_flavor; then
-    _merge_hooks "${LIB_REPO_ROOT}/flavors/${DISTRO_FLAVOR}/hooks/chroot"     "flavor/${DISTRO_FLAVOR}"
+    _merge_hooks "${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}/hooks/chroot"     "flavor/${DISTRO_FLAVOR}"
 fi
 
 if profile_has_hardware_overlay; then
-    _merge_hooks "${LIB_REPO_ROOT}/hardware/${DISTRO_HARDWARE}/hooks/chroot"  "hardware/${DISTRO_HARDWARE}"
+    _merge_hooks "${OS_REPO_ROOT}/hardware/${DISTRO_HARDWARE}/hooks/chroot"  "hardware/${DISTRO_HARDWARE}"
 fi
 
 log_success "Hooks merged."
@@ -161,7 +161,7 @@ log_success "Hooks merged."
 # Merge skel directories (flavor only — base and editions don't have skel)
 # ---------------------------------------------------------------------------
 if profile_has_flavor; then
-    SKEL_SRC="${LIB_REPO_ROOT}/flavors/${DISTRO_FLAVOR}/skel"
+    SKEL_SRC="${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}/skel"
     SKEL_DEST="${BUILD_DIR}/config/includes.chroot/etc/skel"
 
     if [[ -d "${SKEL_SRC}" ]]; then
@@ -173,7 +173,7 @@ if profile_has_flavor; then
 fi
 
 # Also merge brand-wide skel
-BRAND_SKEL="${LIB_REPO_ROOT}/brand/skel-branding"
+BRAND_SKEL="${OS_REPO_ROOT}/brand/skel-branding"
 if [[ -d "${BRAND_SKEL}" ]]; then
     log_info "Merging brand skel overlay"
     SKEL_DEST="${BUILD_DIR}/config/includes.chroot/etc/skel"

@@ -114,15 +114,15 @@ _inject_layer() {
 # ---------------------------------------------------------------------------
 # Inject layers in composition order
 # ---------------------------------------------------------------------------
-_inject_layer "${LIB_REPO_ROOT}/base"                           "base"
-_inject_layer "${LIB_REPO_ROOT}/editions/${DISTRO_EDITION}"     "edition/${DISTRO_EDITION}"
+_inject_layer "${OS_REPO_ROOT}/base"                           "base"
+_inject_layer "${OS_REPO_ROOT}/editions/${DISTRO_EDITION}"     "edition/${DISTRO_EDITION}"
 
 if profile_has_flavor; then
-    _inject_layer "${LIB_REPO_ROOT}/flavors/${DISTRO_FLAVOR}"   "flavor/${DISTRO_FLAVOR}"
+    _inject_layer "${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}"   "flavor/${DISTRO_FLAVOR}"
 fi
 
 if profile_has_hardware_overlay; then
-    _inject_layer "${LIB_REPO_ROOT}/hardware/${DISTRO_HARDWARE}" "hardware/${DISTRO_HARDWARE}"
+    _inject_layer "${OS_REPO_ROOT}/hardware/${DISTRO_HARDWARE}" "hardware/${DISTRO_HARDWARE}"
 fi
 
 # ---------------------------------------------------------------------------

@@ -65,13 +65,13 @@ load_profile() {
     if [[ -z "${profile_name}" ]]; then
         log_error "load_profile requires a profile name argument."
         log_error "  Usage: load_profile <profile-name>"
-        log_error "  Example: load_profile abrar-desktop-gnome"
+        log_error "  Example: load_profile shopno-os-desktop-gnome"
         exit 1
     fi
 
     log_step "Loading profile: ${profile_name}"
 
-    local profile_dir="${LIB_REPO_ROOT}/profiles/${profile_name}"
+    local profile_dir="${OS_REPO_ROOT}/profiles/${profile_name}"
     local profile_env="${profile_dir}/profile.env"
 
     require_dir  "${profile_dir}"
@@ -178,24 +178,24 @@ _profile_resolve_layers() {
     local -a layers_to_check=()
 
     # Base — always present (validated separately by build.sh)
-    local base_dir="${LIB_REPO_ROOT}/base"
+    local base_dir="${OS_REPO_ROOT}/base"
     require_dir "${base_dir}/package-lists"
 
     # Edition layer
-    local edition_dir="${LIB_REPO_ROOT}/editions/${DISTRO_EDITION}"
+    local edition_dir="${OS_REPO_ROOT}/editions/${DISTRO_EDITION}"
     require_dir "${edition_dir}"
     _assert_has_package_lists "${edition_dir}" "edition/${DISTRO_EDITION}"
 
     # Flavor layer (skip for 'none')
     if [[ "${DISTRO_FLAVOR}" != "none" ]]; then
-        local flavor_dir="${LIB_REPO_ROOT}/flavors/${DISTRO_FLAVOR}"
+        local flavor_dir="${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}"
         require_dir "${flavor_dir}"
         _assert_has_package_lists "${flavor_dir}" "flavor/${DISTRO_FLAVOR}"
     fi
 
     # Hardware layer (skip for 'generic')
     if [[ "${DISTRO_HARDWARE}" != "generic" ]]; then
-        local hw_dir="${LIB_REPO_ROOT}/hardware/${DISTRO_HARDWARE}"
+        local hw_dir="${OS_REPO_ROOT}/hardware/${DISTRO_HARDWARE}"
         require_dir "${hw_dir}"
         _assert_has_package_lists "${hw_dir}" "hardware/${DISTRO_HARDWARE}"
     fi
@@ -254,19 +254,19 @@ profile_has_hardware_overlay() {
 # profile_package_lists  — prints paths to all package lists for active profile,
 # in composition order: base → edition → flavor → hardware
 profile_package_lists() {
-    local base_dir="${LIB_REPO_ROOT}/base"
-    local edition_dir="${LIB_REPO_ROOT}/editions/${DISTRO_EDITION}"
+    local base_dir="${OS_REPO_ROOT}/base"
+    local edition_dir="${OS_REPO_ROOT}/editions/${DISTRO_EDITION}"
 
     find "${base_dir}/package-lists"    -name "*.list.chroot" | sort
     find "${edition_dir}/package-lists" -name "*.list.chroot" | sort
 
     if profile_has_flavor; then
-        local flavor_dir="${LIB_REPO_ROOT}/flavors/${DISTRO_FLAVOR}"
+        local flavor_dir="${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}"
         find "${flavor_dir}/package-lists" -name "*.list.chroot" | sort
     fi
 
     if profile_has_hardware_overlay; then
-        local hw_dir="${LIB_REPO_ROOT}/hardware/${DISTRO_HARDWARE}"
+        local hw_dir="${OS_REPO_ROOT}/hardware/${DISTRO_HARDWARE}"
         find "${hw_dir}/package-lists" -name "*.list.chroot" | sort
     fi
 }
@@ -274,14 +274,14 @@ profile_package_lists() {
 # profile_hook_dirs  — prints chroot hook directories in merge order
 profile_hook_dirs() {
     local dirs=()
-    dirs+=("${LIB_REPO_ROOT}/base/hooks/chroot")
-    dirs+=("${LIB_REPO_ROOT}/editions/${DISTRO_EDITION}/hooks/chroot")
+    dirs+=("${OS_REPO_ROOT}/base/hooks/chroot")
+    dirs+=("${OS_REPO_ROOT}/editions/${DISTRO_EDITION}/hooks/chroot")
 
     if profile_has_flavor; then
-        dirs+=("${LIB_REPO_ROOT}/flavors/${DISTRO_FLAVOR}/hooks/chroot")
+        dirs+=("${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}/hooks/chroot")
     fi
     if profile_has_hardware_overlay; then
-        dirs+=("${LIB_REPO_ROOT}/hardware/${DISTRO_HARDWARE}/hooks/chroot")
+        dirs+=("${OS_REPO_ROOT}/hardware/${DISTRO_HARDWARE}/hooks/chroot")
     fi
 
     for d in "${dirs[@]}"; do
@@ -291,7 +291,7 @@ profile_hook_dirs() {
 
 # list_profiles  — prints all available profile names
 list_profiles() {
-    find "${LIB_REPO_ROOT}/profiles" -mindepth 1 -maxdepth 1 -type d \
+    find "${OS_REPO_ROOT}/profiles" -mindepth 1 -maxdepth 1 -type d \
         ! -name '_template' \
         -exec basename {} \; | sort
 }

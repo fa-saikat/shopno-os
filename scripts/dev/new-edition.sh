@@ -52,7 +52,7 @@ if ! [[ "${EDITION_NAME}" =~ ^[a-z][a-z0-9\-]*$ ]]; then
     exit 1
 fi
 
-EDITION_DIR="${_REPO_ROOT}/editions/${EDITION_NAME}"
+EDITION_DIR="${OS_REPO_ROOT}/editions/${EDITION_NAME}"
 
 if [[ -d "${EDITION_DIR}" ]]; then
     log_error "Edition already exists: ${EDITION_DIR}"

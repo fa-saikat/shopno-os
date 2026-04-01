@@ -131,23 +131,23 @@ log_info "Arch    : ${OPT_ARCH}"
 # ---------------------------------------------------------------------------
 # Validate that referenced layers exist
 # ---------------------------------------------------------------------------
-require_dir "${ABRAR_REPO_ROOT}/editions/${OPT_EDITION}" \
+require_dir "${OS_REPO_ROOT}/editions/${OPT_EDITION}" \
     || { log_error "Edition '${OPT_EDITION}' not found. Create it first with new-edition.sh"; exit 1; }
 
 if [[ "${OPT_FLAVOR}" != "none" ]]; then
-    [[ -d "${ABRAR_REPO_ROOT}/flavors/${OPT_FLAVOR}" ]] \
+    [[ -d "${OS_REPO_ROOT}/flavors/${OPT_FLAVOR}" ]] \
         || { log_error "Flavor '${OPT_FLAVOR}' not found. Create it first with new-flavor.sh"; exit 1; }
 fi
 
 if [[ "${OPT_HARDWARE}" != "generic" ]]; then
-    [[ -d "${ABRAR_REPO_ROOT}/hardware/${OPT_HARDWARE}" ]] \
+    [[ -d "${OS_REPO_ROOT}/hardware/${OPT_HARDWARE}" ]] \
         || { log_error "Hardware layer '${OPT_HARDWARE}' not found."; exit 1; }
 fi
 
 # ---------------------------------------------------------------------------
 # Create profile directory
 # ---------------------------------------------------------------------------
-PROFILE_DIR="${ABRAR_REPO_ROOT}/profiles/${PROFILE_NAME}"
+PROFILE_DIR="${OS_REPO_ROOT}/profiles/${PROFILE_NAME}"
 
 if [[ -d "${PROFILE_DIR}" ]]; then
     log_error "Profile already exists: ${PROFILE_DIR}"
@@ -224,7 +224,7 @@ log_info "Created: profile.env"
 # ---------------------------------------------------------------------------
 # Write lb_config.sh (copy from template, update header)
 # ---------------------------------------------------------------------------
-TEMPLATE_LB_CONFIG="${ABRAR_REPO_ROOT}/profiles/_template/lb_config.sh"
+TEMPLATE_LB_CONFIG="${OS_REPO_ROOT}/profiles/_template/lb_config.sh"
 
 if [[ -f "${TEMPLATE_LB_CONFIG}" ]]; then
     cp "${TEMPLATE_LB_CONFIG}" "${PROFILE_DIR}/lb_config.sh"
@@ -232,7 +232,7 @@ if [[ -f "${TEMPLATE_LB_CONFIG}" ]]; then
     sed -i "s|_template|${PROFILE_NAME}|g" "${PROFILE_DIR}/lb_config.sh"
 else
     # Generate lb_config.sh from the existing shopno-os-core one as reference
-    REFERENCE="${ABRAR_REPO_ROOT}/profiles/shopno-os-core/lb_config.sh"
+    REFERENCE="${OS_REPO_ROOT}/profiles/shopno-os-core/lb_config.sh"
     if [[ -f "${REFERENCE}" ]]; then
         cp "${REFERENCE}" "${PROFILE_DIR}/lb_config.sh"
         sed -i "s|shopno-os-core|${PROFILE_NAME}|g" "${PROFILE_DIR}/lb_config.sh"

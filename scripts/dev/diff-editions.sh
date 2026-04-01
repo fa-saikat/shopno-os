@@ -112,8 +112,8 @@ if [[ "${OPT_PROFILE_MODE}" -eq 1 ]]; then
     LABEL_B="profile:${TARGET_B}"
 else
     log_step "Comparing editions: ${TARGET_A}  vs  ${TARGET_B}"
-    _pkgs_from_dir "${ABRAR_REPO_ROOT}/editions/${TARGET_A}" > "${TMP_A}"
-    _pkgs_from_dir "${ABRAR_REPO_ROOT}/editions/${TARGET_B}" > "${TMP_B}"
+    _pkgs_from_dir "${OS_REPO_ROOT}/editions/${TARGET_A}" > "${TMP_A}"
+    _pkgs_from_dir "${OS_REPO_ROOT}/editions/${TARGET_B}" > "${TMP_B}"
     LABEL_A="edition:${TARGET_A}"
     LABEL_B="edition:${TARGET_B}"
 fi

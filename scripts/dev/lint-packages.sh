@@ -78,9 +78,9 @@ _collect_lists() {
         # Collect every *.list.chroot across the whole repo
         while IFS= read -r -d '' f; do
             _out_lists+=("${f}")
-        done < <(find "${LIB_REPO_ROOT}" \
-            \( -path "${LIB_REPO_ROOT}/build" -o \
-               -path "${LIB_REPO_ROOT}/.git"  \) -prune \
+        done < <(find "${OS_REPO_ROOT}" \
+            \( -path "${OS_REPO_ROOT}/build" -o \
+               -path "${OS_REPO_ROOT}/.git"  \) -prune \
             -o -name "*.list.chroot" -print0 | sort -z)     # <-- NOTE
     fi
 }
@@ -249,14 +249,14 @@ _check_layer_policy() {
     done < <(find "${layer_path}/package-lists" -name "*.list.chroot" -print0 2>/dev/null)
 }
 
-BASE_DIR="${LIB_REPO_ROOT}/base"
+BASE_DIR="${OS_REPO_ROOT}/base"
 if [[ -d "${BASE_DIR}/package-lists" ]]; then
     _check_layer_policy "${BASE_DIR}" "base" BASE_FORBIDDEN
 fi
 
 while IFS= read -r -d '' flavor_dir; do
     _check_layer_policy "${flavor_dir}" "flavors/$(basename "${flavor_dir}")" FLAVOR_FORBIDDEN
-done < <(find "${LIB_REPO_ROOT}/flavors" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+done < <(find "${OS_REPO_ROOT}/flavors" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
 
 # ---------------------------------------------------------------------------
 # Summary

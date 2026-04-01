@@ -9,10 +9,10 @@
 #   ./scripts/release/publish.sh shopno-os-desktop-gnome --dry-run
 #
 # ENVIRONMENT VARIABLES (required unless --dry-run):
-#   SHOPNOOS_PUBLISH_HOST      SSH host of the mirror server
-#   SHOPNOOS_PUBLISH_USER      SSH user
-#   SHOPNOOS_PUBLISH_PATH      Remote base path  (e.g. /srv/mirror/abrar)
-#   SHOPNOOS_PUBLISH_KEY       Path to SSH private key (optional — uses ssh-agent otherwise)
+#   OS_PUBLISH_HOST      SSH host of the mirror server
+#   OS_PUBLISH_USER      SSH user
+#   OS_PUBLISH_PATH      Remote base path  (e.g. /srv/mirror/shopno-os)
+#   OS_PUBLISH_KEY       Path to SSH private key (optional — uses ssh-agent otherwise)
 #
 # WHAT IT PUBLISHES:
 #   - The ISO
@@ -22,7 +22,7 @@
 #   - SHA256SUMS, SHA512SUMS (rolling manifests)
 #
 # REMOTE LAYOUT:
-#   <SHOPNOOS_PUBLISH_PATH>/
+#   <OS_PUBLISH_PATH>/
 #   └── <VERSION>/
 #       └── <ARCH>/
 #           ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.iso
@@ -63,10 +63,10 @@ Options:
   -h, --help       Show this help
 
 Required environment (unless --dry-run):
-  SHOPNOOS_PUBLISH_HOST   Mirror server SSH host
-  SHOPNOOS_PUBLISH_USER   SSH user
-  SHOPNOOS_PUBLISH_PATH   Remote base path
-  SHOPNOOS_PUBLISH_KEY    SSH private key path (optional)
+  OS_PUBLISH_HOST   Mirror server SSH host
+  OS_PUBLISH_USER   SSH user
+  OS_PUBLISH_PATH   Remote base path
+  OS_PUBLISH_KEY    SSH private key path (optional)
 EOF
     exit 1
 }
@@ -92,7 +92,7 @@ done
 load_profile "${PROFILE_NAME}"
 
 ISO_FILENAME="$(iso_name)"
-OUTPUT_DIR="${OPT_OUTPUT_DIR:-${LIB_REPO_ROOT}/build/output}"
+OUTPUT_DIR="${OPT_OUTPUT_DIR:-${OS_REPO_ROOT}/build/output}"
 
 # ---------------------------------------------------------------------------
 # Locate artifacts
@@ -135,9 +135,9 @@ fi
 # ---------------------------------------------------------------------------
 if [[ "${OPT_DRY_RUN}" -eq 1 ]]; then
     log_step "DRY RUN — would publish:"
-    REMOTE_HOST="${SHOPNOOS_PUBLISH_HOST:-<host>}"
-    REMOTE_USER="${SHOPNOOS_PUBLISH_USER:-<user>}"
-    REMOTE_PATH="${SHOPNOOS_PUBLISH_PATH:-<path>}"
+    REMOTE_HOST="${OS_PUBLISH_HOST:-<host>}"
+    REMOTE_USER="${OS_PUBLISH_USER:-<user>}"
+    REMOTE_PATH="${OS_PUBLISH_PATH:-<path>}"
     REMOTE_DIR="${REMOTE_PATH}/${DISTRO_VERSION}/${DISTRO_ARCH}"
 
     for artifact in "${ARTIFACTS[@]}"; do
@@ -152,10 +152,10 @@ fi
 # ---------------------------------------------------------------------------
 require_command rsync ssh
 
-PUBLISH_HOST="${SHOPNOOS_PUBLISH_HOST:-}"
-PUBLISH_USER="${SHOPNOOS_PUBLISH_USER:-}"
-PUBLISH_PATH="${SHOPNOOS_PUBLISH_PATH:-}"
-PUBLISH_KEY="${SHOPNOOS_PUBLISH_KEY:-}"
+PUBLISH_HOST="${OS_PUBLISH_HOST:-}"
+PUBLISH_USER="${OS_PUBLISH_USER:-}"
+PUBLISH_PATH="${OS_PUBLISH_PATH:-}"
+PUBLISH_KEY="${OS_PUBLISH_KEY:-}"
 
 require_var PUBLISH_HOST PUBLISH_USER PUBLISH_PATH
 

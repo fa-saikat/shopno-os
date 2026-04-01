@@ -72,7 +72,7 @@ fi
 # ---------------------------------------------------------------------------
 # Resolve targets
 # ---------------------------------------------------------------------------
-BUILD_ROOT="${LIB_REPO_ROOT}/build"
+BUILD_ROOT="${OS_REPO_ROOT}/build"
 OUTPUT_DIR="${BUILD_ROOT}/output"
 CACHE_DIR="${BUILD_ROOT}/cache"
 
