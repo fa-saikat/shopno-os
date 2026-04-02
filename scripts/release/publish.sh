@@ -9,10 +9,10 @@
 #   ./scripts/release/publish.sh shopno-os-desktop-gnome --dry-run
 #
 # ENVIRONMENT VARIABLES (required unless --dry-run):
-#   OS_PUBLISH_HOST      SSH host of the mirror server
-#   OS_PUBLISH_USER      SSH user
-#   OS_PUBLISH_PATH      Remote base path  (e.g. /srv/mirror/shopno-os)
-#   OS_PUBLISH_KEY       Path to SSH private key (optional — uses ssh-agent otherwise)
+#   OS_MIRROR_HOST      SSH host of the mirror server
+#   OS_MIRROR_USER      SSH user
+#   OS_MIRROR_PATH      Remote base path  (e.g. /srv/mirror/shopno-os)
+#   OS_MIRROR_SSH_KEY       Path to SSH private key (optional — uses ssh-agent otherwise)
 #
 # WHAT IT PUBLISHES:
 #   - The ISO
@@ -22,7 +22,7 @@
 #   - SHA256SUMS, SHA512SUMS (rolling manifests)
 #
 # REMOTE LAYOUT:
-#   <OS_PUBLISH_PATH>/
+#   <OS_MIRROR_PATH>/
 #   └── <VERSION>/
 #       └── <ARCH>/
 #           ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.iso
@@ -45,6 +45,8 @@ source "${LIB_DIR}/brand.sh"
 source "${LIB_DIR}/profile.sh"
 # shellcheck source=../lib/iso-name.sh
 source "${LIB_DIR}/iso-name.sh"
+# shellcheck source=../lib/secrets.sh
+source "${LIB_DIR}/secrets.sh"
 
 # ---------------------------------------------------------------------------
 # Args
@@ -63,10 +65,10 @@ Options:
   -h, --help       Show this help
 
 Required environment (unless --dry-run):
-  OS_PUBLISH_HOST   Mirror server SSH host
-  OS_PUBLISH_USER   SSH user
-  OS_PUBLISH_PATH   Remote base path
-  OS_PUBLISH_KEY    SSH private key path (optional)
+  OS_MIRROR_HOST   Mirror server SSH host
+  OS_MIRROR_USER   SSH user
+  OS_MIRROR_PATH   Remote base path
+  OS_MIRROR_SSH_KEY    SSH private key path (optional)
 EOF
     exit 1
 }
@@ -90,6 +92,11 @@ done
 # Load profile
 # ---------------------------------------------------------------------------
 load_profile "${PROFILE_NAME}"
+
+# ---------------------------------------------------------------------------
+# Load secrets and print capability summary
+# ---------------------------------------------------------------------------
+load_secrets
 
 ISO_FILENAME="$(iso_name)"
 OUTPUT_DIR="${OPT_OUTPUT_DIR:-${OS_REPO_ROOT}/build/output}"
@@ -135,9 +142,9 @@ fi
 # ---------------------------------------------------------------------------
 if [[ "${OPT_DRY_RUN}" -eq 1 ]]; then
     log_step "DRY RUN — would publish:"
-    REMOTE_HOST="${OS_PUBLISH_HOST:-<host>}"
-    REMOTE_USER="${OS_PUBLISH_USER:-<user>}"
-    REMOTE_PATH="${OS_PUBLISH_PATH:-<path>}"
+    REMOTE_HOST="${OS_MIRROR_HOST:-<host>}"
+    REMOTE_USER="${OS_MIRROR_USER:-<user>}"
+    REMOTE_PATH="${OS_MIRROR_PATH:-<path>}"
     REMOTE_DIR="${REMOTE_PATH}/${DISTRO_VERSION}/${DISTRO_ARCH}"
 
     for artifact in "${ARTIFACTS[@]}"; do
@@ -152,17 +159,18 @@ fi
 # ---------------------------------------------------------------------------
 require_command rsync ssh
 
-PUBLISH_HOST="${OS_PUBLISH_HOST:-}"
-PUBLISH_USER="${OS_PUBLISH_USER:-}"
-PUBLISH_PATH="${OS_PUBLISH_PATH:-}"
-PUBLISH_KEY="${OS_PUBLISH_KEY:-}"
+PUBLISH_HOST="${OS_MIRROR_HOST:-}"
+PUBLISH_USER="${OS_MIRROR_USER:-}"
+PUBLISH_PATH="${OS_MIRROR_PATH:-}"
+PUBLISH_KEY="${OS_MIRROR_SSH_KEY:-}"
 
 require_var PUBLISH_HOST PUBLISH_USER PUBLISH_PATH
 
 # ---------------------------------------------------------------------------
 # Build SSH args
 # ---------------------------------------------------------------------------
-SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o BatchMode=yes)
+# SSH_OPTS=(-o StrictHostKeyChecking=accept-new -o BatchMode=yes)
+SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
 [[ -n "${PUBLISH_KEY}" ]] && SSH_OPTS+=(-i "${PUBLISH_KEY}")
 
 REMOTE_DIR="${PUBLISH_PATH}/${DISTRO_VERSION}/${DISTRO_ARCH}"
