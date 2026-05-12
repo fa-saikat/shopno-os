@@ -680,7 +680,7 @@ Every ISO is named deterministically from build variables. Names are never const
 **Format:**
 
 ```
-<DISTRO_ID>-<DISTRO_VERSION>-<DISTRO_EDITION>-<DISTRO_FLAVOR>-<DISTRO_ARCH>-<BUILDDATE>[-<DISTRO_HARDWARE>].iso
+<ISO_PREFIX>-<DISTRO_VERSION>-<DISTRO_EDITION>-<DISTRO_FLAVOR>-<DISTRO_ARCH>-<BUILDDATE>[-<DISTRO_HARDWARE>].iso
 ```
 
 **Examples:**

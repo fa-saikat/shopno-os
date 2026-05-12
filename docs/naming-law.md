@@ -22,7 +22,7 @@ Every ISO produced by this repository is named from build variables. No human co
 
 | Field | Source | Format | Example |
 |-------|--------|--------|---------|
-| `DISTRO_ID` | `brand/identity/name.env` | Lowercase alphanumeric, hyphens allowed | `shopno-os` |
+| `ISO_PREFIX` | `brand/identity/name.env` | Lowercase alphanumeric, hyphens allowed | `shopno-os` |
 | `DISTRO_VERSION` | `brand/identity/name.env` | Digits and dots only | `1.0`, `1.1`, `2024.01` |
 | `DISTRO_EDITION` | `profiles/<n>/profile.env` | Lowercase, matches `editions/` directory name | `core`, `desktop`, `pro` |
 | `DISTRO_FLAVOR` | `profiles/<n>/profile.env` | Lowercase, matches `flavors/` directory name, or `none` | `gnome`, `kde`, `xfce`, `none` |

@@ -58,7 +58,7 @@ The most important file. All required variables must be present or the build wil
 DISTRO_NAME="ShopnoOS"
 DISTRO_CODENAME="Boipoka"
 DISTRO_VERSION="1.0"
-DISTRO_ID="shopno-os"
+DISTRO_ID="shopno"
 DISTRO_ID_LIKE="debian"
 DISTRO_WEBSITE="https://shopno.jadupc.com"
 DISTRO_BUGTRACKER="https://github.com/JaduPC/shopno-os/issues"
