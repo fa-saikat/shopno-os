@@ -111,7 +111,9 @@ log_success "Config overlays merged."
 # ---------------------------------------------------------------------------
 log_step "Merging chroot hooks"
 
-HOOKS_DEST="${BUILD_DIR}/config/hooks/normal" # <-- NOTE
+# live-build >= 20230502 renamed hooks/chroot to hooks/normal for chroot-stage
+# hooks. hooks/chroot is a legacy path and no longer recognized.
+HOOKS_DEST="${BUILD_DIR}/config/hooks/normal"
 mkdir -p "${HOOKS_DEST}"
 
 _merge_hooks() {
@@ -198,6 +200,10 @@ DISTRO_ID="${DISTRO_ID}"
 DISTRO_ID_LIKE="${DISTRO_ID_LIKE}"
 DISTRO_WEBSITE="${DISTRO_WEBSITE}"
 DISTRO_BUGTRACKER="${DISTRO_BUGTRACKER:-}"
+DISTRO_COPYRIGHT="${DISTRO_COPYRIGHT:-}"
+DISTRO_LICENSE="${DISTRO_LICENSE:-}"
+DISTRO_TRADEMARK="${DISTRO_TRADEMARK:-}"
+DISTRO_SUPPORT_URL="${URL_SUPPORT:-${DISTRO_WEBSITE}/support}"
 EOF
 
 # GRUB background

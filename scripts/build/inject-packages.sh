@@ -102,7 +102,10 @@ _inject_layer() {
         (( count++ )) || true
         log_debug "  Injected: ${filename} (← ${label})"
 
-    done < <(find "${src_dir}" -maxdepth 1 -name "*.list.*" -print0 | sort -z) # <-- NOTE
+    #done < <(find "${src_dir}" -maxdepth 1 -name "*.list.chroot" -o -name "*.list.chroot" -print0 | sort -z) # <-- NOTE
+    done < <(find "${src_dir}" -maxdepth 1 \
+        \( -name "*.list.chroot" -o -name "*.list.binary" \) \
+        -print0 | sort -z)
 
     if [[ "${count}" -gt 0 ]]; then
         log_info "  ${label}: ${count} package list(s) injected"
