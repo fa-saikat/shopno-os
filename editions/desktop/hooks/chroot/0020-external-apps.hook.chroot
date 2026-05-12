@@ -61,7 +61,7 @@ EOF
 apt update
 apt install -y ibus-avro google-chrome-stable onlyoffice-desktopeditors turbowarp-desktop code sublime-text
 
-rm /etc/apt/sources.list.d/google-chrome.list
+# rm /etc/apt/sources.list.d/google-chrome.list
 
 # apt install -y ./ttf-bijoy_1.0.0-2_all.deb
 # apt install -y ./NeoHtop_1.2.0_x86_64.deb
