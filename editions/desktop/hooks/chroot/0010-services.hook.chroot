@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# set -e
+# set -x
+systemctl daemon-reload
+
+# Eanble ShopnoOS apt hook: add-uninstall-button
+systemctl enable shopno-os-apt-operation.path

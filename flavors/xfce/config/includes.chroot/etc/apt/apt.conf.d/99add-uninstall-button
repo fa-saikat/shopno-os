@@ -1,1 +1,0 @@
-DPKg::Post-Invoke { "/usr/local/bin/apt-hook-99add-uninstall-button || true"; };
