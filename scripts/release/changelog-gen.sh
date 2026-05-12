@@ -215,8 +215,10 @@ if [[ "${OPT_FORMAT}" == "md" ]]; then
     # Footer
     if [[ -n "${REF_FROM}" ]]; then
         OUTPUT_BUFFER+=$'\n'"---"$'\n'
-        COMPARE_URL="${DISTRO_BUGTRACKER%/issues}"
-        OUTPUT_BUFFER+="**Full diff:** \`${REF_FROM}...${OPT_VERSION}\`"$'\n'
+        # COMPARE_URL="${DISTRO_BUGTRACKER%/issues}"
+        OUTPUT_BUFFER+=$'\n'"---"$'\n'
+        #OUTPUT_BUFFER+="**Full diff:** \`${REF_FROM}...${OPT_VERSION}\`"$'\n'
+        OUTPUT_BUFFER+="**Full diff:** [${REF_FROM}...v${OPT_VERSION}](${COMPARE_URL}/compare/${REF_FROM}...v${OPT_VERSION})"$'\n'
     fi
 
 elif [[ "${OPT_FORMAT}" == "deb" ]]; then
