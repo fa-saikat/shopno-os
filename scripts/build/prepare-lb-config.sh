@@ -209,7 +209,7 @@ EOF
 # GRUB background
 GRUB_BG="$(brand_grub_background)"
 if [[ -f "${GRUB_BG}" ]]; then
-    GRUB_THEME_DEST="${INCLUDES_CHROOT}/boot/grub/themes/shopno-os"
+    GRUB_THEME_DEST="${BUILD_DIR}/config/bootloaders/grub-pc/themes/shopno-os"
     mkdir -p "${GRUB_THEME_DEST}"
     cp "${GRUB_BG}" "${GRUB_THEME_DEST}/background.png"
     log_debug "GRUB background injected."
