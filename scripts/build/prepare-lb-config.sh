@@ -206,12 +206,23 @@ DISTRO_TRADEMARK="${DISTRO_TRADEMARK:-}"
 DISTRO_SUPPORT_URL="${URL_SUPPORT:-${DISTRO_WEBSITE}/support}"
 EOF
 
+# Wallpaper (base)
+BASE_WALLPAPER="$(brand_wallpaper_base)"
+if [[ -f "${BASE_WALLPAPER}" ]]; then
+    WP_DEST="${INCLUDES_CHROOT}/usr/share/backgrounds/base"
+    mkdir -p "${WP_DEST}"
+    cp "${BASE_WALLPAPER}" "${WP_DEST}/"
+    log_debug "Base wallpaper injected."
+fi
+
 # GRUB background
 GRUB_BG="$(brand_grub_background)"
 if [[ -f "${GRUB_BG}" ]]; then
     GRUB_THEME_DEST="${BUILD_DIR}/config/bootloaders/grub-pc/themes/shopno-os"
     mkdir -p "${GRUB_THEME_DEST}"
     cp "${GRUB_BG}" "${GRUB_THEME_DEST}/background.png"
+    # For installed system's grub
+    cp "${GRUB_BG}" "${WP_DEST}/grub-default.png"
     log_debug "GRUB background injected."
 fi
 
@@ -224,14 +235,7 @@ if [[ -f "${PLYMOUTH_LOGO}" ]]; then
     log_debug "Plymouth logo injected."
 fi
 
-# Wallpaper (base)
-BASE_WALLPAPER="$(brand_wallpaper_base)"
-if [[ -f "${BASE_WALLPAPER}" ]]; then
-    WP_DEST="${INCLUDES_CHROOT}/usr/share/backgrounds/shopno-os"
-    mkdir -p "${WP_DEST}"
-    cp "${BASE_WALLPAPER}" "${WP_DEST}/"
-    log_debug "Base wallpaper injected."
-fi
+
 
 log_success "Brand assets injected."
 
