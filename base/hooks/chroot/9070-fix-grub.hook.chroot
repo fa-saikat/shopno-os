@@ -3,6 +3,6 @@
 set -e
 
 sed -i -e 's|lsb_release -i|lsb_release -d|g' /etc/default/grub
-echo "GRUB_BACKGROUND=/usr/share/backgrounds/base/jadupc-default.png" | tee -a /etc/default/grub
+echo "GRUB_BACKGROUND=/usr/share/backgrounds/base/grub-default.png" | tee -a /etc/default/grub
 
 echo "GRUB_TIMEOUT_STYLE=hidden" | tee -a /etc/default/grub
