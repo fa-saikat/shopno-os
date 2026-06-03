@@ -125,9 +125,10 @@ for target_dir in "${TARGETS[@]}"; do
         popd > /dev/null
     fi
 
-    # Wipe everything except .gitkeep
-    find "${target_dir}" -mindepth 1 -not -name '.gitkeep' -delete 2>/dev/null || true
-    log_success "Cleaned: ${target_dir}"
+    # Wipe contents, then remove the directory itself
+    find "${target_dir}" -mindepth 1 -delete 2>/dev/null || true
+    rmdir "${target_dir}" 2>/dev/null || true
+    log_success "Removed: ${target_dir}"
 done
 
 # ---------------------------------------------------------------------------
