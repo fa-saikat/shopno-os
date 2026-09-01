@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<gameList>
+	<game>
+		<path>./Crazy Taxi - Fare Wars (USA) (v2.01).iso</path>
+		<name>Crazy Taxi : Fare Wars</name>
+		<desc>Crazy Taxi: Fare Wars (known as: Crazy Taxi: Double Punch in Japan), is a PSP game, which is a port of both Crazy Taxi and Crazy Taxi 2. There is also a multiplayer aspect which was not available in the games' predecessors, where players compete against one another for customers and fare money. The game was developed by newly created Sniper Studios.</desc>
+		<image>~/.emulationstation/downloaded_images/psp/Crazy Taxi - Fare Wars (USA) (v2.01)-image.png</image>
+		<rating>0.65</rating>
+		<releasedate>20070612T000000</releasedate>
+		<developer>SEGA</developer>
+		<publisher>SEGA</publisher>
+		<genre>Racing TPV</genre>
+		<players>1-2</players>
+	</game>
+</gameList>

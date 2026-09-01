@@ -1,0 +1,97 @@
+#!/bin/bash
+# /usr/lib/shopno-os/shopno-os-firstboot
+
+set -euo pipefail
+set -x
+
+# Find the real user (not root, not system accounts)
+NONROOT_USER=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' | head -1)
+NONROOT_HOME=$(getent passwd "${NONROOT_USER}" | cut -d: -f6)
+
+if [[ -z "${NONROOT_USER}" ]]; then
+    echo "shopno-os-firstboot: Non root user not found, aborting" >&2
+    exit 1
+fi
+
+# Symlink RetroPie directories into user home
+if ln -sfn /opt/RetroPie  "${NONROOT_HOME}/"; then
+    echo "Symlink of RetroPie directory is created."
+else
+    echo "Symlink creation failed."
+    exit 1
+fi
+
+ln -sfn /opt/retropie/configs/all/emulationstation "${NONROOT_HOME}/.emulationstation"
+chown -Rh "${NONROOT_USER}:${NONROOT_USER}" /opt/retropie/configs/all/emulationstation
+
+ln -sfn /opt/retropie/configs/all/retroarch "${NONROOT_HOME}/.config/retroarch"
+# chown -Rh "${NONROOT_USER}:${NONROOT_USER}" /opt/retropie/configs/all/retroarch
+
+chown -Rh "${NONROOT_USER}:${NONROOT_USER}" /opt/RetroPie
+
+# mkdir -p "${NONROOT_HOME}/RetroPie"
+# ln -sfn /opt/retropie/roms  "${NONROOT_HOME}/RetroPie/roms"
+# ln -sfn /opt/retropie/BIOS  "${NONROOT_HOME}/RetroPie/BIOS"
+# ln -sfn /opt/retropie/retropiemenu  "${NONROOT_HOME}/RetroPie/retropiemenu"
+# chown -h "${NONROOT_USER}:${NONROOT_USER}" \
+#     "${NONROOT_HOME}/RetroPie" \
+#     "${NONROOT_HOME}/RetroPie/roms" \
+#     "${NONROOT_HOME}/RetroPie/BIOS" \
+#     "${NONROOT_HOME}/RetroPie/retropiemenu"
+
+# Set up antimicro autostart with the Logitech profile
+AUTOSTART_DIR="${NONROOT_HOME}/.config/autostart"
+mkdir -p "${AUTOSTART_DIR}"
+chown -R "${NONROOT_USER}:${NONROOT_USER}" "${AUTOSTART_DIR}"
+
+# Set up antimicrox on autostart
+cat > "${AUTOSTART_DIR}/AntimicroX.desktop" <<EOF
+[Desktop Entry]
+Encoding=UTF-8
+Version=0.1.0
+Type=Application
+Name=AntimicroX
+Comment=Custom gamepad button mapping deamon
+Exec=antimicrox --hidden --tray --profile /usr/local/share/Logitech-F310.gamecontroller.amgp
+OnlyShowIn=XFCE;
+RunHook=0
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+EOF
+chown "${NONROOT_USER}:${NONROOT_USER}" "${AUTOSTART_DIR}/AntimicroX.desktop"
+
+# Set up antimicrox on autostart
+cat > "${AUTOSTART_DIR}/JaduPc 3 in 1 Home.desktop" <<EOF
+[Desktop Entry]
+Encoding=UTF-8
+Version=0.1.0
+Type=Application
+Name=JaduPc 3 in 1 Home
+Comment=JaduPc 3 in 1 Mode Selection Window
+Exec=/usr/bin/bash /usr/local/bin/jadupc-mode-selector.sh
+OnlyShowIn=XFCE;
+RunHook=0
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+EOF
+chown "${NONROOT_USER}:${NONROOT_USER}" "${AUTOSTART_DIR}/JaduPc 3 in 1 Home.desktop"
+
+# Set up welcome app config dir
+mkdir -p "${NONROOT_HOME}/.config/jadupc"
+touch "${NONROOT_HOME}/.config/jadupc/welcome-autostart"
+chown -R "${NONROOT_USER}:${NONROOT_USER}" "${NONROOT_HOME}/.config/jadupc"
+
+# Enable user systemd units
+# systemctl --user requires a running user session; use sudo -u with XDG_RUNTIME_DIR
+# export XDG_RUNTIME_DIR="/run/user/$(id -u "${NONROOT_USER}")"
+# sudo -u "${NONROOT_USER}" systemctl --user enable jadupc-gaming-dnd.path
+# sudo -u "${NONROOT_USER}" systemctl --user enable jadupc-mode-selector.service
+systemctl --global enable jadupc-gaming-dnd.path
+systemctl --global enable jadupc-mode-selector.service
+
+# Service will not run again
+rm -f /etc/gaming-firstboot-pending
+
+echo "shopno-os-firstboot: setup complete for ${NONROOT_USER}"

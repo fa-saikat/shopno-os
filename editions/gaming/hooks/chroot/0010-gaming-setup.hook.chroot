@@ -1,0 +1,19 @@
+#!/bin/bash
+# =============================================================================
+# 0010-gaming-setup.hook.chroot
+# Layer:   editions/gaming
+# Stage:   chroot
+# Purpose: Initial setup hook for the 'gaming' edition
+# Number:  0010 — runs first; add later numbered hooks for additional steps
+# =============================================================================
+set -euo pipefail
+
+echo ">>> [gaming/0010-setup] Starting..."
+
+# TODO: Add edition-specific setup here
+# Examples:
+#   systemctl enable some-service.service
+#   update-alternatives --set ...
+#   sed -i 's/old/new/' /etc/some/config
+
+echo ">>> [gaming/0010-setup] Done."

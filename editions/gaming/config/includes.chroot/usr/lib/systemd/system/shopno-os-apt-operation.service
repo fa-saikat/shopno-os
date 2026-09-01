@@ -1,0 +1,9 @@
+[Unit]
+Description=Trigger apt hook after operation
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /usr/lib/shopno-os/apt-hook-uninstall-button
+
+[Install]
+WantedBy=multi-user.target

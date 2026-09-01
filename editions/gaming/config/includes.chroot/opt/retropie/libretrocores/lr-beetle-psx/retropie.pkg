@@ -1,0 +1,8 @@
+pkg_origin="source"
+pkg_date="2026-05-06T02:16:52+06:00"
+pkg_repo_type="git"
+pkg_repo_url="https://github.com/libretro/beetle-psx-libretro.git"
+pkg_repo_branch="master"
+pkg_repo_commit="72e755557449bfb6b485fab95a200510e849708d"
+pkg_repo_date="2026-05-05T22:03:14+02:00"
+pkg_repo_extra=""

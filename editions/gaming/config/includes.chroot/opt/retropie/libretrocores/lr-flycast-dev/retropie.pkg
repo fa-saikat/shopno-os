@@ -1,0 +1,8 @@
+pkg_origin="source"
+pkg_date="2026-04-29T00:35:43+06:00"
+pkg_repo_type="git"
+pkg_repo_url="https://github.com/flyinghead/flycast.git"
+pkg_repo_branch="master"
+pkg_repo_commit="acb4966f545f4168787c6ff52588833e653be490"
+pkg_repo_date="2026-04-24T22:27:37Z"
+pkg_repo_extra=""

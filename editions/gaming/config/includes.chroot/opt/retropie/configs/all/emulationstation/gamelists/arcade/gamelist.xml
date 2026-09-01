@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<gameList>
+	<game>
+		<path>./kf2k2mp2.zip</path>
+		<name>The King of Fighters 2002</name>
+		<desc>The second plotless "dream match" in The King of Fighters series, this game sports 39 normal characters and 5 hidden characters, some of whom haven't appeared since KOF98. The King of Fighters 2002 also has five characters exclusive to the X-Box, the PS2 and/or Dreamcast systems: Shingo Yabuki, King, Geese Howard, "Riot of the Blood" Iori and Leopold Goenitz. Shingo and King are available on all the non-Neo Geo systems, while Geese and the rest are only available on the PS2 and X-Box platforms.
+
+The gameplay system has also changed. The striker system and four-character teams found in the last three KOF releases have been totally removed. In their place are the old-school three man teams and the "Advanced system" from The King of Fighters '97 and The King of Fighters '98.
+</desc>
+		<image>~/.emulationstation/downloaded_images/arcade/kf2k2mp2-image.png</image>
+		<rating>0.8</rating>
+		<releasedate>20021218T000000</releasedate>
+		<developer>SNK</developer>
+		<publisher>SNK</publisher>
+		<genre>Fighting / Versus</genre>
+		<players>1-2</players>
+	</game>
+	<game>
+		<path>./dino.zip</path>
+		<name>Cadillacs and Dinosaurs</name>
+		<desc>The plot is based on the comic Cadillacs and Dinosaurs and takes place in the "City In The Sea" and its neighboring nearby jungle. The story starts 500 years from the 20th century, when an ensemble gang called the Black Marketeers begin hunting the dinosaurs to serve their unknown purpose. The continuous hunting process has made the dinosaurs violent and now they have started attacking villages and people. In order to get things sorted again, mechanic and shaman Jack Tenrec, diplomat and explorer by profession Hannah Dundee, friend and engineer Mustapha Cairo, and mysterious Mess O'Bradovich have decided to teamp up against the evil deeds of the Black Marketeer. The protagonists reach "the City in the Sea" where they suspect the whole hunting network being operating from.</desc>
+		<image>~/.emulationstation/downloaded_images/arcade/dino-image.png</image>
+		<rating>0.75</rating>
+		<releasedate>19930101T000000</releasedate>
+		<developer>Capcom</developer>
+		<publisher>Capcom</publisher>
+		<genre>Beat'em Up</genre>
+		<players>1-3</players>
+		<playcount>26</playcount>
+		<lastplayed>20260509T163805</lastplayed>
+	</game>
+</gameList>

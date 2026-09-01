@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+
+set -e
+set -x
+
+# Flatpak
+flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak install -y flathub io.github.kolunmi.Bazaar
