@@ -23,6 +23,7 @@
 # Later layers overwrite earlier ones for the same path.
 # =============================================================================
 set -euo pipefail
+set -x
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="${SCRIPT_DIR}/../lib"
@@ -213,6 +214,24 @@ if [[ -f "${BASE_WALLPAPER}" ]]; then
     mkdir -p "${WP_DEST}"
     cp "${BASE_WALLPAPER}" "${WP_DEST}/"
     log_debug "Base wallpaper injected."
+    log_success "Base wallpaper injected."
+fi
+
+# Copy edition-specific wallpaper if one exists for this edition
+EDITION_WALLPAPER_DIR="$(brand_wallpaper_edition "${DISTRO_EDITION}")"
+EDITION_WALLPAPER="${EDITION_WALLPAPER_DIR}/background.png"
+
+# echo "Edition              : $DISTRO_EDITION"         # gaming
+# echo "Edition wallpaper    : $EDITION_WALLPAPER"      # realpath of background
+# echo "Edition wallpaper dir: $EDITION_WALLPAPER_DIR"  # realpath of edition dir
+
+if [[ -f "${EDITION_WALLPAPER}" ]]; then
+    WALLPAPER_DEST="${INCLUDES_CHROOT}/usr/share/backgrounds/${DISTRO_EDITION}"
+    mkdir -p "${WALLPAPER_DEST}"
+    cp "${EDITION_WALLPAPER}" "${WALLPAPER_DEST}/"
+    log_info "Copied edition wallpaper for '${DISTRO_EDITION}'"
+else
+    log_debug "No edition-specific wallpaper found for '${DISTRO_EDITION}', using base wallpaper"
 fi
 
 # GRUB background
