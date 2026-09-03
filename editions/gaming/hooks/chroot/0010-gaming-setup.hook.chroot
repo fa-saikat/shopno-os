@@ -8,12 +8,24 @@
 # =============================================================================
 set -euo pipefail
 
-echo ">>> [gaming/0010-setup] Starting..."
+echo ">>> [gaming/0010-gaming-setup] Starting..."
 
-# TODO: Add edition-specific setup here
-# Examples:
-#   systemctl enable some-service.service
-#   update-alternatives --set ...
-#   sed -i 's/old/new/' /etc/some/config
+# Update xfce4-whiskermenu configuration
+# Set menu button icon
+RCFILE="/etc/skel/.config/xfce4/panel/whiskermenu-1.rc"
+sed -i \
+    -e 's|^button-title=.*|button-title=|' \
+    -e 's|^button-icon=.*|button-icon=/usr/local/share/jadupc-mode-selector/assets/logo.png|' \
+    -e 's|^show-button-title=.*|show-button-title=false|' \
+    "$RCFILE"
 
-echo ">>> [gaming/0010-setup] Done."
+# Set gaming edition background
+XMLFILE="/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+
+# Set default wallpaper directory
+perl -0pi -e 's|<property name="image-path" type="empty"/>|<property name="image-path" type="string" value="/usr/share/backgrounds/gaming/"/>|g' "$XMLFILE"
+
+# Set default background for each workspaces
+perl -0pi -e 's|<property name="last-image" type="string" value="/usr/share/backgrounds/beta-1.png"/>|<property name="last-image" type="string" value="/usr/share/backgrounds/gaming/background.png"/>|g' "$XMLFILE"
+
+echo ">>> [gaming/0010-gaming-setup] Done."
