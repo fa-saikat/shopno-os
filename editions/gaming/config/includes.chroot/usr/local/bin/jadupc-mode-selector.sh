@@ -75,7 +75,7 @@ fi
 
 if [[ -f "${WELCOME_FLAG}" ]]; then
     rm -f "${WELCOME_FLAG}"
-    /usr/local/share/jadupc-welcome-app/jadupc-welcome || true
+    /usr/bin/jadupc-welcome || true
 fi
 
 exec python3 "${PYTHON_APP}"
