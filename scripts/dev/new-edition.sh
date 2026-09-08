@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/dev/new-edition.sh
-# ShopnoOS - New Edition Scaffolder
+# ShopnoOS — New Edition Scaffolder
 #
 # USAGE:
 #   ./scripts/dev/new-edition.sh <edition-name>
@@ -33,8 +33,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="${SCRIPT_DIR}/../lib"
 # shellcheck source=../lib/common.sh
 source "${LIB_DIR}/common.sh"
-# shellcheck source=../lib/brand.sh
-source "${LIB_DIR}/brand.sh"
 
 # ---------------------------------------------------------------------------
 # Args
@@ -68,31 +66,31 @@ log_step "Scaffolding edition: ${EDITION_NAME}"
 
 mkdir -p \
     "${EDITION_DIR}/package-lists" \
-    "${EDITION_DIR}/config/includes.chroot/etc/${ISO_PREFIX}" \
+    "${EDITION_DIR}/config/includes.chroot/etc/shopno-os" \
     "${EDITION_DIR}/hooks/chroot"
 
 # --- edition identifier file ------------------------------------------------
-echo "${EDITION_NAME}" > "${EDITION_DIR}/config/includes.chroot/etc/${ISO_PREFIX}/edition"
-log_info "Created: config/includes.chroot/etc/${ISO_PREFIX}/edition"
+echo "${EDITION_NAME}" > "${EDITION_DIR}/config/includes.chroot/etc/shopno-os/edition"
+log_info "Created: config/includes.chroot/etc/shopno-os/edition"
 
 # --- stub package list -------------------------------------------------------
-cat > "${EDITION_DIR}/package-lists/${ISO_PREFIX}-${EDITION_NAME}.list.chroot" <<EOF
+cat > "${EDITION_DIR}/package-lists/shopno-os-${EDITION_NAME}.list.chroot" <<EOF
 # =============================================================================
-# ${ISO_PREFIX}-${EDITION_NAME}.list.chroot
+# shopno-os-${EDITION_NAME}.list.chroot
 # Layer:   editions/${EDITION_NAME}
 # Purpose: Core packages for the '${EDITION_NAME}' edition
 #
 # RULES:
 #   - Do NOT add packages that belong in base/ (kernel, systemd, apparmor)
-#   - Do NOT add DE/WM packages - those belong in flavors/
-#   - Do NOT add hardware driver packages - those belong in hardware/
+#   - Do NOT add DE/WM packages — those belong in flavors/
+#   - Do NOT add hardware driver packages — those belong in hardware/
 #   - Each package listed here must justify its presence in this edition
 # =============================================================================
 
 # TODO: Add packages for the '${EDITION_NAME}' edition below
 
 EOF
-log_info "Created: package-lists/${ISO_PREFIX}-${EDITION_NAME}.list.chroot"
+log_info "Created: package-lists/shopno-os-${EDITION_NAME}.list.chroot"
 
 # --- stub chroot hook --------------------------------------------------------
 cat > "${EDITION_DIR}/hooks/chroot/0010-${EDITION_NAME}-setup.hook.chroot" <<EOF
@@ -102,7 +100,7 @@ cat > "${EDITION_DIR}/hooks/chroot/0010-${EDITION_NAME}-setup.hook.chroot" <<EOF
 # Layer:   editions/${EDITION_NAME}
 # Stage:   chroot
 # Purpose: Initial setup hook for the '${EDITION_NAME}' edition
-# Number:  0010 - runs first; add later numbered hooks for additional steps
+# Number:  0010 — runs first; add later numbered hooks for additional steps
 # =============================================================================
 set -euo pipefail
 
@@ -147,14 +145,14 @@ cat > "${EDITION_DIR}/README.md" <<EOF
 
 \`\`\`bash
 # First create a profile, then:
-./scripts/build/build.sh ${ISO_PREFIX}-${EDITION_NAME}-<flavor>
+./scripts/build/build.sh shopno-os-${EDITION_NAME}-<flavor>
 \`\`\`
 
 ## Package Lists
 
 | File | Contents |
 |---|---|
-| \`${ISO_PREFIX}-${EDITION_NAME}.list.chroot\` | Core edition packages |
+| \`shopno-os-${EDITION_NAME}.list.chroot\` | Core edition packages |
 
 ## Hooks
 
@@ -172,13 +170,13 @@ log_success "Edition '${EDITION_NAME}' scaffolded at: ${EDITION_DIR}"
 echo ""
 echo -e "${CLR_BOLD}Next steps:${CLR_RESET}"
 echo "  1. Add packages to:"
-echo "       editions/${EDITION_NAME}/package-lists/${ISO_PREFIX}-${EDITION_NAME}.list.chroot"
+echo "       editions/${EDITION_NAME}/package-lists/shopno-os-${EDITION_NAME}.list.chroot"
 echo ""
 echo "  2. Register '${EDITION_NAME}' in the valid editions list:"
 echo "       scripts/lib/profile.sh  →  _VALID_EDITIONS array"
 echo ""
 echo "  3. Create a profile to build it:"
-echo "       ./scripts/dev/new-profile.sh ${ISO_PREFIX}-${EDITION_NAME}-gnome"
+echo "       ./scripts/dev/new-profile.sh shopno-os-${EDITION_NAME}-gnome"
 echo ""
 echo "  4. Run lint to verify no package conflicts:"
 echo "       ./scripts/dev/lint-packages.sh"

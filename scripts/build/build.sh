@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/build/build.sh
-# ShopnoOS - MAIN BUILD ENTRY POINT
+# ShopnoOS — MAIN BUILD ENTRY POINT
 #
 # USAGE:
 #   ./scripts/build/build.sh <profile-name> [options]
@@ -131,7 +131,7 @@ require_root
 require_command lb live-build debootstrap xorriso mksquashfs gpg jq
 
 if [[ "${OPT_DRY_RUN}" -eq 1 ]]; then
-    log_warn "DRY RUN - no files will be modified."
+    log_warn "DRY RUN — no files will be modified."
 fi
 
 log_info "Profile      : ${PROFILE_NAME}"
@@ -149,7 +149,7 @@ log_info "Jobs         : ${OPT_JOBS}"
 # Step 1: Lint package lists
 # ---------------------------------------------------------------------------
 if [[ "${OPT_SKIP_LINT}" -eq 0 ]]; then
-    log_step "Step 1/8 - Linting package lists"
+    log_step "Step 1/8 — Linting package lists"
     if [[ "${OPT_DRY_RUN}" -eq 0 ]]; then
         _run "${SCRIPT_DIR}/../dev/lint-packages.sh"
     else
@@ -162,7 +162,7 @@ fi
 # ---------------------------------------------------------------------------
 # Step 2: Clean previous build
 # ---------------------------------------------------------------------------
-log_step "Step 2/8 - Cleaning previous build"
+log_step "Step 2/8 — Cleaning previous build"
 if [[ "${OPT_NO_CLEAN}" -eq 0 ]]; then
     if [[ "${OPT_DRY_RUN}" -eq 0 ]]; then
         _run "${SCRIPT_DIR}/clean.sh" "${PROFILE_NAME}"
@@ -170,13 +170,13 @@ if [[ "${OPT_NO_CLEAN}" -eq 0 ]]; then
         log_warn "[dry-run] Would run: clean.sh ${PROFILE_NAME}"
     fi
 else
-    log_warn "Clean skipped (--no-clean) - using cached state in ${BUILD_DIR}"
+    log_warn "Clean skipped (--no-clean) — using cached state in ${BUILD_DIR}"
 fi
 
 # ---------------------------------------------------------------------------
 # Step 3: Prepare live-build config tree
 # ---------------------------------------------------------------------------
-log_step "Step 3/8 - Preparing live-build config"
+log_step "Step 3/8 — Preparing live-build config"
 if [[ "${OPT_DRY_RUN}" -eq 0 ]]; then
     _run "${SCRIPT_DIR}/prepare-lb-config.sh" "${PROFILE_NAME}" "${BUILD_DIR}"
 else
@@ -186,7 +186,7 @@ fi
 # ---------------------------------------------------------------------------
 # Step 4: Inject package lists
 # ---------------------------------------------------------------------------
-log_step "Step 4/8 - Injecting package lists"
+log_step "Step 4/8 — Injecting package lists"
 if [[ "${OPT_DRY_RUN}" -eq 0 ]]; then
     _run "${SCRIPT_DIR}/inject-packages.sh" "${PROFILE_NAME}" "${LB_CONFIG_DIR}"
 else
@@ -196,7 +196,7 @@ fi
 # ---------------------------------------------------------------------------
 # Step 5: Run lb build
 # ---------------------------------------------------------------------------
-log_step "Step 5/8 - Running lb build"
+log_step "Step 5/8 — Running lb build"
 if [[ "${OPT_DRY_RUN}" -eq 0 ]]; then
     pushd "${BUILD_DIR}" > /dev/null
         log_info "Working directory: $(pwd)"
@@ -218,7 +218,7 @@ fi
 # ---------------------------------------------------------------------------
 # Step 6: Stamp ISO
 # ---------------------------------------------------------------------------
-log_step "Step 6/8 - Stamping ISO with build metadata"
+log_step "Step 6/8 — Stamping ISO with build metadata"
 if [[ "${OPT_DRY_RUN}" -eq 0 ]]; then
     _run "${SCRIPT_DIR}/stamp-iso.sh" "${BUILD_DIR}" "${ISO_FILENAME}"
 else
@@ -228,7 +228,7 @@ fi
 # ---------------------------------------------------------------------------
 # Step 7: Sign ISO + generate checksums
 # ---------------------------------------------------------------------------
-log_step "Step 7/8 - Signing and checksumming"
+log_step "Step 7/8 — Signing and checksumming"
 if [[ "${OPT_SKIP_SIGN}" -eq 0 ]]; then
     if [[ "${OPT_DRY_RUN}" -eq 0 ]]; then
         _run "${SCRIPT_DIR}/../release/sign-iso.sh" \
@@ -243,7 +243,7 @@ fi
 # ---------------------------------------------------------------------------
 # Step 8: Move to output directory
 # ---------------------------------------------------------------------------
-log_step "Step 8/8 - Moving ISO to output directory"
+log_step "Step 8/8 — Moving ISO to output directory"
 if [[ "${OPT_DRY_RUN}" -eq 0 ]]; then
     mkdir -p "${OPT_OUTPUT_DIR}"
     for artifact in \

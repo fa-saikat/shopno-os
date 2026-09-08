@@ -6,10 +6,3 @@ systemctl daemon-reload
 
 # Eanble ShopnoOS apt hook: add-uninstall-button
 systemctl enable shopno-os-apt-operation.path
-
-# Eanble ShopnoOS apt hook: add-uninstall-button
-systemctl enable shopno-os-apt-operation.service
-
-# Enable ShopnoOS on-boot action: shopno-os-diskcleanup
-# Checks for disk usage on boot, frees if necessary
-systemctl enable shopno-os-diskcleanup.service

@@ -1,8 +1,0 @@
-pkg_origin="source"
-pkg_date="2026-04-29T02:18:32+06:00"
-pkg_repo_type="git"
-pkg_repo_url="https://github.com/libretro/dolphin"
-pkg_repo_branch="master"
-pkg_repo_commit="0cd3bb89c29535db9b7552fc86871867ccf5b471"
-pkg_repo_date="2026-04-08T17:26:21-04:00"
-pkg_repo_extra=""

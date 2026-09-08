@@ -1,8 +1,0 @@
-pkg_origin="source"
-pkg_date="2026-05-06T02:04:52+06:00"
-pkg_repo_type="git"
-pkg_repo_url="https://github.com/retropie/RetroArch.git"
-pkg_repo_branch="retropie-v1.19.0"
-pkg_repo_commit="0832a8d18b90ebdfd3948748d5615a74b667828b"
-pkg_repo_date="2026-05-05T20:31:04+01:00"
-pkg_repo_extra=""

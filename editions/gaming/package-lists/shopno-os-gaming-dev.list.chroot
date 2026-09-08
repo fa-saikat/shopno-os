@@ -1,9 +1,0 @@
-autoconf
-automake
-build-essential
-codeblocks
-debhelper
-dh-autoreconf
-fakeroot
-live-build
-python3-psutil

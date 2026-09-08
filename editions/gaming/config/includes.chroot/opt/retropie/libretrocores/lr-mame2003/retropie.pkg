@@ -1,8 +1,0 @@
-pkg_origin="source"
-pkg_date="2026-05-06T02:39:42+06:00"
-pkg_repo_type="git"
-pkg_repo_url="https://github.com/libretro/mame2003-libretro.git"
-pkg_repo_branch="master"
-pkg_repo_commit="c651c573655218428d7c524f611f7d62d13861a1"
-pkg_repo_date="2026-04-02T21:35:09-04:00"
-pkg_repo_extra=""

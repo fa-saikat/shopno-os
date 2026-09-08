@@ -1,8 +1,0 @@
-[Unit]
-Description=Watch apt operation history
-
-[Path]
-PathChanged=/var/log/apt/history.log
-
-[Install]
-WantedBy=default.target

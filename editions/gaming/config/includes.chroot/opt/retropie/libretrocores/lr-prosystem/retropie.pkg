@@ -1,8 +1,0 @@
-pkg_origin="source"
-pkg_date="2026-05-06T02:45:30+06:00"
-pkg_repo_type="git"
-pkg_repo_url="https://github.com/libretro/prosystem-libretro.git"
-pkg_repo_branch="master"
-pkg_repo_commit="3f465db9c82fc6764cd90c53fc66eb630e0b3710"
-pkg_repo_date="2026-04-20T19:39:25+02:00"
-pkg_repo_extra=""

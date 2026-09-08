@@ -1,8 +1,0 @@
-pkg_origin="source"
-pkg_date="2026-05-06T02:45:26+06:00"
-pkg_repo_type="git"
-pkg_repo_url="https://github.com/libretro/picodrive.git"
-pkg_repo_branch="master"
-pkg_repo_commit="f0d4a0118a9733a1f10bce5a4ac772c474f9300d"
-pkg_repo_date="2026-04-02T14:50:53+02:00"
-pkg_repo_extra=""

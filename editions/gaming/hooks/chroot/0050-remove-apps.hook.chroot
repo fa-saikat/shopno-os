@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# set -e
-set -x
-
-apt purge --auto-remove -y nfs-common plymouth qbittorrent kcalc libreoffice* firefox-esr chromium arc-theme papirus-icon-theme lightdm-gtk-greeter lightdm-greeter
-apt install -y fonts-quicksand

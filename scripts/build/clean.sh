@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/build/clean.sh
-# ShopnoOS - Build Artifact Cleaner
+# ShopnoOS — Build Artifact Cleaner
 #
 # USAGE:
 #   ./scripts/build/clean.sh <profile-name>   # clean one profile's build dir
@@ -13,7 +13,7 @@
 #   - Optionally: build/cache/ (debootstrap + package cache)
 #
 # WHAT IT NEVER TOUCHES:
-#   - build/output/            (final ISOs - protected)
+#   - build/output/            (final ISOs — protected)
 #   - brand/, editions/, flavors/, hardware/, base/
 #   - Any source files
 # =============================================================================
@@ -90,7 +90,7 @@ else
 fi
 
 if [[ ${#TARGETS[@]} -eq 0 ]]; then
-    log_info "Nothing to clean - no build directories found in ${BUILD_ROOT}"
+    log_info "Nothing to clean — no build directories found in ${BUILD_ROOT}"
     exit 0
 fi
 
@@ -118,17 +118,16 @@ for target_dir in "${TARGETS[@]}"; do
     log_step "Cleaning: ${target_dir}"
 
     if [[ -f "${target_dir}/.build/binary" || -d "${target_dir}/chroot" ]]; then
-        # live-build has partially or fully run - use lb clean
+        # live-build has partially or fully run — use lb clean
         pushd "${target_dir}" > /dev/null
             log_info "Running lb clean --purge inside ${target_dir}"
             lb clean --purge 2>/dev/null || true
         popd > /dev/null
     fi
 
-    # Wipe contents, then remove the directory itself
-    find "${target_dir}" -mindepth 1 -delete 2>/dev/null || true
-    rmdir "${target_dir}" 2>/dev/null || true
-    log_success "Removed: ${target_dir}"
+    # Wipe everything except .gitkeep
+    find "${target_dir}" -mindepth 1 -not -name '.gitkeep' -delete 2>/dev/null || true
+    log_success "Cleaned: ${target_dir}"
 done
 
 # ---------------------------------------------------------------------------
@@ -140,7 +139,7 @@ if [[ "${OPT_CACHE}" -eq 1 ]]; then
         rm -rf "${CACHE_DIR:?}"/*
         log_success "Cache wiped: ${CACHE_DIR}"
     else
-        log_info "Cache directory does not exist - nothing to wipe."
+        log_info "Cache directory does not exist — nothing to wipe."
     fi
 fi
 
