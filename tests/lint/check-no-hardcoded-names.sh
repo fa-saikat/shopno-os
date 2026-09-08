@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # tests/lint/check-no-hardcoded-names.sh
-# ShopnoOS — Lint: Hardcoded Distro Name / URL Detection
+# ShopnoOS - Lint: Hardcoded Distro Name / URL Detection
 #
 # PURPOSE:
 #   Enforce the branding isolation rule: nothing outside brand/identity/*.env
@@ -46,6 +46,16 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 QUIET=0
 STRICT=0
 COLOR="auto"
+
+# ---------------------------------------------------------------------------
+# Known-safe exclusions - structural, not branding violations
+# ---------------------------------------------------------------------------
+# The standard "# ShopnoOS - <title>" header line used in every script/hook.
+# Purely descriptive & doesn't affect the rebrand pipeline.
+_is_header_title_line() {
+    local content="${1}"
+    [[ "${content}" =~ ^[[:space:]]*\#[[:space:]]*${DISTRO_NAME}[[:space:]]*[-–—] ]]
+}
 
 while [[ $# -gt 0 ]]; do
     case "${1}" in
@@ -193,6 +203,8 @@ for pattern in "${PATTERNS[@]}"; do
         rest="${match#*:}"
         lineno="${rest%%:*}"
         content="${rest#*:}"
+
+	_is_header_title_line "${content}" && continue
 
         file_violations["${file}"]=$(( ${file_violations["${file}"]:-0} + 1 ))
         (( TOTAL_VIOLATIONS++ )) || true
