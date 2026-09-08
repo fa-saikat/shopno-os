@@ -36,6 +36,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LIB_DIR="${SCRIPT_DIR}/../lib"
 # shellcheck source=../lib/common.sh
 source "${LIB_DIR}/common.sh"
+# shellcheck source=../lib/brand.sh
+source "${LIB_DIR}/brand.sh"
 
 # ---------------------------------------------------------------------------
 # Args
@@ -68,18 +70,18 @@ log_step "Scaffolding flavor: ${FLAVOR_NAME}"
 
 mkdir -p \
     "${FLAVOR_DIR}/package-lists" \
-    "${FLAVOR_DIR}/config/includes.chroot/etc/shopno-os" \
+    "${FLAVOR_DIR}/config/includes.chroot/etc/${ISO_PREFIX}" \
     "${FLAVOR_DIR}/skel/.config" \
     "${FLAVOR_DIR}/hooks/chroot"
 
 # --- flavor identifier -------------------------------------------------------
-echo "${FLAVOR_NAME}" > "${FLAVOR_DIR}/config/includes.chroot/etc/shopno-os/flavor"
-log_info "Created: config/includes.chroot/etc/shopno-os/flavor"
+echo "${FLAVOR_NAME}" > "${FLAVOR_DIR}/config/includes.chroot/etc/${ISO_PREFIX}/flavor"
+log_info "Created: config/includes.chroot/etc/${ISO_PREFIX}/flavor"
 
 # --- main package list -------------------------------------------------------
-cat > "${FLAVOR_DIR}/package-lists/shopno-os-flavor-${FLAVOR_NAME}.list.chroot" <<EOF
+cat > "${FLAVOR_DIR}/package-lists/${ISO_PREFIX}-flavor-${FLAVOR_NAME}.list.chroot" <<EOF
 # =============================================================================
-# shopno-os-flavor-${FLAVOR_NAME}.list.chroot
+# ${ISO_PREFIX}-flavor-${FLAVOR_NAME}.list.chroot
 # Layer:   flavors/${FLAVOR_NAME}
 # Purpose: DE/WM core packages for the '${FLAVOR_NAME}' flavor
 #
@@ -104,12 +106,12 @@ cat > "${FLAVOR_DIR}/package-lists/shopno-os-flavor-${FLAVOR_NAME}.list.chroot" 
 #   some-display-manager
 
 EOF
-log_info "Created: package-lists/shopno-os-flavor-${FLAVOR_NAME}.list.chroot"
+log_info "Created: package-lists/${ISO_PREFIX}-flavor-${FLAVOR_NAME}.list.chroot"
 
 # --- apps package list -------------------------------------------------------
-cat > "${FLAVOR_DIR}/package-lists/shopno-os-flavor-${FLAVOR_NAME}-apps.list.chroot" <<EOF
+cat > "${FLAVOR_DIR}/package-lists/${ISO_PREFIX}-flavor-${FLAVOR_NAME}-apps.list.chroot" <<EOF
 # =============================================================================
-# shopno-os-flavor-${FLAVOR_NAME}-apps.list.chroot
+# ${ISO_PREFIX}-flavor-${FLAVOR_NAME}-apps.list.chroot
 # Layer:   flavors/${FLAVOR_NAME}
 # Purpose: DE-specific app replacements/additions for '${FLAVOR_NAME}'
 #
@@ -123,7 +125,7 @@ cat > "${FLAVOR_DIR}/package-lists/shopno-os-flavor-${FLAVOR_NAME}-apps.list.chr
 # TODO: Add DE-specific app packages below
 
 EOF
-log_info "Created: package-lists/shopno-os-flavor-${FLAVOR_NAME}-apps.list.chroot"
+log_info "Created: package-lists/${ISO_PREFIX}-flavor-${FLAVOR_NAME}-apps.list.chroot"
 
 # --- stub hook ---------------------------------------------------------------
 cat > "${FLAVOR_DIR}/hooks/chroot/0010-${FLAVOR_NAME}-setup.hook.chroot" <<EOF
@@ -180,8 +182,8 @@ from the \`desktop\` or \`pro\` edition.
 
 | File | Contents |
 |---|---|
-| \`shopno-os-flavor-${FLAVOR_NAME}.list.chroot\` | DE/WM core + display manager |
-| \`shopno-os-flavor-${FLAVOR_NAME}-apps.list.chroot\` | DE-specific app replacements |
+| \`${ISO_PREFIX}-flavor-${FLAVOR_NAME}.list.chroot\` | DE/WM core + display manager |
+| \`${ISO_PREFIX}-flavor-${FLAVOR_NAME}-apps.list.chroot\` | DE-specific app replacements |
 
 ## Skel
 
@@ -203,8 +205,8 @@ This flavor is designed to be paired with:
 ## Build Command
 
 \`\`\`bash
-./scripts/build/build.sh shopno-os-desktop-${FLAVOR_NAME}
-./scripts/build/build.sh shopno-os-pro-${FLAVOR_NAME}
+./scripts/build/build.sh ${ISO_PREFIX}-desktop-${FLAVOR_NAME}
+./scripts/build/build.sh ${ISO_PREFIX}-pro-${FLAVOR_NAME}
 \`\`\`
 EOF
 log_info "Created: README.md"
@@ -217,14 +219,14 @@ log_success "Flavor '${FLAVOR_NAME}' scaffolded at: ${FLAVOR_DIR}"
 echo ""
 echo -e "${CLR_BOLD}Next steps:${CLR_RESET}"
 echo "  1. Add DE/WM packages to:"
-echo "       flavors/${FLAVOR_NAME}/package-lists/shopno-os-flavor-${FLAVOR_NAME}.list.chroot"
+echo "       flavors/${FLAVOR_NAME}/package-lists/${ISO_PREFIX}-flavor-${FLAVOR_NAME}.list.chroot"
 echo ""
 echo "  2. Register '${FLAVOR_NAME}' in the valid flavors list:"
 echo "       scripts/lib/profile.sh  →  _VALID_FLAVORS array"
 echo ""
 echo "  3. Create profiles to build with this flavor:"
-echo "       ./scripts/dev/new-profile.sh shopno-os-desktop-${FLAVOR_NAME}"
-echo "       ./scripts/dev/new-profile.sh shopno-os-pro-${FLAVOR_NAME}"
+echo "       ./scripts/dev/new-profile.sh ${ISO_PREFIX}-desktop-${FLAVOR_NAME}"
+echo "       ./scripts/dev/new-profile.sh ${ISO_PREFIX}-pro-${FLAVOR_NAME}"
 echo ""
 echo "  4. Add display manager enable to the setup hook:"
 echo "       flavors/${FLAVOR_NAME}/hooks/chroot/0010-${FLAVOR_NAME}-setup.hook.chroot"
