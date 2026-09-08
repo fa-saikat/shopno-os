@@ -21,10 +21,10 @@
 #   Idempotent - safe to source multiple times.
 # =============================================================================
 
-[[ -n "${LIB_PROFILE_LOADED:-}" ]] && return 0
-readonly LIB_PROFILE_LOADED=1
+[[ -n "${OS_PROFILE_LOADED:-}" ]] && return 0
+readonly OS_PROFILE_LOADED=1
 
-if [[ -z "${LIB_COMMON_LOADED:-}" ]]; then
+if [[ -z "${OS_COMMON_LOADED:-}" ]]; then
     echo "[profile.sh] ERROR: common.sh must be sourced before profile.sh" >&2
     exit 1
 fi

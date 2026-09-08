@@ -29,10 +29,10 @@
 #   Idempotent - safe to source multiple times.
 # =============================================================================
 
-[[ -n "${LIB_ISO_NAME_LOADED:-}" ]] && return 0
-readonly LIB_ISO_NAME_LOADED=1
+[[ -n "${OS_ISO_NAME_LOADED:-}" ]] && return 0
+readonly OS_ISO_NAME_LOADED=1
 
-if [[ -z "${LIB_COMMON_LOADED:-}" ]]; then
+if [[ -z "${OS_COMMON_LOADED:-}" ]]; then
     echo "[iso-name.sh] ERROR: common.sh must be sourced before iso-name.sh" >&2
     exit 1
 fi
@@ -270,26 +270,26 @@ iso_metadata_json() {
 # iso_metadata_env  - prints a simple KEY=value file (for embedding into ISO)
 iso_metadata_env() {
     cat <<EOF
-LIB_ISO_NAME="${DISTRO_NAME:-}"
-LIB_ISO_ID="${DISTRO_ID:-}"
-LIB_ISO_VERSION="${DISTRO_VERSION:-}"
-LIB_ISO_CODENAME="${DISTRO_CODENAME:-}"
-LIB_ISO_EDITION="${DISTRO_EDITION:-}"
-LIB_ISO_FLAVOR="${DISTRO_FLAVOR:-}"
-LIB_ISO_HARDWARE="${DISTRO_HARDWARE:-}"
-LIB_ISO_ARCH="${DISTRO_ARCH:-}"
-LIB_ISO_BUILD_DATE="$(_iso_builddate)"
-LIB_ISO_FILENAME="$(iso_name)"
-LIB_ISO_DISTRIBUTION="${LB_DISTRIBUTION:-}"
+OS_ISO_NAME="${DISTRO_NAME:-}"
+OS_ISO_ID="${DISTRO_ID:-}"
+OS_ISO_VERSION="${DISTRO_VERSION:-}"
+OS_ISO_CODENAME="${DISTRO_CODENAME:-}"
+OS_ISO_EDITION="${DISTRO_EDITION:-}"
+OS_ISO_FLAVOR="${DISTRO_FLAVOR:-}"
+OS_ISO_HARDWARE="${DISTRO_HARDWARE:-}"
+OS_ISO_ARCH="${DISTRO_ARCH:-}"
+OS_ISO_BUILD_DATE="$(_iso_builddate)"
+OS_ISO_FILENAME="$(iso_name)"
+OS_ISO_DISTRIBUTION="${LB_DISTRIBUTION:-}"
 EOF
 }
 
 # =============================================================================
 # SELF-TEST
-# Run with: LIB_ISO_NAME_SELFTEST=1 source iso-name.sh
+# Run with: OS_ISO_NAME_SELFTEST=1 source iso-name.sh
 # =============================================================================
 
-if [[ "${LIB_ISO_NAME_SELFTEST:-0}" == "1" ]]; then
+if [[ "${OS_ISO_NAME_SELFTEST:-0}" == "1" ]]; then
     echo "=== iso-name.sh self-test ==="
 
     # Minimal stub vars for testing

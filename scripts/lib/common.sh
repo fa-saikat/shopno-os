@@ -12,11 +12,11 @@
 #   source "$(dirname "$0")/../lib/common.sh"
 #
 # GUARDS:
-#   Safe to source multiple times - idempotent via LIB_COMMON_LOADED.
+#   Safe to source multiple times - idempotent via OS_COMMON_LOADED.
 # =============================================================================
 
-[[ -n "${LIB_COMMON_LOADED:-}" ]] && return 0
-readonly LIB_COMMON_LOADED=1
+[[ -n "${OS_COMMON_LOADED:-}" ]] && return 0
+readonly OS_COMMON_LOADED=1
 
 # =============================================================================
 # STRICT MODE
@@ -100,9 +100,9 @@ log_step() {
     echo -e "${CLR_BOLD}${CLR_BLUE}══════════════════════════════════════════════${CLR_RESET}\n" >&2
 }
 
-# log_debug "message"      → only printed when LIB_DEBUG=1
+# log_debug "message"      → only printed when OS_DEBUG=1
 log_debug() {
-    [[ "${LIB_DEBUG:-0}" == "1" ]] || return 0
+    [[ "${OS_DEBUG:-0}" == "1" ]] || return 0
     echo -e "${CLR_DIM}[$(_log_ts)] DEBUG $*${CLR_RESET}" >&2
 }
 
@@ -273,11 +273,11 @@ iso_build_date() {
 # ENVIRONMENT SUMMARY (debug helper)
 # =============================================================================
 
-# dump_env  - print all LIB_* and DISTRO_* vars (only when LIB_DEBUG=1)
+# dump_env  - print all OS_* and DISTRO_* vars (only when OS_DEBUG=1)
 dump_env() {
-    [[ "${LIB_DEBUG:-0}" == "1" ]] || return 0
+    [[ "${OS_DEBUG:-0}" == "1" ]] || return 0
     echo -e "${CLR_DIM}--- Environment Dump ---${CLR_RESET}" >&2
-    env | grep -E '^(LIB_|DISTRO_|LB_)' | sort | while IFS= read -r line; do
+    env | grep -E '^(OS_|DISTRO_|LB_)' | sort | while IFS= read -r line; do
         echo -e "  ${CLR_DIM}${line}${CLR_RESET}" >&2
     done
     echo -e "${CLR_DIM}------------------------${CLR_RESET}" >&2

@@ -27,11 +27,11 @@
 #   secrets/github-token.env       → GitHub / Forgejo API token
 # =============================================================================
 
-[[ -n "${LIB_SECRETS_LOADED:-}" ]] && return 0
-readonly LIB_SECRETS_LOADED=1
+[[ -n "${OS_SECRETS_LOADED:-}" ]] && return 0
+readonly OS_SECRETS_LOADED=1
 
 # Ensure common.sh was sourced
-if [[ -z "${LIB_COMMON_LOADED:-}" ]]; then
+if [[ -z "${OS_COMMON_LOADED:-}" ]]; then
     echo "[secrets.sh] ERROR: common.sh must be sourced before secrets.sh" >&2
     exit 1
 fi

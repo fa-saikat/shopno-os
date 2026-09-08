@@ -19,11 +19,11 @@
 #   Idempotent - safe to source multiple times.
 # =============================================================================
 
-[[ -n "${LIB_BRAND_LOADED:-}" ]] && return 0
-readonly LIB_BRAND_LOADED=1
+[[ -n "${OS_BRAND_LOADED:-}" ]] && return 0
+readonly OS_BRAND_LOADED=1
 
 # Ensure common.sh was sourced
-if [[ -z "${LIB_COMMON_LOADED:-}" ]]; then
+if [[ -z "${OS_COMMON_LOADED:-}" ]]; then
     echo "[brand.sh] ERROR: common.sh must be sourced before brand.sh" >&2
     exit 1
 fi
@@ -32,13 +32,13 @@ fi
 # BRAND IDENTITY FILES
 # =============================================================================
 
-readonly LIB_BRAND_DIR="${OS_REPO_ROOT}/brand/identity"
+readonly OS_BRAND_DIR="${OS_REPO_ROOT}/brand/identity"
 
 _BRAND_ENV_FILES=(
-    "${LIB_BRAND_DIR}/name.env"
-    "${LIB_BRAND_DIR}/colors.env"
-    "${LIB_BRAND_DIR}/urls.env"
-    "${LIB_BRAND_DIR}/legal.env"
+    "${OS_BRAND_DIR}/name.env"
+    "${OS_BRAND_DIR}/colors.env"
+    "${OS_BRAND_DIR}/urls.env"
+    "${OS_BRAND_DIR}/legal.env"
 )
 
 # =============================================================================
@@ -79,7 +79,7 @@ _load_brand_file() {
 load_brand() {
     log_step "Loading brand identity"
 
-    require_dir "${LIB_BRAND_DIR}"
+    require_dir "${OS_BRAND_DIR}"
 
     for env_file in "${_BRAND_ENV_FILES[@]}"; do
         _load_brand_file "${env_file}"
@@ -119,7 +119,7 @@ _brand_validate() {
     for var in "${_BRAND_REQUIRED_NAME_VARS[@]}"; do
         if [[ -z "${!var:-}" ]]; then
             log_error "Required brand variable is unset or empty: ${var}"
-            log_error "  → Check: ${LIB_BRAND_DIR}/name.env"
+            log_error "  → Check: ${OS_BRAND_DIR}/name.env"
             (( failed++ )) || true
         fi
     done
