@@ -1,8 +1,0 @@
-pkg_origin="source"
-pkg_date="2026-04-28T23:15:20+06:00"
-pkg_repo_type="git"
-pkg_repo_url="https://github.com/cmitu/kmsxx"
-pkg_repo_branch="retropie"
-pkg_repo_commit="4ff33a88cbb503cca80087fe934de17861d4b92a"
-pkg_repo_date="2024-01-25T05:14:40Z"
-pkg_repo_extra=""

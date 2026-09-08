@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/dev/lint-packages.sh
-# ShopnoOS - Package List Linter
+# ShopnoOS — Package List Linter
 #
 # USAGE:
 #   ./scripts/dev/lint-packages.sh              # lint all layers
@@ -17,8 +17,8 @@
 #   6. Packages that live in the wrong layer (e.g. Xorg in base)
 #
 # EXIT CODES:
-#   0 - all checks passed (warnings may exist)
-#   1 - one or more fatal errors found
+#   0 — all checks passed (warnings may exist)
+#   1 — one or more fatal errors found
 # =============================================================================
 set -euo pipefail
 
@@ -89,7 +89,7 @@ declare -a ALL_LISTS=()
 _collect_lists "${OPT_PROFILE}" ALL_LISTS
 
 if [[ ${#ALL_LISTS[@]} -eq 0 ]]; then
-    log_warn "No *.list.chroot files found - nothing to lint."
+    log_warn "No *.list.chroot files found — nothing to lint."
     exit 0
 fi
 
@@ -170,7 +170,7 @@ done
 
 # ---------------------------------------------------------------------------
 # Check 5: Cross-list duplicates (same package in two different lists)
-# This is the Golden Rule violation - fatal.
+# This is the Golden Rule violation — fatal.
 # ---------------------------------------------------------------------------
 log_info "Check 5: Cross-list duplicate packages (Golden Rule)"
 
@@ -197,7 +197,7 @@ CROSS_ERRORS=0
 for pkg in "${!PKG_SOURCES[@]}"; do
     mapfile -t sources <<< "${PKG_SOURCES[${pkg}]}"
     if [[ ${#sources[@]} -gt 1 ]]; then
-        _error "Golden Rule violation - package '${pkg}' found in multiple lists:"
+        _error "Golden Rule violation — package '${pkg}' found in multiple lists:"
         for src in "${sources[@]}"; do
             _error "  ${src}"
         done
@@ -264,7 +264,7 @@ done < <(find "${OS_REPO_ROOT}/flavors" -mindepth 1 -maxdepth 1 -type d -print0 
 log_step "Lint Results"
 
 if [[ "${ERRORS}" -eq 0 && "${WARNINGS}" -eq 0 ]]; then
-    log_success "All checks passed - no errors, no warnings."
+    log_success "All checks passed — no errors, no warnings."
     exit 0
 fi
 
@@ -273,7 +273,7 @@ if [[ "${WARNINGS}" -gt 0 ]]; then
 fi
 
 if [[ "${ERRORS}" -gt 0 ]]; then
-    log_error "Errors: ${ERRORS} - build blocked."
+    log_error "Errors: ${ERRORS} — build blocked."
     exit 1
 fi
 

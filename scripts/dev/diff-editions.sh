@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/dev/diff-editions.sh
-# ShopnoOS - Edition/Profile Package Set Comparator
+# ShopnoOS — Edition/Profile Package Set Comparator
 #
 # USAGE:
 #   ./scripts/dev/diff-editions.sh <edition-a> <edition-b>
@@ -65,7 +65,7 @@ done
 # Extract package list from an edition directory or full profile
 # ---------------------------------------------------------------------------
 
-# _pkgs_from_dir "dir" - extract all packages from *.list.chroot in a dir
+# _pkgs_from_dir "dir" — extract all packages from *.list.chroot in a dir
 _pkgs_from_dir() {
     local dir="${1}/package-lists"
     if [[ ! -d "${dir}" ]]; then
@@ -77,7 +77,7 @@ _pkgs_from_dir() {
         | sort -u
 }
 
-# _pkgs_from_profile "profile-name" - extract all packages for a full profile
+# _pkgs_from_profile "profile-name" — extract all packages for a full profile
 _pkgs_from_profile() {
     local profile="${1}"
     # shellcheck source=../lib/profile.sh

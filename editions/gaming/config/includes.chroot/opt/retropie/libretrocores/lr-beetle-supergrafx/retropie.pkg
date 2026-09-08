@@ -1,8 +1,0 @@
-pkg_origin="source"
-pkg_date="2026-05-06T02:17:23+06:00"
-pkg_repo_type="git"
-pkg_repo_url="https://github.com/libretro/beetle-supergrafx-libretro.git"
-pkg_repo_branch="master"
-pkg_repo_commit="3c6fcd3deded54ebecd69408f108407ac03d11b5"
-pkg_repo_date="2026-04-20T19:33:43+02:00"
-pkg_repo_extra=""

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/release/sign-iso.sh
-# ShopnoOS - ISO Signer & Checksum Generator
+# ShopnoOS — ISO Signer & Checksum Generator
 #
 # USAGE:
 #   ./scripts/release/sign-iso.sh <path/to/shopno-os-*.iso>

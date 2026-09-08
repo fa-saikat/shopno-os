@@ -60,6 +60,3 @@ build.log
 # -------------------------------------------------------------------
 **/*.deb
 
-# Heavy assets
-# Exclude retropie rom files directory 
-roms/
