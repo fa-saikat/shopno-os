@@ -1,0 +1,8 @@
+pkg_origin="source"
+pkg_date="2026-05-06T02:41:25+06:00"
+pkg_repo_type="git"
+pkg_repo_url="https://github.com/RetroPie/mupen64plus-libretro.git"
+pkg_repo_branch="master"
+pkg_repo_commit="3d195fc025c99d0d644bc30742431b65b5f5b7e5"
+pkg_repo_date="2020-11-11T16:53:57Z"
+pkg_repo_extra=""

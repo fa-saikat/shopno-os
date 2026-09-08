@@ -1,0 +1,8 @@
+pkg_origin="source"
+pkg_date="2026-05-06T02:12:23+06:00"
+pkg_repo_type="git"
+pkg_repo_url="https://github.com/libretro/libretro-atari800.git"
+pkg_repo_branch="master"
+pkg_repo_commit="7f3456f16109c34915d0bad7393b6c4df66c3850"
+pkg_repo_date="2026-04-20T19:40:47+02:00"
+pkg_repo_extra=""

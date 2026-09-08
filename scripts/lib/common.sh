@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/lib/common.sh
-# ShopnoOS — Shared Script Library: Common Utilities
+# ShopnoOS - Shared Script Library: Common Utilities
 #
 # PURPOSE:
 #   Mandatory source for every script in the ShopnoOS build system.
@@ -12,11 +12,11 @@
 #   source "$(dirname "$0")/../lib/common.sh"
 #
 # GUARDS:
-#   Safe to source multiple times — idempotent via LIB_COMMON_LOADED.
+#   Safe to source multiple times - idempotent via OS_COMMON_LOADED.
 # =============================================================================
 
-[[ -n "${LIB_COMMON_LOADED:-}" ]] && return 0
-readonly LIB_COMMON_LOADED=1
+[[ -n "${OS_COMMON_LOADED:-}" ]] && return 0
+readonly OS_COMMON_LOADED=1
 
 # =============================================================================
 # STRICT MODE
@@ -100,9 +100,9 @@ log_step() {
     echo -e "${CLR_BOLD}${CLR_BLUE}══════════════════════════════════════════════${CLR_RESET}\n" >&2
 }
 
-# log_debug "message"      → only printed when LIB_DEBUG=1
+# log_debug "message"      → only printed when OS_DEBUG=1
 log_debug() {
-    [[ "${LIB_DEBUG:-0}" == "1" ]] || return 0
+    [[ "${OS_DEBUG:-0}" == "1" ]] || return 0
     echo -e "${CLR_DIM}[$(_log_ts)] DEBUG $*${CLR_RESET}" >&2
 }
 
@@ -136,7 +136,7 @@ trap '_err_handler' ERR
 # GUARD / PRECONDITION UTILITIES
 # =============================================================================
 
-# require_root — die if not running as root
+# require_root - die if not running as root
 require_root() {
     if [[ "${EUID}" -ne 0 ]]; then
         log_error "This script must be run as root (got UID=${EUID})."
@@ -145,7 +145,7 @@ require_root() {
     fi
 }
 
-# require_command "cmd" ["cmd2" ...]  — die if any command is not in PATH
+# require_command "cmd" ["cmd2" ...]  - die if any command is not in PATH
 require_command() {
     local missing=()
     for cmd in "$@"; do
@@ -160,7 +160,7 @@ require_command() {
     fi
 }
 
-# require_var "VAR_NAME" ["VAR_NAME2" ...]  — die if any variable is unset or empty
+# require_var "VAR_NAME" ["VAR_NAME2" ...]  - die if any variable is unset or empty
 require_var() {
     local missing=()
     for var in "$@"; do
@@ -174,7 +174,7 @@ require_var() {
     fi
 }
 
-# require_file "path" ["path2" ...]  — die if any file does not exist
+# require_file "path" ["path2" ...]  - die if any file does not exist
 require_file() {
     local missing=()
     for f in "$@"; do
@@ -189,7 +189,7 @@ require_file() {
     fi
 }
 
-# require_dir "path" ["path2" ...]  — die if any directory does not exist
+# require_dir "path" ["path2" ...]  - die if any directory does not exist
 require_dir() {
     local missing=()
     for d in "$@"; do
@@ -210,7 +210,7 @@ require_dir() {
 # regardless of where it is called from.
 # =============================================================================
 
-# _repo_root — prints absolute path to repo root (the dir containing scripts/)
+# _repo_root - prints absolute path to repo root (the dir containing scripts/)
 _repo_root() {
     local this_file
     this_file="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -218,7 +218,7 @@ _repo_root() {
     echo "$(dirname "$(dirname "${this_file}")")"
 }
 
-# Convenience export — most scripts will want this
+# Convenience export - most scripts will want this
 OS_REPO_ROOT="$(_repo_root)"
 export OS_REPO_ROOT
 
@@ -226,7 +226,7 @@ export OS_REPO_ROOT
 # GENERAL UTILITIES
 # =============================================================================
 
-# die "message" [exit_code]  — print error and exit
+# die "message" [exit_code]  - print error and exit
 die() {
     local msg="${1:-Unspecified error}"
     local code="${2:-1}"
@@ -234,7 +234,7 @@ die() {
     exit "${code}"
 }
 
-# confirm "question"  — prompt y/N, returns 0 on yes, 1 on no
+# confirm "question"  - prompt y/N, returns 0 on yes, 1 on no
 confirm() {
     local question="${1:-Are you sure?}"
     local reply
@@ -242,7 +242,7 @@ confirm() {
     [[ "${reply,,}" == "y" || "${reply,,}" == "yes" ]]
 }
 
-# _symlink src dst  — create symlink; warn and skip if dst already exists
+# _symlink src dst  - create symlink; warn and skip if dst already exists
 _symlink() {
     local src="${1}"
     local dst="${2}"
@@ -251,20 +251,20 @@ _symlink() {
         return 0
     fi
     if [[ -e "${dst}" ]]; then
-        log_warn "Destination exists and is not a symlink: ${dst} — skipping"
+        log_warn "Destination exists and is not a symlink: ${dst} - skipping"
         return 0
     fi
     ln -s "${src}" "${dst}"
     log_debug "Symlinked: ${dst} → ${src}"
 }
 
-# _run cmd [args...]  — log then execute a command
+# _run cmd [args...]  - log then execute a command
 _run() {
     log_debug "Running: $*"
     "$@"
 }
 
-# iso_build_date  — prints current UTC date as YYYYMMDD
+# iso_build_date  - prints current UTC date as YYYYMMDD
 iso_build_date() {
     date -u "+%Y%m%d"
 }
@@ -273,11 +273,11 @@ iso_build_date() {
 # ENVIRONMENT SUMMARY (debug helper)
 # =============================================================================
 
-# dump_env  — print all LIB_* and DISTRO_* vars (only when LIB_DEBUG=1)
+# dump_env  - print all OS_* and DISTRO_* vars (only when OS_DEBUG=1)
 dump_env() {
-    [[ "${LIB_DEBUG:-0}" == "1" ]] || return 0
+    [[ "${OS_DEBUG:-0}" == "1" ]] || return 0
     echo -e "${CLR_DIM}--- Environment Dump ---${CLR_RESET}" >&2
-    env | grep -E '^(LIB_|DISTRO_|LB_)' | sort | while IFS= read -r line; do
+    env | grep -E '^(OS_|DISTRO_|LB_)' | sort | while IFS= read -r line; do
         echo -e "  ${CLR_DIM}${line}${CLR_RESET}" >&2
     done
     echo -e "${CLR_DIM}------------------------${CLR_RESET}" >&2

@@ -48,6 +48,7 @@
       <property name="&lt;Primary&gt;&lt;Alt&gt;e" type="string" value="ibus engine xkb:us::eng"/>
       <property name="&lt;Alt&gt;F2" type="string" value="xfce4-popup-whiskermenu"/>
       <property name="F12" type="string" value="sh -c /usr/local/bin/keyboard-layout-switcher"/>
+      <property name="&lt;Primary&gt;&lt;Super&gt;Home" type="string" value="/usr/bin/bash /usr/local/bin/jadupc-mode-selector.sh"/>
     </property>
   </property>
   <property name="xfwm4" type="empty">

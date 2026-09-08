@@ -1,0 +1,15 @@
+# /etc/systemd/system/shopno-os-firstboot.service
+# Baked into the squashfs via includes.chroot
+
+[Unit]
+Description=ShopnoOS GAMING Edition First Boot Setup
+ConditionPathExists=/etc/gaming-firstboot-pending
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/shopno-os/shopno-os-firstboot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

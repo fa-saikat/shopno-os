@@ -1,0 +1,8 @@
+pkg_origin="source"
+pkg_date="2026-05-06T02:47:43+06:00"
+pkg_repo_type="git"
+pkg_repo_url="https://github.com/libretro/snes9x.git"
+pkg_repo_branch="master"
+pkg_repo_commit="185488cd83aaf274752a742c94d45561cbecb7af"
+pkg_repo_date="2026-04-20T19:29:10+02:00"
+pkg_repo_extra=""

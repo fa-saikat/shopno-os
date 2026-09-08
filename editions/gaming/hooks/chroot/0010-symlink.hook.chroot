@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# set -e
+# set -x
+
+# Fixing dpkg vendor
+ln -sfn /etc/dpkg/origins/shopno /etc/dpkg/origins/default
+
+# Fixing os-release
+ln -sfn /usr/lib/os-release /etc/os-release
+
+# Fixing default wallpaper for all monitors
+ln -sfn /usr/share/backgrounds/beta-1.png /usr/share/images/desktop-base/default
+ln -sfn /usr/share/backgrounds/beta-1.png /usr/share/images/desktop-base/desktop-background

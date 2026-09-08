@@ -6,11 +6,11 @@ sidebar: widget
 navigation: widget
 
 strings:
-    productName:         ShopnoOS 2.0 (trixie)
+    productName:         ShopnoOS 2.1 (trixie)
     shortProductName:    ShopnoOS
-    version:             2.0
-    shortVersion:        2.0
-    versionedName:       ShopnoOS 2.0
+    version:             2.1
+    shortVersion:        2.1
+    versionedName:       ShopnoOS 2.1
     shortVersionedName:  ShopnoOS
     bootloaderEntryName: ShopnoOS
     productUrl:          https://dev.jadupc.com/builds/iso/ShopnoOS-Beta-amd64.hybrid.iso

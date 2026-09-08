@@ -1,0 +1,139 @@
+<?xml version="1.0"?>
+<gameList>
+	<game>
+		<path>./FIFA Soccer 2005.cue</path>
+		<name>FIFA Soccer 2005</name>
+		<desc>FIFA Football 2005 gives you more control than ever with improved button and control sensitivity and an intuitive Off the Ball Control. Now you can take command of players not in possession of the ball by calling in tackles, jostling for space, and sending your teammates on runs as you control the pitch. With more than 350 official team and league licenses from around the world, an enhanced Career mode, and an improved broadcast, FIFA Football 2005 gives you a complete and authentic soccer experience.</desc>
+		<image>~/.emulationstation/downloaded_images/psx/FIFA Soccer 2005-image.png</image>
+		<rating>0.75</rating>
+		<releasedate>20041012T000000</releasedate>
+		<developer>EA Canada</developer>
+		<publisher>EA Sports</publisher>
+		<genre>Sports / Football (Soccer)</genre>
+		<players>1-8</players>
+		<playcount>3</playcount>
+		<lastplayed>20260429T053357</lastplayed>
+	</game>
+	<game>
+		<path>./Road Rash - Jailbreak.cue</path>
+		<name>Road Rash : Jailbreak</name>
+		<desc>The Road Rash series continues with an all new chapter of intense motorcycle combat and racing action. In Road Rash: Jail Break it's up to you to bust the toughest rasher of all time, Spaz, out of jail! To accomplish this, you'll have to join a motorcycle gang and move up through the ranks by succeeding at a variety of challenges and winning races.
+
+You also have the option of playing on the right side of the law in Five-O mode, where you are a police officer out to bust suspects and fill your rasher quota.</desc>
+		<image>~/.emulationstation/downloaded_images/psx/Road Rash - Jailbreak-image.png</image>
+		<rating>0.75</rating>
+		<releasedate>20000201T000000</releasedate>
+		<developer>Electronic Arts</developer>
+		<publisher>Electronic Arts</publisher>
+		<genre>Racing, Driving</genre>
+		<players>1-2</players>
+		<playcount>7</playcount>
+		<lastplayed>20260429T131517</lastplayed>
+	</game>
+	<game>
+		<path>./Need for Speed III - Hot Pursuit (USA).cue</path>
+		<name>Need for Speed III : Hot Pursuit</name>
+		<desc>Need for Speed returns with all the exotic supercars, tracks, and race modes you've come to expect--but reengineered for higher performance, stunning realism, and fierce competition. With Hot Pursuit mode, you can race on both sides of the law: as a cop using radar, dispatchers, and roadblocks to track down speeders; or as a racer, trying to outrun the law. Real-world environments feature details such as blowing leaves, rain, lightning, mud splashes, and smoke from burning rubber and they will put your driving skills to the ultimate test.</desc>
+		<image>~/.emulationstation/downloaded_images/psx/Need for Speed III - Hot Pursuit (USA)-image.png</image>
+		<rating>0.85</rating>
+		<releasedate>19980325T000000</releasedate>
+		<developer>EA Canada</developer>
+		<publisher>Electronic Arts</publisher>
+		<genre>Racing, Driving</genre>
+		<players>1-2</players>
+		<playcount>3</playcount>
+		<lastplayed>20260514T172900</lastplayed>
+	</game>
+	<game>
+		<path>./Spider-Man (USA).cue</path>
+		<name>Spider-Man (USA)</name>
+		<playcount>2</playcount>
+		<lastplayed>20260514T175652</lastplayed>
+	</game>
+	<game>
+		<path>./Doom (USA) (Rev 1).cue</path>
+		<name>Doom</name>
+		<desc>All Hell's Breaking Loose!
+
+This is it! The gaming addiction that's been played by an estimated 10 million fanatics on the PC. And now it's out in a sweat-soaked, pulse-pounding, adrenaline-wrenching version for the PlayStation game console.
+
+It's DOOM. The Custom PlayStation Edition. Enhanced to take full advantage of the PlayStation's cutting-edge technology. With over 50 levels of madness and mayhem from ULTIMATE DOOM and DOOM II. Plus unique, new levels of destruction that make all hell break loose on your screen!</desc>
+		<image>~/.emulationstation/downloaded_images/psx/Doom (USA) (Rev 1)-image.png</image>
+		<rating>0.6</rating>
+		<releasedate>19951116T000000</releasedate>
+		<developer>Williams Entertainment</developer>
+		<publisher>GT Interactive Software</publisher>
+		<genre>Shooter / FPV</genre>
+		<players>1-2</players>
+	</game>
+	<game>
+		<path>./Metal Gear Solid (USA) (Disc 1) (Rev 1).cue</path>
+		<name>Metal Gear Solid</name>
+		<desc>Renegade special forces unit FOXHOUND has taken over Shadow Moses Island in Alaska's Fox Archipelago - publicly a nuclear weapons disposal facility but in truth a top secret weapons development site and home to Metal Gear REX.
+
+With the help of the genetically engineered Next Generation Special Forces, Liquid Snake has seized the facility, taken hostages and hijacked REX, demanding the US Government give them One Billion Dollars and the remains of legendary soldier Big Boss.
+
+Returning from retirement, former FOXHOUND operative Solid Snake has been tasked with infiltrating the island on a solo mission to free the hostages and stop his former unit before they can launch a nuclear attack.</desc>
+		<image>~/.emulationstation/downloaded_images/psx/Metal Gear Solid (USA) (Disc 1) (Rev 1)-image.png</image>
+		<rating>0.95</rating>
+		<releasedate>19981021T000000</releasedate>
+		<developer>KCEJ</developer>
+		<publisher>Konami</publisher>
+		<genre>Action</genre>
+	</game>
+	<game>
+		<path>./Metal Slug X (USA).cue</path>
+		<name>Metal Slug X</name>
+		<desc>Metal Slug X is an enhanced version of Metal Slug 2: Super Vehicle - 001/II. The main differences to the original release include:
+Additional weapons: Stones, Iron Lizard, Enemy Chaser, Super Grenade, and Drop Shot.
+Additional power-ups, items, and prisoners in most of the levels.
+Additional times of the day: stages can take place at twilight, sunset, or dusk.
+Some of the locations and vehicles in the game have been altered.
+Increased enemy count. Some of the enemies' placement has been changed.
+Many weapons have a stronger explosive force. Explosions yield more unexpected results.
+The soundtrack has been re-mixed.</desc>
+		<image>~/.emulationstation/downloaded_images/psx/Metal Slug X (USA)-image.png</image>
+		<rating>0.75</rating>
+		<releasedate>20010414T000000</releasedate>
+		<developer>SNK</developer>
+		<publisher>Agetec</publisher>
+		<genre>Shooter / Run and Gun</genre>
+		<players>1-2</players>
+	</game>
+	<game>
+		<path>./Road Rash (USA).cue</path>
+		<name>Road Rash</name>
+		<desc>Electronic Arts' motorcycle racing series makes its PlayStation debut with digitized graphics, a licensed soundtrack, and full-motion video cut-scenes. The fourth entry in the franchise continues the point-to-point racing format of the Genesis games, with players knocking out rivals with fists, boots, or even pilfered weapons. Two play options are available to rambunctious riders: Thrash Mode and Big Game Mode. The former lets players enter a single race on their choice of courses and difficulty levels, while the latter is structured like a career. Big Game Mode involves selecting one of eight colorful characters and competing in a total of 25 races on five Californian courses: Sierra Nevada, Napa Valley, Peninsula, The City, and Pacific Highway.</desc>
+		<image>~/.emulationstation/downloaded_images/psx/Road Rash (USA)-image.png</image>
+		<rating>0.7</rating>
+		<releasedate>19951229T000000</releasedate>
+		<developer>Advanced Technology</developer>
+		<publisher>Electronic Arts</publisher>
+		<genre>Motorcycle race TPV</genre>
+		<players>1-2</players>
+	</game>
+	<game>
+		<path>./Tekken 3 (USA).cue</path>
+		<name>Tekken 3</name>
+		<desc>An ancient evil force has reawakened, attacking in secret and feeding on the souls of mighty warriors. To lure it out of hiding will take the greatest fighting contest the world has ever seen... Tekken 3. Some are fighting for revenge, some for honor, ultimately, all are fighting for their lives and the fate of all mankind.</desc>
+		<image>~/.emulationstation/downloaded_images/psx/Tekken 3 (USA)-image.png</image>
+		<rating>0.9</rating>
+		<releasedate>19980429T000000</releasedate>
+		<developer>Namco</developer>
+		<publisher>Namco</publisher>
+		<genre>Fighting / 2.5D</genre>
+		<players>1-2</players>
+	</game>
+	<game>
+		<path>./Tony Hawk's Pro Skater 2 (USA).cue</path>
+		<name>Tony Hawk's Pro Skater 2</name>
+		<desc>Tony Hawk's Pro Skater 2 features the series' trademark open-ended gameplay, in which the player (playing as a professional skateboarder) completes a number of tasks which result in cash rewards. With money gained, the player can then purchase skill improvements and better skateboards. THPS2 was also the first game in the series to introduce the manual, a skateboarding trick where the performer balances on two wheels. This enables players to string together trick combos. The game also introduced the Noseslide, Tailslide, Bluntslide, Nosebluntside, Feeble, and Overcrook grinds. It was also the first of the Pro Skater games to feature Create-a-Skater and Park Editor features, now staples in the series.</desc>
+		<image>~/.emulationstation/downloaded_images/psx/Tony Hawk's Pro Skater 2 (USA)-image.png</image>
+		<rating>0.8</rating>
+		<releasedate>20000920T000000</releasedate>
+		<developer>Neversoft</developer>
+		<publisher>Activision</publisher>
+		<genre>Sports / Skateboard</genre>
+		<players>1-2</players>
+	</game>
+</gameList>

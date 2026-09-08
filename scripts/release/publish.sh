@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/release/publish.sh
-# ShopnoOS  — Release Publisher
+# ShopnoOS  - Release Publisher
 #
 # USAGE:
 #   ./scripts/release/publish.sh <profile-name> [options]
@@ -12,7 +12,7 @@
 #   OS_MIRROR_HOST      SSH host of the mirror server
 #   OS_MIRROR_USER      SSH user
 #   OS_MIRROR_PATH      Remote base path  (e.g. /srv/mirror/shopno-os)
-#   OS_MIRROR_SSH_KEY       Path to SSH private key (optional — uses ssh-agent otherwise)
+#   OS_MIRROR_SSH_KEY       Path to SSH private key (optional - uses ssh-agent otherwise)
 #
 # WHAT IT PUBLISHES:
 #   - The ISO
@@ -132,7 +132,7 @@ _add_artifact "${OUTPUT_DIR}/SHA256SUMS"                              false
 _add_artifact "${OUTPUT_DIR}/SHA512SUMS"                              false
 
 if [[ ${#MISSING[@]} -gt 0 ]]; then
-    log_error "Required artifact(s) missing — cannot publish."
+    log_error "Required artifact(s) missing - cannot publish."
     log_error "  Run a full build first: ./scripts/build/build.sh ${PROFILE_NAME}"
     exit 1
 fi
@@ -141,7 +141,7 @@ fi
 # Dry run
 # ---------------------------------------------------------------------------
 if [[ "${OPT_DRY_RUN}" -eq 1 ]]; then
-    log_step "DRY RUN — would publish:"
+    log_step "DRY RUN - would publish:"
     REMOTE_HOST="${OS_MIRROR_HOST:-<host>}"
     REMOTE_USER="${OS_MIRROR_USER:-<user>}"
     REMOTE_PATH="${OS_MIRROR_PATH:-<path>}"
@@ -150,7 +150,7 @@ if [[ "${OPT_DRY_RUN}" -eq 1 ]]; then
     for artifact in "${ARTIFACTS[@]}"; do
         echo "  rsync $(basename "${artifact}") → ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
     done
-    log_warn "Dry run complete — no files transferred."
+    log_warn "Dry run complete - no files transferred."
     exit 0
 fi
 

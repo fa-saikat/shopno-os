@@ -1,0 +1,31 @@
+#!/bin/bash
+# =============================================================================
+# 0010-gaming-setup.hook.chroot
+# Layer:   editions/gaming
+# Stage:   chroot
+# Purpose: Initial setup hook for the 'gaming' edition
+# Number:  0010 — runs first; add later numbered hooks for additional steps
+# =============================================================================
+set -euo pipefail
+
+echo ">>> [gaming/0010-gaming-setup] Starting..."
+
+# Update xfce4-whiskermenu configuration
+# Set menu button icon
+RCFILE="/etc/skel/.config/xfce4/panel/whiskermenu-1.rc"
+sed -i \
+    -e 's|^button-title=.*|button-title=|' \
+    -e 's|^button-icon=.*|button-icon=/usr/local/share/jadupc-mode-selector/assets/logo.png|' \
+    -e 's|^show-button-title=.*|show-button-title=false|' \
+    "$RCFILE"
+
+# Set gaming edition background
+XMLFILE="/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+
+# Set default wallpaper directory
+perl -0pi -e 's|<property name="image-path" type="empty"/>|<property name="image-path" type="string" value="/usr/share/backgrounds/gaming/"/>|g' "$XMLFILE"
+
+# Set default background for each workspaces
+perl -0pi -e 's|<property name="last-image" type="string" value="/usr/share/backgrounds/beta-1.png"/>|<property name="last-image" type="string" value="/usr/share/backgrounds/gaming/background.png"/>|g' "$XMLFILE"
+
+echo ">>> [gaming/0010-gaming-setup] Done."

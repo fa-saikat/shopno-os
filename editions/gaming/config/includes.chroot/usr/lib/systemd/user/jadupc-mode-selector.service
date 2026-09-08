@@ -1,0 +1,32 @@
+# /usr/lib/systemd/user/jadupc-mode-selector.service
+#
+# Persistent mode selector - starts once at login, stays resident.
+# Re-surfaced by HotkeyTriggered DBus signal or SIGUSR1.
+
+[Unit]
+Description=Persistent daemon for JaduPc Mode Selector 
+Documentation=https://github.com/JaduPC/jadupc
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+
+# Allow the process to re-surface on signal — do not treat hide as exit
+Restart=on-failure
+RestartSec=2
+
+ExecStart=/usr/local/bin/jadupc-mode-selector.sh
+TimeoutStartSec=10
+ExecStopPost=/bin/rm -f /run/user/$UID/jadupc/mode-selector.pid
+
+# Run compositor before start 
+Environment=DISPLAY=:0
+# Environment=WAYLAND_DISPLAY=wayland-0	# Uncomment if running under Wayland
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=jadupc-mode-selector
+
+[Install]
+WantedBy=graphical-session.target

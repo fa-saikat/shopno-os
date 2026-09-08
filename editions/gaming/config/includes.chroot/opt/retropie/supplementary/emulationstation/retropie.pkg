@@ -1,0 +1,8 @@
+pkg_origin="source"
+pkg_date="2026-05-06T02:07:10+06:00"
+pkg_repo_type="git"
+pkg_repo_url="https://github.com/RetroPie/EmulationStation"
+pkg_repo_branch="stable"
+pkg_repo_commit="c552292ff42230ed5947b651ad1b6d5c8122a452"
+pkg_repo_date="2023-08-10T19:52:13+01:00"
+pkg_repo_extra=""

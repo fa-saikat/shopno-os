@@ -1,0 +1,35 @@
+#!/bin/bash
+mode="$1"
+[[ -z "$mode" ]] && mode="start"
+shift
+
+# allow overriding joystick device via __joy2key_dev env (by default will use /dev/input/jsX which will scan all)
+device="/dev/input/jsX"
+[[ -n "$__joy2key_dev" ]] && device="$__joy2key_dev"
+
+params=("$@")
+if [[ "${#params[@]}" -eq 0 ]]; then
+    # Default button-to-keyboard mappings:
+    # * cursor keys for axis/dpad
+    # * enter, space, esc and tab for buttons 'a', 'b', 'x' and 'y'
+    # * page up/page down for buttons 5,6 (shoulder buttons)
+    params=(kcub1 kcuf1 kcuu1 kcud1 0x0a 0x20 0x1b 0x09 kpp knp)
+fi
+
+script="joy2key_sdl.py"
+grep --basic-regexp --quiet --no-messages '^legacy_joy2key[[:space:]]*=[[:space:]]*"\?1"\?' /opt/retropie/configs/all/runcommand.cfg && script="joy2key.py"
+
+case "$mode" in
+    start)
+        if pgrep -f "$script" &>/dev/null; then
+            "$0" stop
+        fi
+        "/opt/retropie/admin/joy2key/$script" "$device" "${params[@]}" || exit 1
+        ;;
+    stop)
+        if pid=$(pgrep -f "$script"); then
+            /sbin/start-stop-daemon --stop --oknodo --pid $pid --retry 1
+        fi
+        ;;
+esac
+exit 0

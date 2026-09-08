@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch mode selector state
+
+[Path]
+PathChanged=/run/user/%U/jadupc/mode-selector.state
+
+[Install]
+WantedBy=default.target

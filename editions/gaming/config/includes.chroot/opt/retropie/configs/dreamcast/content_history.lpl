@@ -1,0 +1,76 @@
+{
+  "version": "1.5",
+  "default_core_path": "",
+  "default_core_name": "",
+  "label_display_mode": 0,
+  "right_thumbnail_mode": 0,
+  "left_thumbnail_mode": 0,
+  "thumbnail_match_mode": 0,
+  "sort_mode": 2,
+  "items": [
+    {
+      "path": "/home/jadupc/RetroPie/roms/dreamcast/Spider-Man (USA).gdi",
+      "label": "",
+      "core_path": "/opt/retropie/libretrocores/lr-flycast-dev/flycast_libretro.so",
+      "core_name": "Sega - Dreamcast/Naomi (Flycast)",
+      "crc32": "",
+      "db_name": ""
+    },
+    {
+      "path": "/home/jadupc/RetroPie/roms/dreamcast/Crazy Taxi 2 (USA).gdi",
+      "label": "",
+      "core_path": "/opt/retropie/libretrocores/lr-flycast-dev/flycast_libretro.so",
+      "core_name": "Sega - Dreamcast/Naomi (Flycast)",
+      "crc32": "",
+      "db_name": ""
+    },
+    {
+      "path": "/home/jadupc/RetroPie/roms/dreamcast/Daytona USA (USA).gdi",
+      "label": "",
+      "core_path": "/opt/retropie/libretrocores/lr-flycast-dev/flycast_libretro.so",
+      "core_name": "Sega - Dreamcast/Naomi (Flycast)",
+      "crc32": "",
+      "db_name": ""
+    },
+    {
+      "path": "/home/jadupc/RetroPie/roms/dreamcast/Sonic Adventure (USA) (En,Ja,Fr,De,Es) (Rev A).gdi",
+      "label": "",
+      "core_path": "/opt/retropie/libretrocores/lr-flycast-dev/flycast_libretro.so",
+      "core_name": "Sega - Dreamcast/Naomi (Flycast)",
+      "crc32": "",
+      "db_name": ""
+    },
+    {
+      "path": "/home/jadupc/RetroPie/roms/dreamcast/Sonic Adventure (USA) (En,Ja,Fr,De,Es) (Rev A).cue",
+      "label": "",
+      "core_path": "/opt/retropie/libretrocores/lr-flycast-dev/flycast_libretro.so",
+      "core_name": "Sega - Dreamcast/Naomi (Flycast)",
+      "crc32": "",
+      "db_name": ""
+    },
+    {
+      "path": "/home/jadupc/RetroPie/roms/dreamcast/Crazy Taxi (USA).gdi",
+      "label": "",
+      "core_path": "/opt/retropie/libretrocores/lr-flycast-dev/flycast_libretro.so",
+      "core_name": "Sega - Dreamcast/Naomi (Flycast)",
+      "crc32": "",
+      "db_name": ""
+    },
+    {
+      "path": "/home/jadupc/RetroPie/roms/dreamcast/Crazy Taxi (USA).cue",
+      "label": "",
+      "core_path": "/opt/retropie/libretrocores/lr-flycast-dev/flycast_libretro.so",
+      "core_name": "Sega - Dreamcast/Naomi (Flycast)",
+      "crc32": "",
+      "db_name": ""
+    },
+    {
+      "path": "/home/jadupc/RetroPie/roms/dreamcast/Crazy Taxi (USA)/Crazy Taxi (USA).gdi",
+      "label": "",
+      "core_path": "/opt/retropie/libretrocores/lr-flycast-dev/flycast_libretro.so",
+      "core_name": "Sega - Dreamcast/Naomi (Flycast)",
+      "crc32": "",
+      "db_name": ""
+    }
+  ]
+}

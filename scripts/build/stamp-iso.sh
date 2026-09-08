@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/build/stamp-iso.sh
-# ShopnoOS — ISO Metadata Stamper
+# ShopnoOS - ISO Metadata Stamper
 #
 # USAGE:
 #   ./scripts/build/stamp-iso.sh <build-dir> <iso-filename>
@@ -59,7 +59,7 @@ done < <(find "${BUILD_DIR}" -maxdepth 1 -name "*.iso" -print0 2>/dev/null | sor
 
 if [[ -z "${LB_ISO}" ]]; then
     log_error "No ISO file found in ${BUILD_DIR}"
-    log_error "lb build may have failed — check ${BUILD_DIR}/build.log"
+    log_error "lb build may have failed - check ${BUILD_DIR}/build.log"
     exit 1
 fi
 
@@ -132,7 +132,7 @@ xorriso \
     -commit \
     2>/dev/null \
     && log_success "Metadata embedded at /.shopno-os-build-info" \
-    || log_warn "xorriso embed failed (non-fatal — ISO is still valid)"
+    || log_warn "xorriso embed failed (non-fatal - ISO is still valid)"
 
 # ---------------------------------------------------------------------------
 # Write build-manifest.json alongside the ISO

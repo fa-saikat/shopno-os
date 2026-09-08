@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/build/inject-packages.sh
-# ShopnoOS — Package List Injector
+# ShopnoOS - Package List Injector
 #
 # USAGE:
 #   ./scripts/build/inject-packages.sh <profile-name> <lb-config-dir>
@@ -18,7 +18,7 @@
 #
 # NAMING CONVENTION:
 #   Source files must be named: shopno-os-<layer>-<purpose>.list.chroot
-#   Symlinks preserve the original filename — no renaming.
+#   Symlinks preserve the original filename - no renaming.
 #
 # DUPLICATE DETECTION:
 #   If two layers provide the same filename, this script fails loudly.
@@ -66,7 +66,7 @@ _inject_layer() {
     local label="${2}"
 
     if [[ ! -d "${src_dir}" ]]; then
-        log_debug "No package-lists dir for ${label} — skipping."
+        log_debug "No package-lists dir for ${label} - skipping."
         return 0
     fi
 
@@ -102,7 +102,6 @@ _inject_layer() {
         (( count++ )) || true
         log_debug "  Injected: ${filename} (← ${label})"
 
-    #done < <(find "${src_dir}" -maxdepth 1 -name "*.list.chroot" -o -name "*.list.chroot" -print0 | sort -z) # <-- NOTE
     done < <(find "${src_dir}" -maxdepth 1 \
         \( -name "*.list.chroot" -o -name "*.list.binary" \) \
         -print0 | sort -z)
@@ -134,7 +133,7 @@ fi
 TOTAL="${#INJECTED_FILES[@]}"
 log_success "Package injection complete: ${TOTAL} list(s) active for profile '${PROFILE_NAME}'"
 
-if [[ "${SHOPNOOS_DEBUG:-0}" == "1" ]]; then
+if [[ "${OS_DEBUG:-0}" == "1" ]]; then
     log_debug "Active package lists:"
     find "${PKG_LIST_DEST}" -name "*.list.*" | sort | while IFS= read -r f; do
         log_debug "  $(basename "${f}") → $(readlink -f "${f}")"

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+log_file="/var/log/uninstall-desktop-hook.log"
+exec > "$log_file" 2>&1
+
+installed_pkgs=$(dpkg-query -W | cut -f1 | grep -vE '^(xfce|.*theme*|.fonts*)')
+
+for pkg in $installed_pkgs; do
+    dpkg -L "$pkg" | grep '\.desktop$' | while read -r desktop_file; do
+        [ -f "$desktop_file" ] || continue
+
+        categories=$(grep -i "^Categories=" "$desktop_file" | cut -d= -f2)
+
+        if echo "$categories" | grep -Eiq 'System|X-XFCE'; then
+            echo "Skipping system/xfce category: $desktop_file"
+            continue
+        fi
+
+        grep -q "\[Desktop Action Uninstall\]" "$desktop_file" && continue
+
+        echo "Modifying: $desktop_file"
+
+        if ! grep -q "^Actions=" "$desktop_file"; then
+            echo "Actions=Uninstall;" >> "$desktop_file"
+        else
+            sed -i '/^Actions=/ s/$/Uninstall;/' "$desktop_file"
+        fi
+
+        cat <<EOF >> "$desktop_file"
+
+[Desktop Action Uninstall]
+Name=Uninstall
+Icon=remove
+Exec=bash -c "/usr/local/bin/uninstall-button-gui $pkg"
+OnlyShowIn=XFCE;
+EOF
+
+        echo "Appended uninstall action to: $desktop_file"
+    done
+done
+

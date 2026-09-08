@@ -96,14 +96,35 @@ All values are hex without the `#` prefix. The build system exports these as env
 
 ### `brand/identity/urls.env`
 
+Variables in this file use the `URL_` prefix (not `DISTRO_`). They are grouped by purpose:
+
 ```bash
-DISTRO_MIRROR_PRIMARY="https://mirror.shopno-oslinux.org/apt"
-DISTRO_MIRROR_FALLBACK="https://deb.debian.org/debian"
-DISTRO_DOCS_URL="https://shopno.jadupc.com"
-DISTRO_RELEASE_URL="https://github.com/JaduPC/shopno-os/releases"
+# Website
+URL_WEBSITE="https://shopno.jadupc.com"
+URL_DOCS="https://shopno.jadupc.com"
+URL_SUPPORT="https://shopno.jadupc.com/support"
+URL_DOWNLOADS="https://shopno.jadupc.com"
+
+# Community
+URL_FORUM=""
+URL_MATRIX=""
+URL_TELEGRAM=""
+
+# Development
+URL_SOURCE="https://github.com/JaduPC/shopno-os"
+URL_BUGTRACKER="https://github.com/JaduPC/shopno-os/issues"
+URL_CI=""
+
+# Mirrors
+URL_MIRROR_MAIN=""
+URL_MIRROR_FALLBACK=""
+
+# Security
+URL_SECURITY_ADVISORIES=""
+URL_GPG_KEY=""
 ```
 
-These are written into the live system's apt sources and help files by hooks. Changing them here propagates everywhere automatically.
+Build scripts consume these directly (e.g. `prepare-lb-config.sh` reads `URL_SUPPORT`). Changing a value here propagates to every hook and script that sources `urls.env` at build time.
 
 ---
 
@@ -113,7 +134,7 @@ These are written into the live system's apt sources and help files by hooks. Ch
 
 1. Loads all three `brand/identity/*.env` files
 2. Validates required variables and format rules
-3. Exports all `DISTRO_*` and `BRAND_*` vars into the environment
+3. Exports all `DISTRO_*`, `BRAND_*`, and `URL_*` vars into the environment
 
 Every child process — including live-build hooks — inherits the exported variables. Hooks never read `brand/identity/` directly; they use the pre-exported environment.
 

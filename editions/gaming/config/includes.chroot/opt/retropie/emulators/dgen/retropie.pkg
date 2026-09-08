@@ -1,0 +1,8 @@
+pkg_origin="source"
+pkg_date="2026-04-29T03:20:33+06:00"
+pkg_repo_type="file"
+pkg_repo_url="https://files.retropie.org.uk/archives/dgen-sdl-1.33.tar.gz"
+pkg_repo_branch=""
+pkg_repo_commit=""
+pkg_repo_date="2015-02-08T15:24:40+06:00"
+pkg_repo_extra=""
