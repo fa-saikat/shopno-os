@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/lib/secrets.sh
-# ShopnoOS — Shared Script Library: Secrets Loader
+# ShopnoOS - Shared Script Library: Secrets Loader
 #
 # PURPOSE:
 #   Loads all secrets from secrets/*.env files, exports them into the
@@ -15,9 +15,9 @@
 #   common.sh (must be sourced first)
 #
 # BEHAVIOR:
-#   - Each secrets file is OPTIONAL — missing files are warned, not fatal
+#   - Each secrets file is OPTIONAL - missing files are warned, not fatal
 #   - Variables are exported so all child processes (sign-iso.sh etc.) inherit them
-#   - Idempotent — safe to source multiple times
+#   - Idempotent - safe to source multiple times
 #
 # SECRETS FILES:
 #   secrets/signing.env            → ISO GPG signing
@@ -70,7 +70,7 @@ _load_secrets_file() {
 load_secrets() {
     log_step "Loading secrets"
 
-    # signing.env — ISO GPG signing key
+    # signing.env - ISO GPG signing key
     if _load_secrets_file "${OS_SECRETS_DIR}/signing.env" "ISO signing"; then
         export OS_GPG_KEY
         export OS_GPG_BATCH
@@ -79,7 +79,7 @@ load_secrets() {
         _SECRET_SIGNING_LOADED=0
     fi
 
-    # repo-signing.env — APT repository GPG signing key
+    # repo-signing.env - APT repository GPG signing key
     if _load_secrets_file "${OS_SECRETS_DIR}/repo-signing.env" "APT repo signing"; then
         export OS_REPO_GPG_KEY
         export OS_REPO_GPG_BATCH
@@ -88,7 +88,7 @@ load_secrets() {
         _SECRET_REPO_SIGNING_LOADED=0
     fi
 
-    # mirror-credentials.env — release mirror upload credentials
+    # mirror-credentials.env - release mirror upload credentials
     if _load_secrets_file "${OS_SECRETS_DIR}/mirror-credentials.env" "Mirror credentials"; then
         export OS_MIRROR_HOST
         export OS_MIRROR_USER
@@ -104,7 +104,7 @@ load_secrets() {
         _SECRET_MIRROR_LOADED=0
     fi
 
-    # notary.env — Secure Boot / MOK signing
+    # notary.env - Secure Boot / MOK signing
     if _load_secrets_file "${OS_SECRETS_DIR}/notary.env" "Secure Boot / MOK"; then
         export OS_SECUREBOOT
         export OS_MOK_KEY
@@ -114,7 +114,7 @@ load_secrets() {
         _SECRET_NOTARY_LOADED=0
     fi
 
-    # github-token.env — GitHub / Forgejo API token
+    # github-token.env - GitHub / Forgejo API token
     if _load_secrets_file "${OS_SECRETS_DIR}/github-token.env" "GitHub token"; then
         export OS_GITHUB_TOKEN
         export OS_GITHUB_REPO

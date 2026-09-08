@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/dev/new-edition.sh
-# ShopnoOS — New Edition Scaffolder
+# ShopnoOS - New Edition Scaffolder
 #
 # USAGE:
 #   ./scripts/dev/new-edition.sh <edition-name>
@@ -82,8 +82,8 @@ cat > "${EDITION_DIR}/package-lists/shopno-os-${EDITION_NAME}.list.chroot" <<EOF
 #
 # RULES:
 #   - Do NOT add packages that belong in base/ (kernel, systemd, apparmor)
-#   - Do NOT add DE/WM packages — those belong in flavors/
-#   - Do NOT add hardware driver packages — those belong in hardware/
+#   - Do NOT add DE/WM packages - those belong in flavors/
+#   - Do NOT add hardware driver packages - those belong in hardware/
 #   - Each package listed here must justify its presence in this edition
 # =============================================================================
 
@@ -100,7 +100,7 @@ cat > "${EDITION_DIR}/hooks/chroot/0010-${EDITION_NAME}-setup.hook.chroot" <<EOF
 # Layer:   editions/${EDITION_NAME}
 # Stage:   chroot
 # Purpose: Initial setup hook for the '${EDITION_NAME}' edition
-# Number:  0010 — runs first; add later numbered hooks for additional steps
+# Number:  0010 - runs first; add later numbered hooks for additional steps
 # =============================================================================
 set -euo pipefail
 

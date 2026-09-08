@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/dev/new-flavor.sh
-# ShopnoOS — New Flavor Scaffolder
+# ShopnoOS - New Flavor Scaffolder
 #
 # USAGE:
 #   ./scripts/dev/new-flavor.sh <flavor-name>
@@ -27,8 +27,8 @@
 #
 # GOLDEN RULE REMINDER:
 #   Flavors provide DE/WM + theming ONLY.
-#   No capability packages (Xorg, PipeWire, NetworkManager) — those live in editions/desktop.
-#   No hardware packages — those live in hardware/.
+#   No capability packages (Xorg, PipeWire, NetworkManager) - those live in editions/desktop.
+#   No hardware packages - those live in hardware/.
 # =============================================================================
 set -euo pipefail
 
@@ -83,7 +83,7 @@ cat > "${FLAVOR_DIR}/package-lists/shopno-os-flavor-${FLAVOR_NAME}.list.chroot" 
 # Layer:   flavors/${FLAVOR_NAME}
 # Purpose: DE/WM core packages for the '${FLAVOR_NAME}' flavor
 #
-# SCOPE — this file should contain ONLY:
+# SCOPE - this file should contain ONLY:
 #   - The display manager (gdm3, sddm, lightdm, etc.)
 #   - The DE/WM itself and its core components
 #   - Theming packages specific to this DE/WM
@@ -117,7 +117,7 @@ cat > "${FLAVOR_DIR}/package-lists/shopno-os-flavor-${FLAVOR_NAME}-apps.list.chr
 #   e.g. nautilus instead of thunar for GNOME, dolphin instead for KDE.
 #
 # Generic apps (browsers, office suites) belong in editions/desktop/,
-# NOT here — unless they require DE-specific integration to function properly.
+# NOT here - unless they require DE-specific integration to function properly.
 # =============================================================================
 
 # TODO: Add DE-specific app packages below
@@ -195,8 +195,8 @@ default dotfiles/config for new users.
 ## Compatible Editions
 
 This flavor is designed to be paired with:
-- \`desktop\` — general-purpose workstation
-- \`pro\` — developer workstation
+- \`desktop\` - general-purpose workstation
+- \`pro\` - developer workstation
 
 **Not compatible** with: \`core\` (TTY only)
 

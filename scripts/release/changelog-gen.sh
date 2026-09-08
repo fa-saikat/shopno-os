@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/release/changelog-gen.sh
-# ShopnoOS — Changelog Generator
+# ShopnoOS - Changelog Generator
 #
 # USAGE:
 #   ./scripts/release/changelog-gen.sh                    # since last tag
@@ -25,8 +25,8 @@
 #   BREAKING:   → Breaking Changes (section promoted to top)
 #
 # OUTPUT FORMATS:
-#   md    — Markdown (default), suitable for GitHub releases
-#   deb   — Debian changelog format (debian/changelog compatible)
+#   md    - Markdown (default), suitable for GitHub releases
+#   deb   - Debian changelog format (debian/changelog compatible)
 # =============================================================================
 set -euo pipefail
 
@@ -98,7 +98,7 @@ if [[ -z "${REF_FROM}" ]]; then
         REF_FROM="${LAST_TAG}"
         log_info "Auto-detected last tag: ${REF_FROM}"
     else
-        log_warn "No git tags found — generating full history changelog."
+        log_warn "No git tags found - generating full history changelog."
         REF_FROM=""
     fi
 fi
@@ -120,7 +120,7 @@ mapfile -t COMMITS < <(
 log_info "Commits found: ${#COMMITS[@]}"
 
 if [[ ${#COMMITS[@]} -eq 0 ]]; then
-    log_warn "No commits in range ${GIT_RANGE} — empty changelog."
+    log_warn "No commits in range ${GIT_RANGE} - empty changelog."
 fi
 
 # ---------------------------------------------------------------------------
@@ -201,7 +201,7 @@ _section_deb() {
 }
 
 if [[ "${OPT_FORMAT}" == "md" ]]; then
-    OUTPUT_BUFFER="## [${OPT_VERSION}] — ${RELEASE_DATE}"$'\n'
+    OUTPUT_BUFFER="## [${OPT_VERSION}] - ${RELEASE_DATE}"$'\n'
 
     _section_md "⚠️ Breaking Changes"  BREAKING
     _section_md "✨ Features"          FEATURES

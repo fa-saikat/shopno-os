@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/lib/iso-name.sh
-# ShopnoOS — Shared Script Library: ISO Naming Law
+# ShopnoOS - Shared Script Library: ISO Naming Law
 #
 # PURPOSE:
 #   Single authoritative source for ISO filename generation.
@@ -26,7 +26,7 @@
 #   common.sh + brand.sh + profile.sh (must be sourced first, vars exported)
 #
 # GUARDS:
-#   Idempotent — safe to source multiple times.
+#   Idempotent - safe to source multiple times.
 # =============================================================================
 
 [[ -n "${LIB_ISO_NAME_LOADED:-}" ]] && return 0
@@ -41,19 +41,19 @@ fi
 # CORE NAMING FUNCTION
 # =============================================================================
 
-# iso_name  — prints full ISO filename (with .iso extension)
+# iso_name  - prints full ISO filename (with .iso extension)
 iso_name() {
     echo "$(iso_stem).iso"
 }
 
-# iso_stem  — prints ISO name without extension (used for lb --image-name)
+# iso_stem  - prints ISO name without extension (used for lb --image-name)
 iso_stem() {
     local stem
     stem="$(_build_iso_stem)"
     echo "${stem}"
 }
 
-# iso_volume_label  — prints a FAT32-compatible volume label (≤11 chars, uppercase)
+# iso_volume_label  - prints a FAT32-compatible volume label (≤11 chars, uppercase)
 # Used for the ISO filesystem label visible when the USB is inserted.
 iso_volume_label() {
     local label
@@ -63,14 +63,14 @@ iso_volume_label() {
     echo "${label:0:11}"
 }
 
-# iso_checksum_filename  — prints the expected checksum filename
+# iso_checksum_filename  - prints the expected checksum filename
 # Follows the same stem as the ISO for easy association.
 iso_checksum_filename() {
     local algo="${1:-sha256}"
     echo "$(iso_stem).${algo}"
 }
 
-# iso_signature_filename  — prints the GPG signature filename
+# iso_signature_filename  - prints the GPG signature filename
 iso_signature_filename() {
     echo "$(iso_name).gpg"
 }
@@ -79,7 +79,7 @@ iso_signature_filename() {
 # INTERNAL STEM BUILDER
 # =============================================================================
 
-# _build_iso_stem  — assembles and validates all components
+# _build_iso_stem  - assembles and validates all components
 # _build_iso_stem() {
 #     # Ensure required vars are present (brand + profile must be loaded first)
 #     require_var \
@@ -108,7 +108,7 @@ iso_signature_filename() {
 #     # Core components
 #     stem="${id}-${version}-${edition}-${flavor}-${arch}-${builddate}"
 #
-#     # Hardware suffix — only appended when not 'generic'
+#     # Hardware suffix - only appended when not 'generic'
 #     hardware="${DISTRO_HARDWARE:-generic}"
 #     if [[ "${hardware}" != "generic" ]]; then
 #         hardware="$(_iso_sanitize "${hardware}")"
@@ -151,7 +151,7 @@ _build_iso_stem() {
     # Core components
     stem="${isoprefix}-${version}-${edition}-${flavor}-${arch}-${builddate}"
 
-    # Hardware suffix — only appended when not 'generic'
+    # Hardware suffix - only appended when not 'generic'
     hardware="${DISTRO_HARDWARE:-generic}"
     if [[ "${hardware}" != "generic" ]]; then
         hardware="$(_iso_sanitize "${hardware}")"
@@ -166,7 +166,7 @@ _build_iso_stem() {
 # COMPONENT SANITISATION AND VALIDATION
 # =============================================================================
 
-# _iso_sanitize "value"  — lowercase, trim whitespace, replace spaces with hyphens
+# _iso_sanitize "value"  - lowercase, trim whitespace, replace spaces with hyphens
 _iso_sanitize() {
     local val="${1}"
     # lowercase, trim leading/trailing whitespace, replace inner whitespace with -
@@ -210,7 +210,7 @@ _iso_validate_component() {
 # BUILD DATE
 # =============================================================================
 
-# _iso_builddate  — returns YYYYMMDD
+# _iso_builddate  - returns YYYYMMDD
 # Respects SOURCE_DATE_EPOCH for reproducible builds (set in CI).
 _iso_builddate() {
     if [[ -n "${SOURCE_DATE_EPOCH:-}" ]]; then
@@ -227,7 +227,7 @@ _iso_builddate() {
 # Structured metadata for embedding into ISO and release manifests.
 # =============================================================================
 
-# iso_metadata_json  — prints a JSON object with all ISO metadata
+# iso_metadata_json  - prints a JSON object with all ISO metadata
 # Requires: jq in PATH
 iso_metadata_json() {
     require_command jq
@@ -267,7 +267,7 @@ iso_metadata_json() {
         }'
 }
 
-# iso_metadata_env  — prints a simple KEY=value file (for embedding into ISO)
+# iso_metadata_env  - prints a simple KEY=value file (for embedding into ISO)
 iso_metadata_env() {
     cat <<EOF
 LIB_ISO_NAME="${DISTRO_NAME:-}"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # scripts/lib/profile.sh
-# ShopnoOS — Shared Script Library: Build Profile Loader
+# ShopnoOS - Shared Script Library: Build Profile Loader
 #
 # PURPOSE:
 #   Loads and validates a named build profile (profiles/<name>/profile.env),
@@ -18,7 +18,7 @@
 #   common.sh + brand.sh (must be sourced first)
 #
 # GUARDS:
-#   Idempotent — safe to source multiple times.
+#   Idempotent - safe to source multiple times.
 # =============================================================================
 
 [[ -n "${LIB_PROFILE_LOADED:-}" ]] && return 0
@@ -54,10 +54,10 @@ readonly _PROFILE_REQUIRED_VARS=(
 # PUBLIC: load_profile "profile-name"
 # =============================================================================
 
-# _ACTIVE_PROFILE_NAME  — set after successful load_profile call
+# _ACTIVE_PROFILE_NAME  - set after successful load_profile call
 _ACTIVE_PROFILE_NAME=""
 
-# load_profile "name"  — main entry point
+# load_profile "name"  - main entry point
 # Loads profiles/<name>/profile.env, validates, resolves layers, exports vars.
 load_profile() {
     local profile_name="${1:-}"
@@ -159,7 +159,7 @@ _profile_validate() {
 
     # 7. Sanity: flavor=none paired with desktop/pro is suspicious
     if [[ "${DISTRO_FLAVOR}" == "none" && "${DISTRO_EDITION}" =~ ^(desktop|pro)$ ]]; then
-        log_warn "DISTRO_FLAVOR=none with edition '${DISTRO_EDITION}' — this will produce a headless image."
+        log_warn "DISTRO_FLAVOR=none with edition '${DISTRO_EDITION}' - this will produce a headless image."
         log_warn "  If this is intentional, you can ignore this warning."
     fi
 
@@ -177,7 +177,7 @@ _profile_resolve_layers() {
 
     local -a layers_to_check=()
 
-    # Base — always present (validated separately by build.sh)
+    # Base - always present (validated separately by build.sh)
     local base_dir="${OS_REPO_ROOT}/base"
     require_dir "${base_dir}/package-lists"
 
@@ -203,7 +203,7 @@ _profile_resolve_layers() {
     log_debug "All layers resolved successfully."
 }
 
-# _assert_has_package_lists "dir" "label"  — fails if no *.list.chroot files found
+# _assert_has_package_lists "dir" "label"  - fails if no *.list.chroot files found
 _assert_has_package_lists() {
     local dir="${1}"
     local label="${2}"
@@ -232,7 +232,7 @@ _profile_export() {
 # INTROSPECTION HELPERS (callable after load_profile)
 # =============================================================================
 
-# active_profile  — prints the currently loaded profile name
+# active_profile  - prints the currently loaded profile name
 active_profile() {
     if [[ -z "${_ACTIVE_PROFILE_NAME}" ]]; then
         log_error "No profile loaded. Call load_profile first."
@@ -241,17 +241,17 @@ active_profile() {
     echo "${_ACTIVE_PROFILE_NAME}"
 }
 
-# profile_has_flavor  — returns 0 if flavor is not 'none'
+# profile_has_flavor  - returns 0 if flavor is not 'none'
 profile_has_flavor() {
     [[ "${DISTRO_FLAVOR:-none}" != "none" ]]
 }
 
-# profile_has_hardware_overlay  — returns 0 if hardware is not 'generic'
+# profile_has_hardware_overlay  - returns 0 if hardware is not 'generic'
 profile_has_hardware_overlay() {
     [[ "${DISTRO_HARDWARE:-generic}" != "generic" ]]
 }
 
-# profile_package_lists  — prints paths to all package lists for active profile,
+# profile_package_lists  - prints paths to all package lists for active profile,
 # in composition order: base → edition → flavor → hardware
 profile_package_lists() {
     local base_dir="${OS_REPO_ROOT}/base"
@@ -271,7 +271,7 @@ profile_package_lists() {
     fi
 }
 
-# profile_hook_dirs  — prints chroot hook directories in merge order
+# profile_hook_dirs  - prints chroot hook directories in merge order
 profile_hook_dirs() {
     local dirs=()
     dirs+=("${OS_REPO_ROOT}/base/hooks/chroot")
@@ -289,7 +289,7 @@ profile_hook_dirs() {
     done
 }
 
-# list_profiles  — prints all available profile names
+# list_profiles  - prints all available profile names
 list_profiles() {
     find "${OS_REPO_ROOT}/profiles" -mindepth 1 -maxdepth 1 -type d \
         ! -name '_template' \
@@ -300,7 +300,7 @@ list_profiles() {
 # PRIVATE UTILITIES
 # =============================================================================
 
-# _in_array "needle" "elem1" "elem2" ...  — returns 0 if needle is in array
+# _in_array "needle" "elem1" "elem2" ...  - returns 0 if needle is in array
 _in_array() {
     local needle="${1}"
     shift
