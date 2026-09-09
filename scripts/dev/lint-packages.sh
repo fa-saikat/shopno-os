@@ -9,11 +9,11 @@
 #   ./scripts/dev/lint-packages.sh --strict     # exit 1 on any warning
 #
 # CHECKS PERFORMED:
-#   1. Duplicate packages across lists within the same build (fatal)
-#   2. Duplicate packages within a single list file (warning)
+#   1. Naming convention: all lists must start with 'shopno-os-'
+#   2. Empty list files (warning)
 #   3. Package name format validation (lowercase, valid chars)
-#   4. Naming convention: all lists must start with 'shopno-os-'
-#   5. Empty list files (warning)
+#   4. Duplicate packages within a single list file (warning)
+#   5. Duplicate packages between edition and flavor layers (fatal)
 #   6. Packages that live in the wrong layer (e.g. Xorg in base)
 #
 # EXIT CODES:
@@ -169,41 +169,117 @@ for list_file in "${ALL_LISTS[@]}"; do
 done
 
 # ---------------------------------------------------------------------------
-# Check 5: Cross-list duplicates (same package in two different lists)
-# This is the Golden Rule violation - fatal.
+# Check 5: Duplicate packages between edition and flavor layers
+# Checks edition and flavor layers for duplicate package definitions.
+# Fails only when the same package is defined in both edition and flavor.
 # ---------------------------------------------------------------------------
-log_info "Check 5: Cross-list duplicate packages (Golden Rule)"
+log_info "Check 5: Duplicate packages between edition and flavor layers"
 
-# Build a master map: package → list files that contain it
-declare -A PKG_SOURCES   # pkg → "file1\nfile2"
+_collect_layer_packages() {
+    local layer_dir="${1}"
+    local -n _out_map="${2}"
 
-for list_file in "${ALL_LISTS[@]}"; do
-    while IFS= read -r line; do
-        [[ -z "${line}" || "${line}" =~ ^[[:space:]]*# ]] && continue
-        pkg="${line%%#*}"
-        pkg="${pkg//[[:space:]]/}"
-        [[ -z "${pkg}" ]] && continue
+    [[ -d "${layer_dir}/package-lists" ]] || return 0
 
-        if [[ -n "${PKG_SOURCES[${pkg}]:-}" ]]; then
-            PKG_SOURCES["${pkg}"]="${PKG_SOURCES[${pkg}]}
-${list_file}"
-        else
-            PKG_SOURCES["${pkg}"]="${list_file}"
-        fi
-    done < "${list_file}"
-done
+    while IFS= read -r -d '' list_file; do
+        while IFS= read -r line; do
+            [[ -z "${line}" || "${line}" =~ ^[[:space:]]*# ]] && continue
+            local pkg="${line%%#*}"
+            pkg="${pkg//[[:space:]]/}"
+            [[ -z "${pkg}" ]] && continue
 
-CROSS_ERRORS=0
-for pkg in "${!PKG_SOURCES[@]}"; do
-    mapfile -t sources <<< "${PKG_SOURCES[${pkg}]}"
-    if [[ ${#sources[@]} -gt 1 ]]; then
-        _error "Golden Rule violation - package '${pkg}' found in multiple lists:"
-        for src in "${sources[@]}"; do
-            _error "  ${src}"
-        done
-        (( CROSS_ERRORS++ )) || true
+            if [[ -n "${_out_map[${pkg}]:-}" ]]; then
+                _out_map["${pkg}"]="${_out_map[${pkg}]} ${list_file}"
+            else
+                _out_map["${pkg}"]="${list_file}"
+            fi
+        done < "${list_file}"
+    done < <(find "${layer_dir}/package-lists" -type f \( -name "*.list.chroot" -o -name "*.list.binary" \) -print0 2>/dev/null)
+}
+
+_check_edition_flavor_duplicates() {
+    local profile_label="${1}"
+    local edition="${2}"
+    local flavor="${3}"
+
+    if [[ -z "${flavor}" || "${flavor}" == "none" ]]; then
+        log_info "  Profile '${profile_label}': flavor is 'none' (skipped)"
+        return 0
     fi
-done
+
+    local edition_dir="${OS_REPO_ROOT}/editions/${edition}"
+    local flavor_dir="${OS_REPO_ROOT}/flavors/${flavor}"
+
+    if [[ ! -d "${edition_dir}" ]]; then
+        _error "Edition '${edition}' directory not found: ${edition_dir} (profile: ${profile_label})"
+        return 0
+    fi
+
+    if [[ ! -d "${flavor_dir}" ]]; then
+        _error "Flavor '${flavor}' directory not found: ${flavor_dir} (profile: ${profile_label})"
+        return 0
+    fi
+
+    local -A edition_pkgs=()
+    local -A flavor_pkgs=()
+
+    _collect_layer_packages "${edition_dir}" edition_pkgs
+    _collect_layer_packages "${flavor_dir}" flavor_pkgs
+
+    log_info "  Checking profile '${profile_label}' (edition: ${edition}, flavor: ${flavor})"
+
+    local dupes_found=0
+    for pkg in "${!edition_pkgs[@]}"; do
+        if [[ -n "${flavor_pkgs[${pkg}]:-}" ]]; then
+            _error "Golden Rule violation: Package '${pkg}' found in both edition and flavor layers (profile: ${profile_label}):"
+            for f in ${edition_pkgs[${pkg}]}; do
+                _error "  Edition (${edition}): ${f}"
+            done
+            for f in ${flavor_pkgs[${pkg}]}; do
+                _error "  Flavor  (${flavor}):  ${f}"
+            done
+            (( dupes_found++ )) || true
+        fi
+    done
+
+    if [[ "${dupes_found}" -eq 0 ]]; then
+        log_debug "  Profile '${profile_label}': No edition/flavor duplicates found."
+    fi
+}
+
+if [[ -n "${OPT_PROFILE}" ]]; then
+    _check_edition_flavor_duplicates "${OPT_PROFILE}" "${DISTRO_EDITION}" "${DISTRO_FLAVOR}"
+else
+    # Check edition vs flavor across all profiles found under profiles/
+    declare -a PROFILE_DIRS=()
+    while IFS= read -r -d '' p_dir; do
+        PROFILE_DIRS+=("${p_dir}")
+    done < <(find "${OS_REPO_ROOT}/profiles" -mindepth 1 -maxdepth 1 -type d ! -name "_*" -print0 | sort -z)
+
+    if [[ ${#PROFILE_DIRS[@]} -eq 0 ]]; then
+        log_warn "No profiles found in ${OS_REPO_ROOT}/profiles to check edition vs flavor duplicates."
+    else
+        for p_dir in "${PROFILE_DIRS[@]}"; do
+            p_name="$(basename "${p_dir}")"
+            p_env="${p_dir}/profile.env"
+            if [[ ! -f "${p_env}" ]]; then
+                continue
+            fi
+            p_edition=""
+            p_flavor=""
+            read -r p_edition p_flavor < <(
+                DISTRO_EDITION=""
+                DISTRO_FLAVOR=""
+                # shellcheck source=/dev/null
+                source "${p_env}" 2>/dev/null || true
+                echo "${DISTRO_EDITION} ${DISTRO_FLAVOR}"
+            )
+            if [[ -n "${p_edition}" && -n "${p_flavor}" ]]; then
+                _check_edition_flavor_duplicates "${p_name}" "${p_edition}" "${p_flavor}"
+            fi
+        done
+    fi
+fi
 
 # ---------------------------------------------------------------------------
 # Check 6: Wrong-layer packages (policy enforcement)
