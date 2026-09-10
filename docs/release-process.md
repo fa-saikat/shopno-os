@@ -166,9 +166,24 @@ DISTRO_BUGTRACKER="https://github.com/JaduPC/shopno-os/issues"
 
 ```bash
 # Quick sanity check - brand.sh will validate on build, but catch it early
-source scripts/lib/common.sh && source scripts/lib/brand.sh
-echo "Version: ${DISTRO_VERSION}"
-echo "ISO will be named: $(source scripts/lib/iso-name.sh && iso_name)"
+(
+    source scripts/lib/common.sh
+    source scripts/lib/brand.sh
+    source scripts/lib/profile.sh
+    source scripts/lib/iso-name.sh
+
+    echo "Version: ${DISTRO_VERSION}"
+    echo ""
+    echo "ISO names for all available profiles:"
+
+    for profile in $(list_profiles); do
+        if ! iso="$(load_profile "${profile}" >/dev/null 2>&1 && iso_name)"; then
+            echo "  ${profile} → ERROR (failed to load profile)"
+            continue
+        fi
+        echo "  ${profile} → ${iso}"
+    done
+)
 ```
 
 ### 4.3 Confirm ISO names look correct
