@@ -19,6 +19,10 @@ sed -i \
     -e 's|^show-button-title=.*|show-button-title=false|' \
     "$RCFILE"
 
+# Set mode selection window keyboard shortcut
+sed -i '/name="F12" type="string" value="sh -c \/usr\/local\/bin\/keyboard-layout-switcher"/a\    <property name="&lt;Primary&gt;&lt;Super&gt;Home" type="string" value="/usr/bin/bash /usr/local/bin/jadupc-mode-selector.sh"/>' /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml
+# sed -i '/<property name="F12"/a\        <property name="&lt;Primary&gt;&lt;Super&gt;Home" type="string" value="/usr/bin/bash /usr/local/bin/jadupc-mode-selector.sh"/>' /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-keyboard-shortcuts.xml
+
 # Set gaming edition background
 XMLFILE="/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
 
