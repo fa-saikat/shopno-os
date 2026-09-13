@@ -20,13 +20,3 @@ shopno-os-stats-sync
 sudo
 systemd-timesyncd
 user-setup
-grub-common
-grub-pc
-grub-pc-bin
-grub2-common
-mokutil
-os-prober
-shim-helpers-amd64-signed
-shim-signed
-shim-signed-common
-shim-unsigned
