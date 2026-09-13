@@ -4,10 +4,28 @@
 # ShopnoOS — Lint: Duplicate Package Detection
 #
 # PURPOSE:
-#   Enforce the Golden Rule: a package lives in exactly ONE place.
-#   Scans all *.list.chroot and *.list.binary files across base/, editions/,
-#   flavors/, and hardware/, then reports any package name that appears in
-#   more than one file.
+#   Enforce the Golden Rule *within a single layer instance*: a package must
+#   not be declared twice inside the same base/, the same edition/<n>/, the
+#   same flavor/<n>/, or the same hardware/<n>/.
+#
+#   Duplicate package NAMES across DIFFERENT layer instances of the same
+#   type (e.g. editions/desktop/ vs editions/gaming/, or flavors/xfce/ vs
+#   flavors/gnome/) are NOT flagged. A profile only ever activates one
+#   edition, one flavor, and one hardware layer at a time (see
+#   scripts/lib/profile.sh) — two editions declaring the same package is
+#   not a collision, it's two independent, mutually-exclusive selections
+#   that happen to overlap. See docs/package-ownership.md
+#   § "Cross-Layer Package Sharing" for the full policy.
+#
+#   Duplication between an active edition and its paired flavor is still
+#   checked, but per-profile — that lives in scripts/dev/lint-packages.sh
+#   (Check 5), not here.
+#
+# SCOPES CHECKED (independently — never against each other):
+#   - base                    (all *.list.chroot under base/, as one group)
+#   - edition:<name>          (all *.list.chroot under editions/<name>/)
+#   - flavor:<name>           (all *.list.chroot under flavors/<name>/)
+#   - hardware:<name>         (all *.list.chroot under hardware/<name>/)
 #
 # EXIT CODES:
 #   0 — no duplicates found
@@ -80,6 +98,39 @@ SEARCH_DIRS=(
     "${REPO_ROOT}/hardware"
 )
 
+# _scope_for_path "abs_path"
+# Prints the scope key a given list file belongs to:
+#   base
+#   edition:<name>
+#   flavor:<name>
+#   hardware:<name>
+#   unknown:<rel-path>   (defensive fallback — should never happen)
+_scope_for_path() {
+    local path="${1}"
+    local rel="${path#"${REPO_ROOT}"/}"
+
+    case "${rel}" in
+        base/*)
+            echo "base"
+            ;;
+        editions/*)
+            local rest="${rel#editions/}"
+            echo "edition:${rest%%/*}"
+            ;;
+        flavors/*)
+            local rest="${rel#flavors/}"
+            echo "flavor:${rest%%/*}"
+            ;;
+        hardware/*)
+            local rest="${rel#hardware/}"
+            echo "hardware:${rest%%/*}"
+            ;;
+        *)
+            echo "unknown:${rel}"
+            ;;
+    esac
+}
+
 LIST_FILES=()
 for dir in "${SEARCH_DIRS[@]}"; do
     if [[ -d "${dir}" ]]; then
@@ -97,13 +148,14 @@ fi
 log_section "ShopnoOS — Duplicate Package Checker"
 log_info "Repo root : ${REPO_ROOT}"
 log_info "List files: ${#LIST_FILES[@]} found"
+log_info "Scope     : per-layer-instance (base / each edition / each flavor / each hardware)"
 
 # ---------------------------------------------------------------------------
-# Build a map: package_name → list of files it appears in
+# Build a map: "scope||package_name" → list of files it appears in
 # ---------------------------------------------------------------------------
-# Use a temp dir for associative-array simulation compatible with bash 4+
-declare -A pkg_files   # pkg_name -> space-separated list of file paths
-declare -A pkg_count   # pkg_name -> count
+declare -A pkg_files   # "scope||pkg" -> space-separated list of file paths
+declare -A pkg_count   # "scope||pkg" -> count
+declare -A scope_seen  # scope -> 1 (summary only)
 
 _strip_comments() {
     # Remove blank lines, comment lines, and inline comments.
@@ -119,53 +171,61 @@ _strip_comments() {
 }
 
 for list_file in "${LIST_FILES[@]}"; do
-    # path relative to repo root for cleaner output
     rel="${list_file#"${REPO_ROOT}"/}"
+    scope="$(_scope_for_path "${list_file}")"
+    scope_seen["${scope}"]=1
 
     while IFS= read -r pkg; do
         [[ -z "${pkg}" ]] && continue
-        if [[ -n "${pkg_files[${pkg}]+_}" ]]; then
-            pkg_files["${pkg}"]+=" ${rel}"
-            (( pkg_count["${pkg}"]++ )) || true
+        key="${scope}||${pkg}"
+        if [[ -n "${pkg_files[${key}]+_}" ]]; then
+            pkg_files["${key}"]+=" ${rel}"
+            (( pkg_count["${key}"]++ )) || true
         else
-            pkg_files["${pkg}"]="${rel}"
-            pkg_count["${pkg}"]=1
+            pkg_files["${key}"]="${rel}"
+            pkg_count["${key}"]=1
         fi
     done < <(_strip_comments "${list_file}")
 done
+
+log_info "Layer instances scanned: ${#scope_seen[@]}"
 
 # ---------------------------------------------------------------------------
 # Report
 # ---------------------------------------------------------------------------
 DUPLICATES=()
-for pkg in $(echo "${!pkg_count[@]}" | tr ' ' '\n' | sort); do
-    if [[ ${pkg_count["${pkg}"]} -gt 1 ]]; then
-        DUPLICATES+=("${pkg}")
+for key in $(echo "${!pkg_count[@]}" | tr ' ' '\n' | sort); do
+    if [[ ${pkg_count["${key}"]} -gt 1 ]]; then
+        DUPLICATES+=("${key}")
     fi
 done
 
 echo ""
 if [[ ${#DUPLICATES[@]} -eq 0 ]]; then
-    log_ok "No duplicate packages found across ${#LIST_FILES[@]} list files."
+    log_ok "No duplicate packages found within any single layer instance (${#scope_seen[@]} scopes, ${#LIST_FILES[@]} list files)."
     echo ""
     exit 0
 fi
 
-log_error "${#DUPLICATES[@]} duplicate package(s) detected:"
+log_error "${#DUPLICATES[@]} duplicate package(s) detected within a single layer instance:"
 echo ""
 
 if [[ "${QUIET}" -eq 0 ]]; then
-    for pkg in "${DUPLICATES[@]}"; do
-        echo -e "  ${RED}${BOLD}${pkg}${RESET}"
-        # Print each file on its own indented line
-        for f in ${pkg_files["${pkg}"]}; do
+    for key in "${DUPLICATES[@]}"; do
+        scope="${key%%||*}"
+        pkg="${key#*||}"
+        echo -e "  ${RED}${BOLD}${pkg}${RESET}  ${DIM}(scope: ${scope})${RESET}"
+        for f in ${pkg_files["${key}"]}; do
             echo -e "    ${DIM}→ ${f}${RESET}"
         done
         echo ""
     done
 fi
 
-echo -e "  ${RED}${BOLD}ACTION REQUIRED:${RESET} Each package must live in exactly one list file."
-echo -e "  ${DIM}See: docs/package-ownership.md${RESET}"
+echo -e "  ${RED}${BOLD}ACTION REQUIRED:${RESET} Within the same edition/flavor/hardware layer (or"
+echo -e "  within base/), a package must live in exactly one list file. Packages repeated"
+echo -e "  across DIFFERENT editions or DIFFERENT flavors (e.g. editions/desktop/ and"
+echo -e "  editions/gaming/) are allowed and are not reported here."
+echo -e "  ${DIM}See: docs/package-ownership.md § Cross-Layer Package Sharing${RESET}"
 echo ""
 exit 1
