@@ -145,7 +145,7 @@ if [[ "${OPT_DRY_RUN}" -eq 1 ]]; then
     REMOTE_HOST="${OS_MIRROR_HOST:-<host>}"
     REMOTE_USER="${OS_MIRROR_USER:-<user>}"
     REMOTE_PATH="${OS_MIRROR_PATH:-<path>}"
-    REMOTE_DIR="${REMOTE_PATH}/${DISTRO_VERSION}/${DISTRO_ARCH}"
+    REMOTE_DIR="${REMOTE_PATH}/${DISTRO_VERSION}/${DISTRO_EDITION}/${DISTRO_ARCH}"
 
     for artifact in "${ARTIFACTS[@]}"; do
         echo "  rsync $(basename "${artifact}") → ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
@@ -173,7 +173,7 @@ require_var PUBLISH_HOST PUBLISH_USER PUBLISH_PATH
 SSH_OPTS=(-o StrictHostKeyChecking=accept-new)
 [[ -n "${PUBLISH_KEY}" ]] && SSH_OPTS+=(-i "${PUBLISH_KEY}")
 
-REMOTE_DIR="${PUBLISH_PATH}/${DISTRO_VERSION}/${DISTRO_ARCH}"
+REMOTE_DIR="${PUBLISH_PATH}/${DISTRO_VERSION}/${DISTRO_EDITION}/${DISTRO_ARCH}"
 REMOTE_TARGET="${PUBLISH_USER}@${PUBLISH_HOST}"
 
 # ---------------------------------------------------------------------------
