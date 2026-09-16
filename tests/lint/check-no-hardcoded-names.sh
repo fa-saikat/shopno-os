@@ -57,6 +57,13 @@ _is_header_title_line() {
     [[ "${content}" =~ ^[[:space:]]*\#[[:space:]]*${DISTRO_NAME}[[:space:]]*[-–—] ]]
 }
 
+# Explicit inline suppression for one-off cases (use sparingly, comment why):
+#   LB_DISTRIBUTION="trixie"  # shopno-os-lint:ignore
+_has_ignore_marker() {
+    local content="${1}"
+    [[ "${content}" == *"shopno-os-lint:ignore"* ]]
+}
+
 while [[ $# -gt 0 ]]; do
     case "${1}" in
         --repo-root) REPO_ROOT="${2}"; shift 2 ;;
@@ -205,6 +212,7 @@ for pattern in "${PATTERNS[@]}"; do
         content="${rest#*:}"
 
 	_is_header_title_line "${content}" && continue
+	_has_ignore_marker "${content}" && continue
 
         file_violations["${file}"]=$(( ${file_violations["${file}"]:-0} + 1 ))
         (( TOTAL_VIOLATIONS++ )) || true
