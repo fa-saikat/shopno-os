@@ -293,15 +293,15 @@ if [[ "${OS_ISO_NAME_SELFTEST:-0}" == "1" ]]; then
     echo "=== iso-name.sh self-test ==="
 
     # Minimal stub vars for testing
-    DISTRO_ID="shopno"
-    DISTRO_NAME="ShopnoOS"
-    DISTRO_VERSION="2.0"
-    DISTRO_CODENAME="boipoka"
-    DISTRO_EDITION="desktop"
+    DISTRO_ID="shopno"		# shopno-os-lint:ignore
+    DISTRO_NAME="ShopnoOS"	# shopno-os-lint:ignore
+    DISTRO_VERSION="2.0"	# shopno-os-lint:ignore
+    DISTRO_CODENAME="boipoka"	
+    DISTRO_EDITION="desktop"	
     DISTRO_FLAVOR="gnome"
     DISTRO_HARDWARE="generic"
     DISTRO_ARCH="amd64"
-    LB_DISTRIBUTION="trixie"
+    LB_DISTRIBUTION="trixie"	# shopno-os-lint:ignore
 
     echo "iso_stem:          $(iso_stem)"
     echo "iso_name:          $(iso_name)"

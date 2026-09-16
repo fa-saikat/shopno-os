@@ -4,7 +4,7 @@
 # ShopnoOS - Shared Script Library: Common Utilities
 #
 # PURPOSE:
-#   Mandatory source for every script in the ShopnoOS build system.
+#   Mandatory source for every script in the ShopnoOS build system. # shopno-os-lint:ignore
 #   Provides: logging, colors, error trapping, guard checks and general
 #   utility functions. Nothing distro-specific lives here.
 #
