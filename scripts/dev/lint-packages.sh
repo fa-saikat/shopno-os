@@ -307,6 +307,8 @@ _check_layer_policy() {
     local layer_label="${2}"
     local -n _forbidden="${3}"
 
+    [[ -d "${layer_path}/package-lists" ]] || return 0
+
     while IFS= read -r -d '' list_file; do
         while IFS= read -r line; do
             [[ -z "${line}" || "${line}" =~ ^[[:space:]]*# ]] && continue
