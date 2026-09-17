@@ -162,9 +162,17 @@ EXCLUDE_DIRS=(
     "${REPO_ROOT}/build"
     "${REPO_ROOT}/tests"
     "${REPO_ROOT}/tools"
+    "${REPO_ROOT}/secrets/_template"    # human setup docs, never built
+    "${REPO_ROOT}/editions/*/config"    # chroot files
 )
 
-EXCLUDE_PATTERNS=()
+EXCLUDE_PATTERNS=(
+    "--exclude=*.cfg" "--exclude=*.cfg.in"    # bootloader configs: no substitution
+    "--exclude=*.desc" "--exclude=*.qml"      # Calamares branding: no substitution
+    "--exclude=*.rc"                          # xfconf/panel dumps: no substitution
+    "--exclude=*.desktop"
+    "--exclude=*.list"
+)
 for d in "${EXCLUDE_DIRS[@]}"; do
     EXCLUDE_PATTERNS+=("--exclude-dir=$(basename "${d}")")
 done
