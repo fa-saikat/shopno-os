@@ -1,0 +1,18 @@
+[Unit]
+Description=ShopnoOS CI boot marker
+After=multi-user.target network-online.target
+
+[Service]
+Type=oneshot
+TimeoutStartSec=0
+ExecStart=/bin/sh -c '\
+    if systemctl is-active --quiet multi-user.target \
+       && [ -z "$(systemctl --failed --no-legend --plain)" ]; then \
+        echo "CI_BOOT_OK running"; \
+    else \
+        echo "CI_BOOT_OK degraded"; \
+    fi'
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target
