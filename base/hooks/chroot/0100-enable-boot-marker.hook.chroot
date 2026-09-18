@@ -1,0 +1,22 @@
+#!/bin/sh
+# =============================================================================
+# 0100-enable-boot-marker.hook.chroot
+# Layer:   base
+# Stage:   chroot
+# Purpose: Enable the CI boot-marker systemd unit so automated boot tests
+#          (tests/smoke/test-iso-boots.sh) can detect a clean boot via serial
+#          console output, rather than a naive "reached a login prompt" check
+#          that varies by display manager, locale, and boot speed.
+# Number:  0100 - runs after every other numbered base hook (0010-0090),
+#          including 0090-stamp-build-info. Order doesn't matter for this
+#          hook specifically (it only enables a unit, doesn't depend on
+#          anything the earlier hooks write), but keeping it last avoids
+#          ever having to renumber it as new base hooks are added.
+#
+# NEVER installs packages — see docs/adding-edition.md's hook rule.
+# =============================================================================
+set -e
+
+echo ">>> [base/0100-enable-boot-marker] Enabling shopno-os-boot-marker.service..."
+systemctl enable shopno-os-boot-marker.service
+echo ">>> [base/0100-enable-boot-marker] Done."
