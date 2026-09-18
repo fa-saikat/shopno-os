@@ -137,6 +137,15 @@ LB_CONFIG_ARGS=(
     --memtest               "${LB_MEMTEST}"
 
     # -------------------------------------------------------------------------
+    # BOOT APPEND (LIVE)
+    # console=ttyS0,115200n8 is required for automated boot testing
+    # (tests/smoke/test-iso-boots.sh) — without it QEMU's serial capture
+    # receives no kernel/init output at all, and the boot gate would pass
+    # regardless of what actually happens on boot.
+    # -------------------------------------------------------------------------
+    --bootappend-live       "${LB_BOOTAPPEND_LIVE:-boot=live components quiet splash console=ttyS0,115200n8}"
+
+    # -------------------------------------------------------------------------
     # COMPRESSION
     # Squashfs compression (rootfs) and initramfs compression are set separately.
     # -------------------------------------------------------------------------
