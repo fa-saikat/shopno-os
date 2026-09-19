@@ -746,17 +746,19 @@ These tools reference brand variables from the environment at runtime - they do 
 ```
 tests/
 ├── smoke/
-│   ├── test-iso-boots.sh           # QEMU boot test - verifies ISO reaches login prompt
-│   └── test-packages-present.sh    # Mounts squashfs, checks package list against manifest
+│   ├── test-iso-boots.sh           # QEMU boot test (UEFI-only) - verifies ISO reaches multi-user.target cleanly
+│   └── test-packages-present.sh    # Rootless artifact check - installed set vs floor + critical-package list
 ├── lint/
 │   ├── check-duplicate-packages.sh # Same logic as lint-packages.sh - run in CI
 │   ├── check-no-hardcoded-names.sh # Scans all files outside brand/ for hardcoded names
 │   └── check-brand-vars-used.sh    # Confirms every declared DISTRO_* var is consumed
 └── fixtures/
-    └── expected-package-counts.json  # Baseline package counts per layer for regression detection
+    └── expected-package-counts.json  # Per-profile floors + critical packages; per-profile validation flags
 ```
 
-**Smoke tests** require QEMU and run against the built ISO. They are run in CI after a successful build on the `vm` hardware profile.
+**Smoke tests** run against the built ISO. `test-iso-boots.sh` boots the ISO headlessly under QEMU and greps the serial log for the boot-marker service's verdict — by design it exercises the **UEFI (grub-efi) boot path only**. The legacy-BIOS (ISOLINUX/syslinux) path has no serial configuration yet, so a BIOS boot would hang silently waiting for keyboard input; see issue #30 before trusting any non-UEFI result from this gate.
+
+`test-packages-present.sh` answers the complementary question — does the ISO *contain* what its layers declared — by extracting the squashfs **without root** (xorriso, with a 7z fallback for images xorriso 1.5.x can't parse; single-file `unsquashfs` of `var/lib/dpkg/status`, never a loop mount, so it runs in unprivileged CI). It deliberately checks a **floor plus a critical-package list, not exact counts**: exact counts go stale on every upstream Debian change and train people to bump numbers blindly, while a floor catches catastrophic drops and the critical list catches layer-merge regressions deterministically. Expectations live in `expected-package-counts.json`, which records per-profile `validated_against_real_iso` flags — a floor derived only from declared lists (unvalidated) is intentionally weaker than one recalibrated from a real build, and the flag says which is which.
 
 **Lint tests** run on every push and do not require a build. They are fast and catch the most common classes of error: duplicate packages, hardcoded names, and unused brand variables.
 

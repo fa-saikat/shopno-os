@@ -1,0 +1,70 @@
+{
+  "schema_version": "1",
+  "generated_from": "declared *.list.chroot unique package counts per profile composition (base -> edition -> flavor)",
+  "provenance": {
+    "method": "source-derived floor",
+    "note": "total_min is a FLOOR (declared unique count), not an exact expectation. A real installed system always exceeds it via dependencies and essential packages. Validation state is tracked per profile via validated_against_real_iso — recalibrate each floor upward from its real `unsquashfs var/lib/dpkg/status` run; publish the diff even if it shows drift."
+  },
+  "profiles": {
+    "shopno-os-core": {
+      "composition": ["base", "editions/core"],
+      "declared_unique": 186,
+      "total_min": 186,
+      "validated_against_real_iso": false,
+      "critical_packages": [
+        "live-boot",
+        "live-config-systemd",
+        "grub-efi-amd64",
+        "openssh-server",
+        "apparmor",
+        "cryptsetup",
+        "curl",
+        "git"
+      ]
+    },
+    "shopno-os-desktop-xfce": {
+      "composition": ["base", "editions/desktop", "flavors/xfce"],
+      "declared_unique": 332,
+      "total_min": 1500,
+      "validated_against_real_iso": true,
+      "validated_detail": {
+        "iso": "shopno-os-2.2-desktop-xfce-amd64-20260918.iso",
+        "observed_installed": 1812,
+        "critical_present": "8/8",
+        "date": "2026-09-19"
+      },
+      "critical_packages": [
+        "calamares",
+        "xfce4",
+        "lightdm",
+        "xorg",
+        "thunar",
+        "network-manager-gnome",
+        "live-tools",
+        "flatpak"
+      ]
+    },
+    "shopno-os-gaming-xfce": {
+      "composition": ["base", "editions/gaming", "flavors/xfce"],
+      "declared_unique": 335,
+      "total_min": 1500,
+      "validated_against_real_iso": true,
+      "validated_detail": {
+        "iso": "shopno-os-2.2-gaming-xfce-amd64-20260918.iso",
+        "observed_installed": 1852,
+        "critical_present": "7/7",
+        "date": "2026-09-19",
+        "note": "xorriso 1.5.x cannot parse this image (multi-extent SUSP CE from >4GB squashfs); extracted via 7z fallback"
+      },
+      "critical_packages": [
+        "kodi",
+        "antimicro",
+        "calamares",
+        "xfce4",
+        "lightdm",
+        "xorg",
+        "live-tools"
+      ]
+    }
+  }
+}
