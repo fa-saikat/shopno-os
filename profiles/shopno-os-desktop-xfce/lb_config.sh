@@ -75,7 +75,7 @@ lb config --binary-image        "${LB_BINARY_IMAGES}" \
         --linux-flavours        "${LB_LINUX_FLAVOURS}" \
         --memtest               "${LB_MEMTEST}" \
         --bootloaders           "${LB_BOOTLOADERS}" \
-        --bootappend-live "boot=live components hostname=shopnoos-live username=liveuser user-fullname=Shopnobaz timezone='Asia/Dhaka' efi_no_storage_paranoia console=ttyS0,115200n8" \
+        --bootappend-live "${LB_BOOTAPPEND_LIVE}" \
         "${@}" @>/dev/null
 
 

@@ -252,16 +252,18 @@ if [[ -z "${PROFILE}" ]]; then
     if [[ -z "${PROFILE}" ]]; then
         BASE="$(basename "${ISO_PATH}" .iso)"
         if [[ "${BASE}" =~ ^shopno-os-[0-9]+(\.[0-9]+)*-([a-z]+)-([a-z0-9]+(-[a-z0-9]+)?)-([a-z0-9]+)-([0-9]{8})(-([a-z0-9]+))?$ ]]; then
-            if [[ "${BASH_REMATCH[3]}" == "none" ]]; then
-                PROFILE="shopno-os-${BASH_REMATCH[2]}"
-            else
-                PROFILE="shopno-os-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
-            fi
+            PROFILE="shopno-os-${BASH_REMATCH[2]}-${BASH_REMATCH[3]}"
             [[ -n "${BASH_REMATCH[8]:-}" ]] && PROFILE="${PROFILE}-${BASH_REMATCH[8]}"
             log_warn "Profile guessed from filename: ${PROFILE} (pass --profile to override)"
         fi
     fi
 fi
+
+# Normalize: flavor 'none' is not part of profile names (profiles/shopno-os-core,
+# not shopno-os-core-none), but it does appear in build-info, manifest and ISO
+# filenames. Strip it here, once, for every detection hint uniformly.
+PROFILE="${PROFILE//-none-/-}"
+PROFILE="${PROFILE%-none}"
 
 [[ -n "${PROFILE}" ]] \
     || { log_error "Could not determine profile — pass --profile explicitly"; exit 1; }

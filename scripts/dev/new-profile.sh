@@ -187,9 +187,9 @@ LB_BINARY_IMAGES="iso-hybrid"
 LB_BOOTLOADERS="grub-efi grub-pc"
 LB_UEFI_SECURE_BOOT="auto"
 
-# Boot
+# Boot (console=ttyS0,115200n8 required for QEMU serial boot gate - see tests/smoke/test-iso-boots.sh)
 LB_MEMTEST="none"
-LB_BOOTAPPEND_LIVE="boot=live components quiet splash"
+LB_BOOTAPPEND_LIVE="boot=live components quiet splash console=ttyS0,115200n8"
 LB_BOOTAPPEND_INSTALL=""
 
 # Build options

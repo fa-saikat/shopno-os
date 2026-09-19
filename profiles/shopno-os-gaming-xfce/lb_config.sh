@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-# ShopnoOS — live-build config assembler for: shopno-os-desktop-xfce
+# ShopnoOS — live-build config assembler for: shopno-os-gaming-xfce
 # Called by: scripts/build/prepare-lb-config.sh
-# Do NOT run this directly — use: ./scripts/build/build.sh shopno-os-desktop-xfce
+# Do NOT run this directly — use: ./scripts/build/build.sh shopno-os-gaming-xfce
 # =============================================================================
 set -euo pipefail
 
@@ -75,10 +75,10 @@ lb config --binary-image        "${LB_BINARY_IMAGES}" \
         --linux-flavours        "${LB_LINUX_FLAVOURS}" \
         --memtest               "${LB_MEMTEST}" \
         --bootloaders           "${LB_BOOTLOADERS}" \
-        --bootappend-live "boot=live components hostname=shopnoos-live username=liveuser user-fullname=Shopnobaz timezone='Asia/Dhaka' efi_no_storage_paranoia console=ttyS0,115200n8" \
+        --bootappend-live "${LB_BOOTAPPEND_LIVE}" \
         "${@}" @>/dev/null
 
 
 
 
-log_success "lb config assembled for profile: shopno-os-desktop-xfce"
+log_success "lb config assembled for profile: shopno-os-gaming-xfce"
