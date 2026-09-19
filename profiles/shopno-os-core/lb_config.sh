@@ -37,6 +37,8 @@ lb config noauto \
     --bootappend-live       "${LB_BOOTAPPEND_LIVE}" \
     --memtest               "${LB_MEMTEST}" \
     \
+    --debootstrap-options   "--include=apt-transport-https,ca-certificates,openssl" \
+    \
     --apt-recommends        "${LB_APT_RECOMMENDS}" \
     --apt-secure            "${LB_APT_SECURE}" \
     --archive-areas         "${LB_APT_ARCHIVE_AREAS}" \
