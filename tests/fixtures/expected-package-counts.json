@@ -9,8 +9,14 @@
     "shopno-os-core": {
       "composition": ["base", "editions/core"],
       "declared_unique": 186,
-      "total_min": 186,
-      "validated_against_real_iso": false,
+      "total_min": 650,
+      "validated_against_real_iso": true,
+      "validated_detail": {
+        "iso": "shopno-os-2.2-core-none-amd64-20260919.iso",
+        "observed_installed": 784,
+        "critical_present": "8/8",
+        "date": "2026-09-19"
+      },
       "critical_packages": [
         "live-boot",
         "live-config-systemd",
