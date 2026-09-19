@@ -37,7 +37,9 @@
 #   --workdir DIR       Use DIR as workdir instead of mktemp (implies --keep-workdir).
 #   -h, --help          Show this help.
 #
-# HOST DEPS (all rootless): xorriso, unsquashfs (squashfs-tools), jq
+# HOST DEPS (all rootless): xorriso, unsquashfs (squashfs-tools), jq,
+#   plus 7z (p7zip, optional) as extraction fallback for images whose
+#   tree xorriso 1.5.x cannot parse (e.g. >4GB squashfs members).
 # =============================================================================
 set -euo pipefail
 
@@ -149,6 +151,13 @@ else
         elif command -v 7z > /dev/null 2>&1; then
             log_warn "xorriso extraction failed — falling back to 7z"
             tail -5 "${XORRISO_LOG}" >&2 || true
+            # xorriso may have died partway, leaving a partially-extracted
+            # read-only tree (it restores ISO permissions verbatim). 7z must
+            # overwrite those same paths, so start it from a clean dir —
+            # otherwise the fallback fails on the very images it exists for.
+            chmod -R u+rwX "${ISO_ROOT}" 2>/dev/null || true
+            rm -rf "${ISO_ROOT}"
+            mkdir -p "${ISO_ROOT}"
             P7ZIP_LOG="${WORKDIR}/7z.log"
             if ! 7z x "-o${ISO_ROOT}" "${ISO_PATH}" > "${P7ZIP_LOG}" 2>&1; then
                 log_error "7z extraction also failed for: ${ISO_PATH}"
