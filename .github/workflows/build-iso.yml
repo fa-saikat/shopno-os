@@ -61,11 +61,25 @@ jobs:
       # Plus: qemu-system-x86 + ovmf (boot gate), squashfs-tools (unsquashfs
       # for the package gate), p7zip-full (7z fallback for >4GB squashfs
       # images xorriso 1.5.x cannot parse - load-bearing for gaming-xfce).
-      # gpg/rsync are preinstalled on ubuntu-24.04 runners.
+      # gpg/rsync/cpio are preinstalled on ubuntu-24.04 runners.
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y live-build debootstrap xorriso squashfs-tools jq qemu-system-x86 ovmf p7zip-full
+          sudo apt-get install -y debootstrap xorriso squashfs-tools jq qemu-system-x86 ovmf p7zip-full
+          # Noble ships NO live-build package (verified across universe/
+          # multiverse/updates/backports) and whatever `lb` resolves there
+          # rejects flags this project requires. Install Debian trixie's
+          # live-build instead - arch:all scripts, needs only cpio +
+          # debootstrap. Pinned version + checksum; re-pin on trixie updates.
+          if dpkg -S /usr/bin/lb >/dev/null 2>&1; then
+            echo "NOTE: /usr/bin/lb already owned by: $(dpkg -S /usr/bin/lb)"
+          fi
+          LB_DEB=/tmp/live-build.deb
+          curl -sL --max-time 120 -o "${LB_DEB}" \
+            http://deb.debian.org/debian/pool/main/l/live-build/live-build_20250505+deb13u1_all.deb
+          echo "58e09779881cbcc631c49ceb703413e0247a87db01823e597b2a1c40a2afd8f4  ${LB_DEB}" | sha256sum -c -
+          sudo dpkg -i "${LB_DEB}"
+          dpkg-query -W live-build
 
       # --skip-sign: no GPG key on hosted runners (signing stays a release-
       # machine step via scripts/release/sign-iso.sh). Lint runs inside
