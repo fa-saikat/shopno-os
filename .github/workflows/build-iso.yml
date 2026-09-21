@@ -1,0 +1,128 @@
+name: Build ISO
+
+# Release flow (docs/release-process.md §1.5): everything through signing
+# happens on `dev`; `main` only ever receives merges and tags. So this
+# workflow gates pull requests targeting `dev` - a build proves the PR
+# before it lands. Pushes to `main` intentionally do NOT rebuild: those
+# bits were already proven on `dev`, and rebuilding for a different
+# channel is exactly what the plan forbids (promotion, not rebuild).
+# Single profile for now (core: smallest, fastest); the matrix + caching
+# + self-hosted runner are follow-ups gated on actually hitting
+# hosted-runner limits (see devops-integration-plan.md §3).
+on:
+  pull_request:
+    branches: [dev]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'CHANGELOG.md'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Profile to build (single-profile phase - matrix later)'
+        required: false
+        default: 'shopno-os-core'
+
+# Successive PR synchronizes cancel the superseded build - a half-built
+# ISO is no artifact worth keeping, so never pay for stale commits.
+concurrency:
+  group: build-iso-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PROFILE: ${{ github.event.inputs.profile || 'shopno-os-core' }}
+
+jobs:
+  build:
+    name: Build + smoke-test ${{ github.event.inputs.profile || 'shopno-os-core' }}
+    runs-on: ubuntu-24.04
+    # GitHub-hosted ceiling is 6h/job. A live-build run (chroot + squashfs)
+    # is exactly the workload this quota wasn't sized for - if core starts
+    # approaching it, that's the measured trigger for the self-hosted runner
+    # (devops-integration-plan.md §3), not a reason to shrink the build.
+    timeout-minutes: 360
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Hosted runners ship ~72GB total with ~19-29GB free; toolchain
+      # SDKs we never touch are the cheapest gigabytes to reclaim.
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force 2>/dev/null || true
+          sudo apt-get clean
+          df -h /
+
+      # build.sh requires: lb live-build debootstrap xorriso mksquashfs gpg jq.
+      # Plus: qemu-system-x86 + ovmf (boot gate), squashfs-tools (unsquashfs
+      # for the package gate), p7zip-full (7z fallback for >4GB squashfs
+      # images xorriso 1.5.x cannot parse - load-bearing for gaming-xfce).
+      # gpg/rsync/cpio are preinstalled on ubuntu-24.04 runners.
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debootstrap xorriso squashfs-tools jq qemu-system-x86 ovmf p7zip-full
+          # Noble ships NO live-build package (verified across universe/
+          # multiverse/updates/backports) and whatever `lb` resolves there
+          # rejects flags this project requires. Install Debian trixie's
+          # live-build instead - arch:all scripts, needs only cpio +
+          # debootstrap. Pinned version + checksum; re-pin on trixie updates.
+          if dpkg -S /usr/bin/lb >/dev/null 2>&1; then
+            echo "NOTE: /usr/bin/lb already owned by: $(dpkg -S /usr/bin/lb)"
+          fi
+          LB_DEB=/tmp/live-build.deb
+          curl -sL --max-time 120 -o "${LB_DEB}" \
+            http://deb.debian.org/debian/pool/main/l/live-build/live-build_20250505+deb13u1_all.deb
+          echo "58e09779881cbcc631c49ceb703413e0247a87db01823e597b2a1c40a2afd8f4  ${LB_DEB}" | sha256sum -c -
+          sudo dpkg -i "${LB_DEB}"
+          dpkg-query -W live-build
+          # debootstrap aborts without /usr/share/keyrings/
+          # debian-archive-keyring.gpg, and noble's keyring (2023.4) predates
+          # the trixie archive keys. Same pinned-.deb treatment as live-build.
+          KEYRING_DEB=/tmp/debian-archive-keyring.deb
+          curl -sL --max-time 120 -o "${KEYRING_DEB}" \
+            http://deb.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2025.1_all.deb
+          echo "9ea7778e443144ca490668737a8ab22dd3e748bb99e805e22ec055abeb3c7fac  ${KEYRING_DEB}" | sha256sum -c -
+          sudo dpkg -i "${KEYRING_DEB}"
+
+      # --skip-sign: no GPG key on hosted runners (signing stays a release-
+      # machine step via scripts/release/sign-iso.sh). Lint runs inside
+      # build.sh too - defense in depth, not skipped.
+      - name: Build ISO
+        run: sudo ./scripts/build/build.sh "${PROFILE}" --skip-sign --jobs "$(nproc)"
+
+      - name: Locate built ISO
+        id: iso
+        run: |
+          ISO="$(find build/output -maxdepth 1 -name '*.iso' | sort | head -1)"
+          echo "iso=${ISO}" >> "${GITHUB_OUTPUT}"
+          ls -la build/output/
+
+      # Blocking: fast, deterministic, no virtualization involved.
+      - name: Smoke test - package presence
+        run: ./tests/smoke/test-packages-present.sh "${{ steps.iso.outputs.iso }}"
+
+      # Metric-first, not a gate yet (project's own grype pattern, ADR-007):
+      # the test is proven locally, but this hosted environment (KVM vs TCG
+      # fallback, steal time) is not. Promote to blocking after N consecutive
+      # green runs by removing continue-on-error.
+      - name: Smoke test - boot gate (non-blocking)
+        id: boot
+        continue-on-error: true
+        run: ./tests/smoke/test-iso-boots.sh "${{ steps.iso.outputs.iso }}" --timeout 600
+
+      # architecture.md §13: retained 7 days. ISO + manifest + build log -
+      # enough to re-run either smoke test locally without rebuilding.
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROFILE }}-iso
+          retention-days: 7
+          path: |
+            build/output/*.iso
+            build/output/build-manifest.json
+            build/${{ env.PROFILE }}/build.log
