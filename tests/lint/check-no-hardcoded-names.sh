@@ -162,8 +162,11 @@ EXCLUDE_DIRS=(
     "${REPO_ROOT}/build"
     "${REPO_ROOT}/tests"
     "${REPO_ROOT}/tools"
-    "${REPO_ROOT}/secrets/_template"    # human setup docs, never built
+    "${REPO_ROOT}/secrets"    # human setup docs, never built
+    "${REPO_ROOT}/profiles/_template"    # human setup docs, never built
     "${REPO_ROOT}/editions/*/config"    # chroot files
+    "${REPO_ROOT}/editions/*/hooks"    # chroot hooks
+    "${REPO_ROOT}/flavors/*/hooks"    # chroot hooks
 )
 
 EXCLUDE_PATTERNS=(
