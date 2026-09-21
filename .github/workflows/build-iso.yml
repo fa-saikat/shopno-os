@@ -80,6 +80,14 @@ jobs:
           echo "58e09779881cbcc631c49ceb703413e0247a87db01823e597b2a1c40a2afd8f4  ${LB_DEB}" | sha256sum -c -
           sudo dpkg -i "${LB_DEB}"
           dpkg-query -W live-build
+          # debootstrap aborts without /usr/share/keyrings/
+          # debian-archive-keyring.gpg, and noble's keyring (2023.4) predates
+          # the trixie archive keys. Same pinned-.deb treatment as live-build.
+          KEYRING_DEB=/tmp/debian-archive-keyring.deb
+          curl -sL --max-time 120 -o "${KEYRING_DEB}" \
+            http://deb.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2025.1_all.deb
+          echo "9ea7778e443144ca490668737a8ab22dd3e748bb99e805e22ec055abeb3c7fac  ${KEYRING_DEB}" | sha256sum -c -
+          sudo dpkg -i "${KEYRING_DEB}"
 
       # --skip-sign: no GPG key on hosted runners (signing stays a release-
       # machine step via scripts/release/sign-iso.sh). Lint runs inside
