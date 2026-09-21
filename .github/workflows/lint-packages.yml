@@ -1,0 +1,50 @@
+name: Lint
+
+# architecture.md §13: runs on every push, every PR. paths-ignore skips runs
+# that can't possibly trip a lint check (docs-only changes)
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'CHANGELOG.md'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'CHANGELOG.md'
+
+# A push to a branch with an open PR fires both `push` and `pull_request: synchronize`
+# for the same commit which this collapses the duplicate run instead of paying for both.
+concurrency:
+  group: lint-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint suites
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Duplicate packages (per layer instance)
+        run: bash tests/lint/check-duplicate-packages.sh
+
+      - name: Hardcoded distro names / URLs
+        run: bash tests/lint/check-no-hardcoded-names.sh
+
+      - name: Brand variable usage completeness
+        run: bash tests/lint/check-brand-vars-used.sh
+
+      # scripts/dev/lint-packages.sh - the build-pipeline lint step
+      # (naming convention, empty lists, package-name format, intra-list
+      # duplicates, edition/flavor duplicates, layer-policy violations).
+      # Same script build.sh calls before every build; running it here
+      # too catches the same class of error without needing a full build.
+      - name: Package list lint (build-pipeline script)
+        run: bash scripts/dev/lint-packages.sh
