@@ -63,3 +63,6 @@ build.log
 # Heavy assets
 # Exclude retropie rom files directory 
 roms/
+
+# docs
+docs/devops-integration-plan.md
