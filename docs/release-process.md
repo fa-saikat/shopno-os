@@ -38,7 +38,32 @@ The `release.yml` CI workflow automates phases 3–6 when triggered by a git tag
 | `scripts/release/publish.sh` | Uploads ISO and artifacts to the mirror / release server |
 | `scripts/release/changelog-gen.sh` | Auto-generates a `CHANGELOG.md` entry from git log |
 
----
+### 1.5 Branch Flow
+
+Everything through signing happens **on `dev`** -  lint, changelog, the version-bump commit, all builds, all Phase 4 verification, and signing. `dev` is the authoritative branch; a release is proven there before it touches `main` at all.
+
+```
+dev ---> lint ---> changelog ---> version bump ---> build ---> verify ---> sign ---.
+                                                                             	   |
+main <-------------------------- merge dev into main <-----------------------------`
+ |
+ `---> tag v<VERSION> on main ---> push ---> publish.sh (same bits, no rebuild) ---.
+																			 	   |
+GitHub Release <-------------------------------------------------------------------`
+```
+
+Only **after** `dev` has passed every Phase 4 check do you flip `main`:
+
+```bash
+git checkout main
+git merge dev
+```
+
+This must be a clean fast-forward — nothing else ever commits to `main` directly (see `docs/git-guide.md`), so if the merge isn't a fast-forward, stop and investigate before tagging anything.
+
+The tag is then created **on `main`**, never on `dev` - see §8.1. Tagging comes after building and verifying, not before: a tag means "this exact commit is released," so building first means a tag is only ever created for a commit that has already proven itself. This is the same reasoning behind `aptly`'s promotion-by-pointer-swap in the DevOps integration plan - you never rebuild for a different channel, you promote bits that already passed.
+
+Phase 7's post-release version bump happens back **on `dev`** - it marks the start of the next development cycle, which by definition isn't a released state and doesn't belong on `main`.
 
 ## 2. Prerequisites
 
@@ -361,6 +386,13 @@ gpg --detach-sign --armor SHA256SUMS
 
 ### 8.1 Create and push the git tag
 
+Flip `main` to the state `dev` just proved through Phase 4 and Phase 5, before tagging (see §1.5):
+
+```bash
+git checkout main
+git merge dev
+```
+
 The tag must be created after the version bump commit and before publishing. Tags trigger the `release.yml` CI workflow if CI is being used.
 
 ```bash
@@ -530,6 +562,7 @@ Copy this section to a tracking issue or document for each release.
 - [ ] Combined `SHA256SUMS` file generated and signed
 
 ### Phase 6 - Tag and Publish
+- [ ]  `dev` merged into `main` (clean fast-forward confirmed)
 - [ ] Git tag `v${DISTRO_VERSION}` created and pushed
 - [ ] ISOs published to mirror via `publish.sh`
 - [ ] Mirror upload verified accessible via curl

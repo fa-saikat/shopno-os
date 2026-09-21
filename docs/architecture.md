@@ -774,6 +774,8 @@ Three workflows in `.github/workflows/`:
 | `build-iso.yml` | Push to `main`, manual dispatch | Builds one or more profiles; runs smoke tests against `vm` hardware target |
 | `release.yml` | Git tag `v*` | Full build of all release profiles, signs ISOs, publishes to mirror |
 
+`build-iso.yml` triggers on push to `main` and manual dispatch only, day-to-day commits on `dev` do not trigger a build. This is deliberate: `dev` is where lint/fix/chore commits land continuously, and most of them can't be proven or disproven by a full ISO rebuild. A build only runs when a change is deliberately promoted to `main` (release prep) or explicitly requested via `workflow_dispatch` while iterating on the pipeline itself. A nightly scheduled build against `dev` is a planned future addition, not yet wired in - see `docs/release-process.md` §1.5 for how this interacts with the release branch flow.
+
 Build artifacts from `build-iso.yml` are uploaded as workflow artifacts and retained for 7 days. Release artifacts from `release.yml` are published to the release server via `scripts/release/publish.sh`.
 
 See `docs/ci-cd.md` for the full workflow documentation.
@@ -786,9 +788,12 @@ See `docs/ci-cd.md` for the full workflow documentation.
 
 Formal Architecture Decision Records live in `docs/decisions/`. Key decisions:
 
-- **ADR 001 - Edition vs Flavor separation:** The capability/experience split ensures that adding a new DE does not require touching any capability configuration, and that adding new developer tools does not affect any DE.
-- **ADR 002 - No packages in overlays:** `includes.chroot/` is for config files only. Packages must be declared in `package-lists/` files so the lint script can catch duplicates. `.deb` files dropped into overlays bypass package management entirely.
-- **ADR 003 - Hardware as a separate layer:** GPU drivers and hardware-specific packages are not in `base/` because base packages install on every system. A separate hardware layer means drivers are opt-in at the profile level.
+- ~~**ADR 001 - Edition vs Flavor separation:** The capability/experience split ensures that adding a new DE does not require touching any capability configuration, and that adding new developer tools does not affect any DE.~~
+- ~~**ADR 002 - No packages in overlays:** `includes.chroot/` is for config files only. Packages must be declared in `package-lists/` files so the lint script can catch duplicates. `.deb` files dropped into overlays bypass package management entirely.~~
+- ~~**ADR 003 - Hardware as a separate layer:** GPU drivers and hardware-specific packages are not in `base/` because base packages install on every system. A separate hardware layer means drivers are opt-in at the profile level.~~
+- **ADR-001 - Profile-based composition engine over flat `auto/config`:** the existing base/edition/flavor/hardware composition already produces an edition×flavor×hardware matrix with zero duplication — something a flat scaffold has no way to express without copy-pasting package lists per profile, reintroducing the exact duplication the Golden Rule prevents.
+- **ADR-002 - Boot gate scoped to `multi-user.target`, not the edition's default target:** keeps one marker unit working identically across core/desktop/gaming, decoupled from `graphical.target`'s high-variance Xorg/LightDM chain under QEMU software rendering.
+- **ADR-003 - Artifact-derived, rootless package-presence verification, floor + critical-list strictness:** truth comes from the built squashfs's `dpkg` status, never from re-summing source package lists; extraction requires no root; exact package counts are avoided because they go stale on every upstream Debian dependency change and train people to bump numbers blindly.
 
 ### Antipatterns
 
