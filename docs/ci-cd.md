@@ -136,7 +136,7 @@ All three fixture profiles (`shopno-os-core`, `shopno-os-desktop-xfce`, `shopno-
 
 This follows the project's own non-blocking-first pattern already established for `grype` scanning in the broader DevOps plan (`distro-devops-architecture.md` §3.7): prove the check locally, run it in CI as a metric, promote to blocking once it's shown to be reliable in the actual CI environment — not the moment it merges.
 
-It's `continue-on-error` specifically because the **hosted runner has no `/dev/kvm`** — QEMU falls back to TCG software emulation, which is measurably slower than the KVM-accelerated boot every local test has run under. `core` (headless) currently boots within the 600-second CI budget under TCG ([run 35589792768](https://github.com/fa-saikat/shopno-os/actions/runs/35589792768)); `desktop-xfce` does not — it exceeds the timeout under TCG despite booting fine locally under KVM. That gap is real, measured, and is the standing justification for eventually moving to a self-hosted KVM-capable runner rather than a reason to distrust the check itself.
+It's `continue-on-error` specifically because the **hosted runner has no `/dev/kvm`** — QEMU falls back to TCG software emulation, which is measurably slower than the KVM-accelerated boot every local test has run under. `core` (headless) currently boots within the 600-second CI budget under TCG; `desktop-xfce` does not — it exceeds the timeout under TCG despite booting fine locally under KVM. That gap is real, measured, and is the standing justification for eventually moving to a self-hosted KVM-capable runner rather than a reason to distrust the check itself.
 
 ---
 
@@ -151,10 +151,10 @@ It's `continue-on-error` specifically because the **hosted runner has no `/dev/k
 
 ## 9. Tracked Follow-ups
 
-- **`SOURCE_DATE_EPOCH`** wiring into `lb_config.sh`, per `devops-integration-plan.md` Phase 1 — not started.
+- **`SOURCE_DATE_EPOCH`** wiring into `lb_config.sh`, per `shopnos-devops-integration-plan.md` Phase 1 — not started.
 - **Boot-gate promotion** from metric to blocking gate — gated on either a self-hosted KVM runner landing, or N consecutive green `core` boots under TCG establishing the check is reliable in this environment specifically.
 - **Matrix build**: `core` + `desktop` on PRs, `gaming` on dispatch-only (never PR-triggered, given its size — see [§8](#8-known-limits-measured-not-feared)).
-- **Self-hosted runner.** Per `devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before.
+- **Self-hosted runner.** Per `shopnos-devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before.
 - **`release.yml`** does not exist yet. Tag-triggered, full-profile-matrix build, sign, and publish per `docs/release-process.md`.
 - **BIOS serial console gap** (issue #30) — see [§8](#8-known-limits-measured-not-feared).
 - **`lint-packages.yml` has no `workflow_dispatch`** — no way to force a standalone lint run today outside a push or PR.
