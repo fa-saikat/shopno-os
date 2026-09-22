@@ -1,9 +1,9 @@
 {
   "schema_version": "1",
-  "generated_from": "declared *.list.chroot unique package counts per profile composition (base -> edition -> flavor)",
+  "generated_from": "real `unsquashfs var/lib/dpkg/status` runs per profile composition (base -> edition -> flavor); declared_unique kept as audit trail",
   "provenance": {
-    "method": "source-derived floor",
-    "note": "total_min is a FLOOR (declared unique count), not an exact expectation. A real installed system always exceeds it via dependencies and essential packages. Validation state is tracked per profile via validated_against_real_iso — recalibrate each floor upward from its real `unsquashfs var/lib/dpkg/status` run; publish the diff even if it shows drift."
+    "method": "real-iso validated floor (see validated_detail per profile)",
+    "note": "total_min is a FLOOR (~80-85% of observed installed count), not an exact expectation: it catches catastrophic drops while tolerating upstream Debian dependency churn. When adding a profile, seed total_min from its declared-list count with validated_against_real_iso=false, then recalibrate upward from a real build run; publish the diff even if it shows drift."
   },
   "profiles": {
     "shopno-os-core": {
