@@ -117,7 +117,10 @@ jobs:
 
       # architecture.md §13: retained 7 days. ISO + manifest + build log -
       # enough to re-run either smoke test locally without rebuilding.
+      # if: always() so a failed build still uploads build.log - the step
+      # log alone rarely contains the root cause for lb/chroot failures.
       - name: Upload artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROFILE }}-iso
