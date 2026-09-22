@@ -146,6 +146,19 @@ log_info "Output dir   : ${OPT_OUTPUT_DIR}"
 log_info "Jobs         : ${OPT_JOBS}"
 
 # ---------------------------------------------------------------------------
+# Pin SOURCE_DATE_EPOCH for reproducible timestamps (Phase 1, sets up
+# Phase 6). live-build honors it for image metadata and iso-name.sh
+# already honors it for the build date. The HEAD commit timestamp is the
+# build's canonical clock: rebuilding the same commit later reproduces
+# the same stamps instead of "now". An explicit env value wins, so
+# release tooling can pin a date deliberately.
+# ---------------------------------------------------------------------------
+if [[ -z "${SOURCE_DATE_EPOCH:-}" ]]; then
+    export SOURCE_DATE_EPOCH="$(git -C "${OS_REPO_ROOT}" log -1 --pretty=%ct)"
+fi
+log_info "SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
+
+# ---------------------------------------------------------------------------
 # Step 1: Lint package lists
 # ---------------------------------------------------------------------------
 if [[ "${OPT_SKIP_LINT}" -eq 0 ]]; then

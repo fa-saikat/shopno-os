@@ -6,8 +6,9 @@ name: Build ISO
 # before it lands. Pushes to `main` intentionally do NOT rebuild: those
 # bits were already proven on `dev`, and rebuilding for a different
 # channel is exactly what the plan forbids (promotion, not rebuild).
-# Single profile for now (core: smallest, fastest); the matrix + caching
-# + self-hosted runner are follow-ups gated on actually hitting
+# PRs build the proven set; manual dispatch builds any single profile
+# (including gaming-xfce, which stays dispatch-only — see docs/ci-cd.md §8).
+# Caching + self-hosted runner are follow-ups gated on actually hitting
 # hosted-runner limits (see devops-integration-plan.md §3).
 on:
   pull_request:
@@ -19,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       profile:
-        description: 'Profile to build (single-profile phase - matrix later)'
+        description: 'Single profile to build (e.g. shopno-os-gaming-xfce)'
         required: false
         default: 'shopno-os-core'
 
@@ -32,13 +33,20 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  PROFILE: ${{ github.event.inputs.profile || 'shopno-os-core' }}
-
 jobs:
   build:
-    name: Build + smoke-test ${{ github.event.inputs.profile || 'shopno-os-core' }}
+    name: Build + smoke-test ${{ matrix.profile }}
     runs-on: ubuntu-24.04
+    # Independent profiles, independent verdicts: one red leg must not
+    # cancel the other's signal.
+    strategy:
+      fail-fast: false
+      matrix:
+        # pull_request events carry no inputs (null) → full set;
+        # workflow_dispatch carries the chosen profile → just that one.
+        profile: ${{ fromJSON(github.event.inputs.profile && format('["{0}"]', github.event.inputs.profile) || '["shopno-os-core", "shopno-os-desktop-xfce"]') }}
+    env:
+      PROFILE: ${{ matrix.profile }}
     # GitHub-hosted ceiling is 6h/job. A live-build run (chroot + squashfs)
     # is exactly the workload this quota wasn't sized for - if core starts
     # approaching it, that's the measured trigger for the self-hosted runner
