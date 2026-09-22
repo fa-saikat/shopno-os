@@ -118,10 +118,15 @@ jobs:
       # the test is proven locally, but this hosted environment (KVM vs TCG
       # fallback, steal time) is not. Promote to blocking after N consecutive
       # green runs by removing continue-on-error.
+      # Per-profile timeout: no KVM on hosted runners, so TCG-only. Core
+      # headless fits 600s; desktop XFCE needs up to 1800s (measured —
+      # green inside 1800s on dispatch, red at 600s). The step always
+      # consumes the full timeout (QEMU has no shutdown trigger, so there
+      # is no early exit), hence core keeps its short budget.
       - name: Smoke test - boot gate (non-blocking)
         id: boot
         continue-on-error: true
-        run: ./tests/smoke/test-iso-boots.sh "${{ steps.iso.outputs.iso }}" --timeout 600
+        run: ./tests/smoke/test-iso-boots.sh "${{ steps.iso.outputs.iso }}" --timeout ${{ matrix.profile == 'shopno-os-core' && '600' || '1800' }}
 
       # architecture.md §13: retained 7 days. ISO + manifest + build log -
       # enough to re-run either smoke test locally without rebuilding.
