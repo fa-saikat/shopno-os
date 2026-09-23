@@ -404,21 +404,37 @@ Tag naming convention: `v` prefix + version number, e.g. `v1.1`, `v1.0.1`, `v202
 
 ### 8.2 Publish ISOs to the mirror
 
+Publishing needs mirror credentials in the environment (see
+`docs/secrets-management.md`): `OS_MIRROR_HOST`, `OS_MIRROR_USER`,
+`OS_MIRROR_PATH`. The script derives version, edition, arch, and the
+remote directory from the profile and brand identity — pass neither
+by hand:
+
 ```bash
-./scripts/release/publish.sh /srv/release/staging/ "${DISTRO_VERSION}"
+for profile in \
+    shopno-os-core \
+    shopno-os-desktop-xfce \
+    shopno-os-gaming-xfce
+do
+    echo "========================================="
+    echo "Publishing: ${profile}"
+    echo "========================================="
+    ./scripts/release/publish.sh "${profile}" --output-dir /srv/release/staging/
+done
 ```
 
-`publish.sh` uploads all ISOs, checksums, signatures, and manifests to the configured mirror. The target path on the mirror is:
+`publish.sh` uploads that profile's ISO, checksums, signature, and manifest to the configured mirror. The target path on the mirror is:
 
 ```
-releases/<DISTRO_VERSION>/
+releases/<DISTRO_VERSION>/<EDITION>/<ARCH>/
 ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.iso
-├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.iso.sha256
-├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.iso.sha512
+├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.sha256
+├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.sha512
 ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.iso.gpg
+├── build-manifest.json
 ├── SHA256SUMS
-├── SHA256SUMS.asc
-└── build-manifest.json
+├── SHA512SUMS
+└── <id>-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-latest.{iso,sha256,sha512,iso.gpg} (symlinks)
 ```
 
 Verify the upload completed and the files are accessible:
