@@ -330,7 +330,7 @@ umount /mnt/iso
 Confirm:
 - `NAME` matches `DISTRO_NAME` in `brand/identity/name.env`
 - `VERSION_ID` matches `DISTRO_VERSION`
-- `VERSION_CODENAME` matches `DISTRO_CODENAME` (lowercased)
+- `VERSION_CODENAME` matches `BASE_DISTRIBUTION` (lowercased) — deliberately the Debian suite (`trixie`), not `DISTRO_CODENAME`: external tools reading os-release expect a real suite name (see `base/hooks/chroot/0090-stamp-build-info.hook.chroot`)
 - `HOME_URL` and `BUG_REPORT_URL` are correct
 - `BUILD_ID` includes today's date
 
