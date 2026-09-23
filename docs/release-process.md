@@ -277,11 +277,13 @@ ls /srv/release/staging/
 Expected for each profile:
 ```
 shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.iso
-shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.iso.sha256
-shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.iso.sha512
+shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.sha256
+shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.sha512
 shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<BUILDDATE>.iso.gpg
 build-manifest.json
 ```
+
+Naming rule (matches `iso_checksum_filename` / `iso_signature_filename` in `scripts/lib/iso-name.sh`): checksum files follow the *stem* (no `.iso` infix), the signature follows the full ISO name. Never hand-construct these — derive them as the commands below do.
 
 If any artifact is missing, that profile's build did not complete successfully. Do not proceed.
 
@@ -291,8 +293,8 @@ If any artifact is missing, that profile's build did not complete successfully. 
 cd /srv/release/staging/
 for iso in *.iso; do
     echo "Verifying: ${iso}"
-    sha256sum -c "${iso}.sha256" && echo "  SHA256: OK" || echo "  SHA256: FAILED"
-    sha512sum -c "${iso}.sha512" && echo "  SHA512: OK" || echo "  SHA512: FAILED"
+    sha256sum -c "${iso%.iso}.sha256" && echo "  SHA256: OK" || echo "  SHA256: FAILED"
+    sha512sum -c "${iso%.iso}.sha512" && echo "  SHA512: OK" || echo "  SHA512: FAILED"
 done
 ```
 
@@ -347,7 +349,7 @@ The smoke test verifies the ISO boots to a login prompt and that a defined set o
 ```bash
 for manifest in /srv/release/staging/build-manifest.json; do
     echo "=== ${manifest} ==="
-    jq '{profile, edition, flavor, hardware, version, build_date}' "${manifest}"
+    jq '{edition: .build.edition, flavor: .build.flavor, hardware: .build.hardware, version: .distro.version, date: .build.date}' "${manifest}"
 done
 ```
 
@@ -451,7 +453,12 @@ Create the release on the repository host (one local command — no CI involved)
 gh release create "v${DISTRO_VERSION}" \
     --title "ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})" \
     --notes-file CHANGELOG.md \
-    /srv/release/staging/*.iso
+    /srv/release/staging/*.iso \
+    /srv/release/staging/*.sha256 \
+    /srv/release/staging/*.sha512 \
+    /srv/release/staging/*.gpg \
+    /srv/release/staging/SHA256SUMS \
+    /srv/release/staging/SHA512SUMS
 ```
 
 - Tag: `v${DISTRO_VERSION}`
