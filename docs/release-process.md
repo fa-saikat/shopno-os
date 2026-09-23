@@ -372,15 +372,25 @@ for iso in /srv/release/staging/*.iso; do
 done
 ```
 
-### Generate a combined SHA256SUMS file
+### Verify the rolling manifests
 
-Some users and mirrors expect a single `SHA256SUMS` file covering all ISOs in a release:
+`sign-iso.sh` maintains rolling `SHA256SUMS` / `SHA512SUMS` itself
+(remove-stale-entry plus append per ISO) — never hand-roll them with
+`sha256sum *.iso > SHA256SUMS`, which would silently drop ISOs missing
+from the glob. Just confirm they exist and cover every staged ISO:
 
 ```bash
 cd /srv/release/staging/
-sha256sum *.iso > SHA256SUMS
-gpg --detach-sign --armor SHA256SUMS
+for iso in *.iso; do
+    grep -q "  ${iso}$" SHA256SUMS && echo "  ${iso}: listed" || echo "  ${iso}: MISSING"
+done
 ```
+
+Do not create a detached-signed `SHA256SUMS.asc`: nothing publishes,
+uploads, or verifies it (`publish.sh` transfers the unsigned rolling
+files). If signed manifests are ever wanted, that's a design change to
+`sign-iso.sh` + `publish.sh` + mirror verification together — not a
+manual step.
 
 ---
 
