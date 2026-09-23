@@ -13,10 +13,19 @@ name: Build ISO
 on:
   pull_request:
     branches: [dev]
-    paths-ignore:
-      - 'docs/**'
-      - '**/*.md'
-      - 'CHANGELOG.md'
+    paths:
+      - 'base/**'
+      - 'editions/**'
+      - 'flavors/**'
+      - 'hardware/**'
+      - 'profiles/**'
+      - 'brand/**'
+      - 'scripts/lib/**'
+      - 'scripts/build/**'
+      - 'scripts/dev/lint-packages.sh'
+      - 'tests/smoke/**'
+      - 'tests/fixtures/**'
+      - '.github/workflows/build-iso.yml'
   workflow_dispatch:
     inputs:
       profile:
