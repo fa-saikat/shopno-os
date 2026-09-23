@@ -28,7 +28,7 @@ A release is a tagged, signed, published set of ISOs covering all supported prof
 Preparation → Version Bump → Build → Verify → Sign → Publish → Post-Release
 ```
 
-Phases 3–6 run locally, by hand, on a machine holding the GPG key and mirror access — no tag-triggered CI rebuild exists, deliberately: a rebuild would produce different bits than the ones Phase 4 verified, violating the promotion-not-rebuild rule (§1.5). CI's role ends at proof (`build-iso.yml` gates every PR on `dev`); the tag, created in §8.1 *after* building and verifying, marks the proven state and triggers nothing. A `release.yml` automating phases 3–6 is explicitly declined not deferred — the GitHub Release itself is one local command (`gh release create`, §8.3). This document is the authoritative checklist, not a fallback for missing automation.
+The `release.yml` CI workflow automates phases 3–6 when triggered by a git tag. This document covers the full process including the manual steps that precede and follow CI, and serves as the authoritative checklist when doing a release manually or when CI is unavailable.
 
 **Release scripts involved:**
 
@@ -429,14 +429,7 @@ curl -I "https://mirror.shopno-oslinux.org/releases/${DISTRO_VERSION}/"
 
 ### 8.3 Create a GitHub / Forgejo release
 
-Create the release on the repository host (one local command — no CI involved):
-
-```bash
-gh release create "v${DISTRO_VERSION}" \
-    --title "ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})" \
-    --notes-file CHANGELOG.md \
-    /srv/release/staging/*.iso
-```
+Create the release on the repository host:
 
 - Tag: `v${DISTRO_VERSION}`
 - Title: `ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})`
