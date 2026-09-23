@@ -21,17 +21,18 @@
 #   - build-manifest.json
 #   - SHA256SUMS, SHA512SUMS (rolling manifests)
 #
-# REMOTE LAYOUT:
+# REMOTE LAYOUT (source of truth - per-edition dirs keep editions apart):
 #   <OS_MIRROR_PATH>/
 #   └── <VERSION>/
-#       └── <ARCH>/
-#           ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.iso
-#           ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.sha256
-#           ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.sha512
-#           ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.iso.gpg
-#           ├── build-manifest.json
-#           ├── SHA256SUMS
-#           └── SHA512SUMS
+#       └── <EDITION>/
+#           └── <ARCH>/
+#               ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.iso
+#               ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.sha256
+#               ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.sha512
+#               ├── shopno-os-<VERSION>-<EDITION>-<FLAVOR>-<ARCH>-<DATE>.iso.gpg
+#               ├── build-manifest.json
+#               ├── SHA256SUMS
+#               └── SHA512SUMS
 # =============================================================================
 set -euo pipefail
 
@@ -228,5 +229,5 @@ REMOTE_SCRIPT
 # ---------------------------------------------------------------------------
 log_step "Publish complete"
 log_success "Released: ${ISO_FILENAME}"
-log_info "  Mirror : https://${PUBLISH_HOST}/$(basename "${PUBLISH_PATH}")/${DISTRO_VERSION}/${DISTRO_ARCH}/"
-log_info "  Latest : https://${PUBLISH_HOST}/$(basename "${PUBLISH_PATH}")/${DISTRO_VERSION}/${DISTRO_ARCH}/${LATEST_STEM}.iso"
+log_info "  Mirror : https://${PUBLISH_HOST}/$(basename "${PUBLISH_PATH}")/${DISTRO_VERSION}/${DISTRO_EDITION}/${DISTRO_ARCH}/"
+log_info "  Latest : https://${PUBLISH_HOST}/$(basename "${PUBLISH_PATH}")/${DISTRO_VERSION}/${DISTRO_EDITION}/${DISTRO_ARCH}/${LATEST_STEM}.iso"

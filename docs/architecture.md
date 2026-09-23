@@ -772,11 +772,11 @@ Three workflows in `.github/workflows/`:
 |----------|---------|------|
 | `lint-packages.yml` | Every push, every PR | Runs all `tests/lint/` scripts; fails fast on any violation |
 | `build-iso.yml` | Push to `main`, manual dispatch | Builds one or more profiles; runs smoke tests against `vm` hardware target |
-| `release.yml` | Git tag `v*` | Full build of all release profiles, signs ISOs, publishes to mirror |
+| `release.yml` | — (deliberately not built) | Tag-triggered release automation declined, not deferred: phases run locally per `docs/release-process.md`, CI's role ends at proof |
 
 `build-iso.yml` triggers on push to `main` and manual dispatch only, day-to-day commits on `dev` do not trigger a build. This is deliberate: `dev` is where lint/fix/chore commits land continuously, and most of them can't be proven or disproven by a full ISO rebuild. A build only runs when a change is deliberately promoted to `main` (release prep) or explicitly requested via `workflow_dispatch` while iterating on the pipeline itself. A nightly scheduled build against `dev` is a planned future addition, not yet wired in - see `docs/release-process.md` §1.5 for how this interacts with the release branch flow.
 
-Build artifacts from `build-iso.yml` are uploaded as workflow artifacts and retained for 7 days. Release artifacts from `release.yml` are published to the release server via `scripts/release/publish.sh`.
+Build artifacts from `build-iso.yml` are uploaded as workflow artifacts and retained for 7 days. Release artifacts reach the mirror via `scripts/release/publish.sh`, run locally as part of the manual release checklist.
 
 See `docs/ci-cd.md` for the full workflow documentation.
 
