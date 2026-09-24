@@ -20,18 +20,19 @@
 #   --jobs N        Parallel jobs for lb build (default: nproc)
 #   --output-dir D  Directory to move final ISO to (default: ./build/output/)
 #
-# PIPELINE (in order):
-#   1. Validate environment (root, live-build, dependencies)
-#   2. Load brand identity
-#   3. Load and validate profile
-#   4. Lint package lists
-#   5. Clean previous build (unless --no-clean)
-#   6. Prepare live-build config tree
-#   7. Inject package lists via symlinks
-#   8. Run lb build
-#   9. Stamp ISO with metadata
-#  10. Sign ISO + generate checksums
-#  11. Move ISO to output dir
+# PRECONDITIONS (run before Step 1, unnumbered):
+#   - Validate environment (root, live-build, dependencies)
+#   - Load brand identity + build profile
+#
+# PIPELINE STAGES (logged as Step 1/8 - 8/8):
+#   1. Lint package lists
+#   2. Clean previous build (unless --no-clean)
+#   3. Prepare live-build config tree
+#   4. Inject package lists via symlinks
+#   5. Run lb build
+#   6. Stamp ISO with metadata
+#   7. Sign ISO + generate checksums (unless --skip-sign)
+#   8. Move ISO to output dir
 # =============================================================================
 set -euo pipefail
 
