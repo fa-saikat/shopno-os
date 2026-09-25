@@ -210,12 +210,37 @@ INCLUDE_CSV="$(IFS=,; echo "${FINAL[*]}")"
 
 if [[ "${OPT_DRY_RUN}" -eq 1 ]]; then
     log_warn "DRY RUN - no files will be modified."
-    log_info "Would run: mmdebstrap --variant=minbase --architectures=${DISTRO_ARCH} --include=<${#FINAL[@]} pkgs> ${LB_DISTRIBUTION} ${ROOTFS_DIR} ${LB_PARENT_MIRROR_BOOTSTRAP}"
+    log_info "Would run: mmdebstrap --variant=minbase --architectures=${DISTRO_ARCH} --include=<${#FINAL[@]} pkgs> (+ Debian + jadupc sources, own keyring) ${LB_DISTRIBUTION} ${ROOTFS_DIR} ${LB_PARENT_MIRROR_BOOTSTRAP}"
     log_info "Would write: ${TARBALL_OUT} + ${MANIFEST_OUT}"
     exit 0
 fi
 
-require_command mmdebstrap buildah jq
+require_command mmdebstrap buildah jq gpg
+
+# ---------------------------------------------------------------------------
+# Step 2: assemble APT sources (Debian + project repo) with own keyring
+# ---------------------------------------------------------------------------
+# live-build gets this for free (it merges base/config/archives/ into the
+# chroot); mmdebstrap must be told explicitly. The project repo line
+# mirrors jadupc.list verbatim; only signed-by is added (live-build keys
+# archives differently - equivalent trust, different mechanism).
+log_step "Assembling APT sources for mmdebstrap"
+
+SOURCES_LIST="${WORKDIR}/sources.list"
+{
+    echo "deb ${LB_PARENT_MIRROR_BOOTSTRAP} ${LB_DISTRIBUTION} ${LB_APT_ARCHIVE_AREAS}"
+    if [[ "${LB_UPDATES:-false}" == "true" ]]; then
+        echo "deb ${LB_PARENT_MIRROR_BOOTSTRAP} ${LB_DISTRIBUTION}-updates ${LB_APT_ARCHIVE_AREAS}"
+    fi
+} > "${SOURCES_LIST}"
+
+JADUPC_KEY_ASC="${OS_REPO_ROOT}/base/config/archives/jadupc.key"
+JADUPC_KEYRING="${WORKDIR}/jadupc.gpg"
+require_file "${JADUPC_KEY_ASC}"
+# Dearmor at build time: the repo stores ASCII-armored, apt needs binary.
+gpg --batch --yes --dearmor -o "${JADUPC_KEYRING}" "${JADUPC_KEY_ASC}"
+echo "deb [signed-by=${JADUPC_KEYRING}] http://deb.jadupc.com shopno main" >> "${SOURCES_LIST}"
+log_info "Sources: $(wc -l < "${SOURCES_LIST}" | tr -d ' ') lines ($(grep -c '^deb' "${SOURCES_LIST}") repos)"
 
 # ---------------------------------------------------------------------------
 # Step 2: build rootfs with mmdebstrap (rootless, deterministic w/ SDE)
@@ -235,9 +260,20 @@ _run mmdebstrap \
     --variant=minbase \
     --architectures="${DISTRO_ARCH}" \
     --include="${INCLUDE_CSV}" \
+    --aptopt="Dir::Etc::sourcelist \"${SOURCES_LIST}\"" \
+    --aptopt="Dir::Etc::sourceparts \"-\"" \
+    --aptopt="Acquire::https::deb.jadupc.com::Verify-Peer \"false\"" \
     "${LB_DISTRIBUTION}" \
     "${ROOTFS_DIR}" \
     "${LB_PARENT_MIRROR_BOOTSTRAP}"
+# NOTE on the scoped Verify-Peer=false above: deb.jadupc.com 301-redirects
+# to https, and a fresh minbase rootfs has no CA certificates when apt runs
+# its first update - so that fetch cannot validate. Scoped to this host
+# only; authenticity is still fully enforced via signed-by (every index and
+# .deb verifies against the project key regardless of transport, which
+# carries no credentials). If apt ever ignores the host scoping, the same
+# failure as before (cert verification on first update) returns unchanged -
+# escalate to build-time-only global Verify-Peer=false, same argument.
 
 log_success "Rootfs built: $(du -sh "${ROOTFS_DIR}" | cut -f1)"
 
