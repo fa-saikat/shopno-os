@@ -1,0 +1,76 @@
+# =============================================================================
+# scripts/build/container-exclude.txt
+# ShopnoOS - Container Package Exclusion Patterns
+#
+# These shell-glob patterns are SUBTRACTED from the base+core package
+# lists when assembling the OCI image (see build-container.sh). One
+# pattern per line; '#' starts a comment; blank lines ignored.
+#
+# WHY SUBTRACTIVE, NOT A SEPARATE LIST:
+#   The Golden Rule ("a package lives in exactly one place") still holds:
+#   no package is DECLARED here, only excluded. base/* and editions/core/*
+#   stay the single source of truth; this file is a projection of that
+#   source onto a different artifact type (container rootfs has no kernel,
+#   no bootloader, no firmware, no live-boot runtime). New base packages
+#   flow into the container by default - the failure mode is inclusion
+#   (visible in the SBOM, caught by the package gate), never silent drift
+#   between two competing lists.
+#
+# COMPLETENESS: this list is necessarily incomplete-by-construction - it
+# only catches what someone thought to name. Note what is deliberately
+# NOT here: a post-subtraction "re-match FINAL against these patterns"
+# self-check was considered and rejected as tautological (same rules,
+# same matcher - it can only ever return zero). The real backstop is
+# asserting ABSENCE on the built artifact (dpkg list of the image must
+# not contain kernel/bootloader/live packages) - different data source,
+# genuine second opinion. Tracked as follow-up work, not this file.
+# =============================================================================
+
+# Kernel and initramfs (container shares the host kernel; also covers
+# linux-headers-*, linux-image-*, linux-modules-*)
+linux-*
+
+# Kernel-module build tooling (no kernel present to build modules against)
+dkms
+module-assistant
+
+# Bootloaders (no boot happens inside a container)
+grub*
+shim*
+efibootmgr
+syslinux*
+isolinux
+memtest*
+
+# EFI / Secure Boot tooling (no boot chain, no NVRAM, in a container)
+mokutil
+os-prober
+libefiboot1
+libefivar1
+mtools
+
+# Hardware firmware blobs (no hardware visible inside a container).
+# Note: firmware-* only matches leading names; trailing-firmware
+# packages need exact entries (found by auditing FINAL, not by guessing).
+firmware-*
+atmel-firmware
+bluez*
+
+# Wireless / Bluetooth / GPU hardware stacks (no such hardware in a container)
+intel-media-va-driver
+iw
+bluetooth
+
+# Encrypted-disk tooling (no block devices to unlock in a container)
+cryptsetup
+cryptsetup-initramfs
+
+# Live-session runtime (meaningless outside a live ISO boot; previously
+# proven harmful when leaked into the wrong context)
+live-boot*
+live-config*
+live-tools
+
+# Installer / graphical-session packages that slipped the layers
+calamares*
+plymouth*
