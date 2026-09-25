@@ -16,3 +16,11 @@ Releases run locally, by hand, per `docs/release-process.md`: changelog, version
 - A rebuild can never silently substitute different bits for verified ones — promotion (merge the proven state) is the only path to `main`, and the tag marks it rather than triggering work.
 - The one CI-shaped gap this leaves is third-party verification of shipped bits (an independent party checking the mirror's checksums/signatures). If ever wanted, that is a *verifier* workflow — it reads published artifacts, never builds or signs — and needs its own proposal, not a revival of this one.
 - Reopening this decision requires a concrete need CI alone can serve (e.g., multiple releasers without shared machine access), not a general preference for automation.
+
+## Amended 2026-09-23 — Narrowing the Principle
+
+The container workflow (ADR-008) pushes images to a registry from CI, which contradicts this ADR's literal sentence ("CI's role ends at proof... never publishes") while honoring its actual reasoning. The stated principle is therefore narrowed from "CI never publishes" to what it was protecting all along:
+
+> **CI never holds long-lived, high-blast-radius credentials.**
+
+Keyless `cosign` signing via per-run GitHub OIDC and GHCR pushes via the ephemeral, per-run `GITHUB_TOKEN` (`packages: write`) leave nothing that persists past the run — no static credential exists to leak, rotate, or steal. That is the same thesis as the Phase 5 GitOps boundary ("CI never holds cluster credentials"), now applied twice. Everything else in this ADR stands unchanged: ISO releases stay local, the private GPG key stays home, and no tag-triggered rebuild exists.
