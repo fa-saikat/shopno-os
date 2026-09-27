@@ -62,6 +62,15 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y mmdebstrap buildah jq skopeo
+          # build-container.sh requires /usr/share/keyrings/
+          # debian-archive-keyring.gpg on the HOST (explicit signed-by for
+          # the Debian sources it assembles). Noble's 2023.4 keyring predates
+          # the trixie keys - same pinned-.deb treatment as build-iso.yml.
+          KEYRING_DEB=/tmp/debian-archive-keyring.deb
+          curl -sL --max-time 120 -o "${KEYRING_DEB}" \
+            http://deb.debian.org/debian/pool/main/d/debian-archive-keyring/debian-archive-keyring_2025.1_all.deb
+          echo "9ea7778e443144ca490668737a8ab22dd3e748bb99e805e22ec055abeb3c7fac  ${KEYRING_DEB}" | sha256sum -c -
+          sudo dpkg -i "${KEYRING_DEB}"
 
       # Root (same as build.sh): hosted runners disable unprivileged user
       # namespaces, so mmdebstrap cannot run rootless here - it needs real
