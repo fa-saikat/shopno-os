@@ -314,10 +314,13 @@ CMD ["/bin/bash"]
 EOF
 
 IMAGE_REF="shopno-os-container:${DISTRO_VERSION}-${GIT_SHA}"
+# Vendor namespace sits alongside the reserved org.opencontainers.image.*
+# prefix, never nested inside it (that prefix is the spec's own).
 _run buildah bud \
     --format oci \
     --arch "${DISTRO_ARCH}" \
     "${LABEL_FLAGS[@]}" \
+    --label "org.shopno-os.profile=${PROFILE_NAME}" \
     -t "${IMAGE_REF}" \
     -f "${WORKDIR}/Containerfile" \
     "${WORKDIR}"

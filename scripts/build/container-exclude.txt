@@ -17,13 +17,14 @@
 #   between two competing lists.
 #
 # COMPLETENESS: this list is necessarily incomplete-by-construction - it
-# only catches what someone thought to name. Note what is deliberately
-# NOT here: a post-subtraction "re-match FINAL against these patterns"
-# self-check was considered and rejected as tautological (same rules,
-# same matcher - it can only ever return zero). The real backstop is
-# asserting ABSENCE on the built artifact (dpkg list of the image must
-# not contain kernel/bootloader/live packages) - different data source,
-# genuine second opinion. Tracked as follow-up work, not this file.
+# only catches what someone thought to name. Backing it is a backstop
+# check in build-container.sh that re-validates FINAL against these same
+# patterns and fails loud on any hit. Stated precisely: that check guards
+# drift INSIDE the subtraction loop (a refactor with different matching
+# semantics), never pattern coverage - a package nobody wrote a pattern
+# for passes it silently. Coverage itself is audited by reviewing FINAL
+# counts and, eventually, an artifact-absence check on the built image
+# (tracked follow-up).
 # =============================================================================
 
 # Kernel and initramfs (container shares the host kernel; also covers
