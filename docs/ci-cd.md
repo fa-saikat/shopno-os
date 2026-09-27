@@ -28,9 +28,9 @@ Two workflows exist today, both under `.github/workflows/`:
 | Workflow | File | Status |
 |---|---|---|
 | Lint | `lint-packages.yml` | Live, green, every push + PR |
-| Build ISO | `build-iso.yml` | Live, green on `core`; `desktop-xfce` proven via manual dispatch |
+| Build ISO | `build-iso.yml` | Live, matrix `core` + `desktop-xfce` on PRs, green; gaming dispatch-only |
 
-Neither workflow rebuilds on `main`. `release.yml` (tag-triggered full-matrix build, sign, publish) does not exist yet — see [§9](#9-tracked-follow-ups).
+Neither workflow rebuilds on `main`. A tag-triggered `release.yml` (build, sign, publish) is deliberately declined, not pending — see ADR-006; releases run locally per `docs/release-process.md`.
 
 ---
 
@@ -66,7 +66,7 @@ Checkout
 
 `if: always()` on the artifact upload exists specifically so a **failed** `lb build` still uploads `build.log` — the step log alone is rarely enough to diagnose a chroot or `lb config` failure, and that's exactly the run where you want the full log.
 
-`workflow_dispatch` takes an optional `profile` input (default `shopno-os-core`) for exercising a profile outside the PR path — this is how `desktop-xfce` has been proven so far, since `pull_request` events carry no inputs and always fall through to the `core` default.
+`workflow_dispatch` takes an optional `profile` input (default `shopno-os-core`) for exercising one profile outside the PR path — this is how `desktop-xfce` was first proven and how `gaming-xfce` stays available without ever running unasked.
 
 ---
 
@@ -84,7 +84,7 @@ This is enforced by the trigger blocks themselves, not just intended:
 - `build-iso.yml` listens **only** to `pull_request: branches: [dev]` and `workflow_dispatch`. It has no `push` trigger at all — pushing directly to `dev` never fires it.
 - `lint-packages.yml` listens to `push` and `pull_request`, neither scoped to a branch — it fires on any push (including the fast-forward merge push that lands on `main`) and any PR. It has no `workflow_dispatch`, so manual dispatch never runs lint.
 
-Reading the row for "a PR to `dev`" carefully: `pull_request` events carry no `inputs`, so `PROFILE` always resolves to its `workflow_dispatch`-only default, `shopno-os-core`. A PR-triggered `build-iso.yml` run is therefore always a `core` build — `desktop-xfce` has only ever been exercised via manual dispatch, never by a PR.
+Reading the row for "a PR to `dev`" carefully: the matrix resolves from event inputs — `pull_request` events carry none, so the run builds the full `["shopno-os-core", "shopno-os-desktop-xfce"]` set; `workflow_dispatch` builds exactly the chosen profile. Gaming never runs unasked (see [§8](#8-known-limits-measured-not-feared)).
 
 ---
 
@@ -155,7 +155,7 @@ It's `continue-on-error` specifically because the **hosted runner has no `/dev/k
 - **Boot-gate promotion** from metric to blocking gate — gated on either a self-hosted KVM runner landing, or N consecutive green `core` boots under TCG establishing the check is reliable in this environment specifically.
 - **Matrix build**: `core` + `desktop` on PRs, `gaming` on dispatch-only (never PR-triggered, given its size — see [§8](#8-known-limits-measured-not-feared)).
 - **Self-hosted runner.** Per `shopnos-devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before.
-- **`release.yml`** does not exist yet. Tag-triggered, full-profile-matrix build, sign, and publish per `docs/release-process.md`.
+- **No `release.yml`, by decision** (ADR-006): tag-triggered build-sign-publish declined — releases stay local/manual.
 - **BIOS serial console gap** (issue #30) — see [§8](#8-known-limits-measured-not-feared).
 - **`lint-packages.yml` has no `workflow_dispatch`** — no way to force a standalone lint run today outside a push or PR.
 

@@ -405,7 +405,7 @@ git checkout main
 git merge dev
 ```
 
-The tag must be created after the version bump commit and before publishing. Tags trigger the `release.yml` CI workflow if CI is being used.
+The tag must be created after the version bump commit and before publishing. Tags trigger nothing in CI by design (ADR-006 declined tag-triggered release automation — releases stay local).
 
 ```bash
 git tag -a "v${DISTRO_VERSION}" -m "Release ${DISTRO_VERSION} (${DISTRO_CODENAME})"
