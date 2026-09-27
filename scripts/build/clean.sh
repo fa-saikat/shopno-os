@@ -22,6 +22,10 @@
 #   - build/output/            (final ISOs - protected)
 #   - brand/, editions/, flavors/, hardware/, base/
 #   - Any source files
+#
+# PRIVILEGE: builds run under sudo, so artifacts are usually root-owned.
+# A non-root run aborts loudly (naming sudo) instead of half-deleting.
+# Success is verified (absence re-checked), never assumed.
 # =============================================================================
 set -euo pipefail
 
@@ -85,6 +89,7 @@ fi
 BUILD_ROOT="${OS_REPO_ROOT}/build"
 OUTPUT_DIR="${BUILD_ROOT}/output"
 CACHE_DIR="${BUILD_ROOT}/cache"
+CONTAINER_DIR="${BUILD_ROOT}/container"
 
 declare -a TARGETS=()
 
@@ -108,18 +113,61 @@ if [[ ${#TARGETS[@]} -eq 0 && "${OPT_CONTAINER}" -eq 0 ]]; then
 fi
 
 # ---------------------------------------------------------------------------
+# Privilege gate: builds run under sudo, so artifacts are typically
+# root-owned. Every destructive step below used to swallow its own errors
+# and report success anyway. Check FIRST - delete nothing on fail.
+# (Skipped for root, which can remove everything by definition.)
+# ---------------------------------------------------------------------------
+if [[ "${EUID}" -ne 0 ]]; then
+    declare -a _CHECK_DIRS=()
+    for t in "${TARGETS[@]}"; do
+        [[ -d "${t}" ]] && _CHECK_DIRS+=("${t}")
+    done
+    if [[ "${OPT_CONTAINER}" -eq 1 || "${OPT_ALL}" -eq 1 ]]; then
+        [[ -d "${CONTAINER_DIR}" ]] && _CHECK_DIRS+=("${CONTAINER_DIR}")
+        log_warn "Note: images built under sudo live in root's buildah store,"
+        log_warn "which this run cannot even see - sudo covers those too."
+    fi
+    declare -a UNOWNED=()
+    for d in "${_CHECK_DIRS[@]}"; do
+        while IFS= read -r -d '' f; do
+            UNOWNED+=("${f}")
+            [[ "${#UNOWNED[@]}" -ge 5 ]] && break 2
+        done < <(find "${d}" \( ! -user "$(id -un)" -o ! -writable \) -print0 2>/dev/null)
+    done
+    if [[ "${#UNOWNED[@]}" -gt 0 ]]; then
+        log_error "Refusing to clean: root-owned/unwritable files present (builds run under sudo)."
+        for f in "${UNOWNED[@]}"; do
+            log_error "  ${f}"
+        done
+        [[ "${#UNOWNED[@]}" -ge 5 ]] && log_error "  ... (truncated - more exist)"
+        log_error "Re-run this exact command with sudo."
+        exit 1
+    fi
+fi
+
+FAILED=0
+
+# ---------------------------------------------------------------------------
 # Container artifacts: output dir, local buildah store, /tmp strays
 # Runs for --container, and as part of --all (the container dir is also
 # swept by the generic --all loop above - this covers the store + tmp).
 # ---------------------------------------------------------------------------
-CONTAINER_DIR="${BUILD_ROOT}/container"
-
 _clean_container_artifacts() {
     if [[ -d "${CONTAINER_DIR}" ]]; then
         log_step "Cleaning container output: ${CONTAINER_DIR}"
-        find "${CONTAINER_DIR}" -mindepth 1 -delete 2>/dev/null || true
-        rmdir "${CONTAINER_DIR}" 2>/dev/null || true
-        log_success "Removed: ${CONTAINER_DIR}"
+        if ! find "${CONTAINER_DIR}" -mindepth 1 -delete; then
+            log_error "Failed to wipe contents: ${CONTAINER_DIR}"
+            FAILED=1
+        elif ! rmdir "${CONTAINER_DIR}" 2>/dev/null; then
+            log_error "Failed to remove directory: ${CONTAINER_DIR}"
+            FAILED=1
+        elif [[ -e "${CONTAINER_DIR}" ]]; then
+            log_error "Directory still exists after wipe: ${CONTAINER_DIR}"
+            FAILED=1
+        else
+            log_success "Removed: ${CONTAINER_DIR}"
+        fi
     else
         log_debug "No container output dir - skipping."
     fi
@@ -148,9 +196,14 @@ _clean_container_artifacts() {
     while IFS= read -r -d '' stray; do
         log_info "Removing stray workdir: ${stray}"
         chmod -R u+rwX "${stray}" 2>/dev/null || true
-        rm -rf "${stray:?}"
+        if ! rm -rf "${stray:?}" || [[ -e "${stray}" ]]; then
+            log_error "Failed to remove stray workdir: ${stray}"
+            FAILED=1
+        fi
     done < <(find /tmp -maxdepth 1 -type d -name 'shopno-os-container.*' -print0 2>/dev/null)
-    log_success "Container cleanup complete."
+    if [[ "${FAILED}" -eq 0 ]]; then
+        log_success "Container cleanup complete."
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -178,16 +231,25 @@ for target_dir in "${TARGETS[@]}"; do
     log_step "Cleaning: ${target_dir}"
 
     if [[ -f "${target_dir}/.build/binary" || -d "${target_dir}/chroot" ]]; then
-        # live-build has partially or fully run - use lb clean
+        # live-build has partially or fully run - use lb clean (best effort;
+        # the verified wipe below is what actually guarantees the outcome)
         pushd "${target_dir}" > /dev/null
             log_info "Running lb clean --purge inside ${target_dir}"
-            lb clean --purge 2>/dev/null || true
+            lb clean --purge 2>/dev/null || log_warn "lb clean --purge reported failure - continuing with direct wipe."
         popd > /dev/null
     fi
 
-    # Wipe contents, then remove the directory itself
-    find "${target_dir}" -mindepth 1 -delete 2>/dev/null || true
-    rmdir "${target_dir}" 2>/dev/null || true
+    # Wipe contents, then remove the directory itself - verified, never assumed
+    if ! find "${target_dir}" -mindepth 1 -delete; then
+        log_error "Failed to wipe contents: ${target_dir}"
+        FAILED=1
+        continue
+    fi
+    if ! rmdir "${target_dir}" 2>/dev/null || [[ -e "${target_dir}" ]]; then
+        log_error "Failed to remove directory: ${target_dir}"
+        FAILED=1
+        continue
+    fi
     log_success "Removed: ${target_dir}"
 done
 
@@ -204,11 +266,20 @@ fi
 if [[ "${OPT_CACHE}" -eq 1 ]]; then
     log_step "Wiping lb cache: ${CACHE_DIR}"
     if [[ -d "${CACHE_DIR}" ]]; then
-        rm -rf "${CACHE_DIR:?}"/*
-        log_success "Cache wiped: ${CACHE_DIR}"
+        if rm -rf "${CACHE_DIR:?}"/* && [[ -z "$(ls -A "${CACHE_DIR}" 2>/dev/null)" ]]; then
+            log_success "Cache wiped: ${CACHE_DIR}"
+        else
+            log_error "Cache wipe incomplete: ${CACHE_DIR}"
+            FAILED=1
+        fi
     else
         log_info "Cache directory does not exist - nothing to wipe."
     fi
 fi
 
-log_success "Clean complete."
+if [[ "${FAILED}" -eq 0 ]]; then
+    log_success "Clean complete."
+else
+    log_error "Clean incomplete - see errors above."
+    exit 1
+fi
