@@ -1,0 +1,113 @@
+name: Build Container
+
+# ADR-008: separate workflow file (never folded into build-iso.yml).
+# Disjoint triggers (push:[dev] exists here precisely because build-iso
+# deliberately lacks it), disjoint artifact lifecycles (registry-immutable
+# tags vs 7-day ISO retention), disjoint timeout tuning. Prove on PR
+# (build + smoke, no registry writes); push to GHCR on merge to dev.
+on:
+  pull_request:
+    branches: [dev]
+    paths:
+      - 'scripts/build/build-container.sh'
+      - 'scripts/build/container-exclude.txt'
+      - '.github/workflows/container-build.yml'
+  push:
+    branches: [dev]
+    paths:
+      - 'scripts/build/build-container.sh'
+      - 'scripts/build/container-exclude.txt'
+      - '.github/workflows/container-build.yml'
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Core-family profile to build (v1: core only)'
+        required: false
+        default: 'shopno-os-core'
+
+# Successive synchronizes cancel the superseded build - same reasoning as
+# build-iso.yml (no artifact worth keeping from a stale commit).
+concurrency:
+  group: container-build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  # packages:write only ever used by the push steps (merge only).
+  # PR runs prove without publishing - no registry writes to clean up.
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: fa-saikat/shopno-os
+
+jobs:
+  build:
+    name: Build + smoke-test container (shopno-os-core)
+    runs-on: ubuntu-24.04
+    # Rootfs builds take minutes, not the ISO's hour - generous ceiling
+    # with room; shrink only on measured evidence, never preemptively.
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # build-container.sh needs: mmdebstrap, buildah, jq, gpg.
+      # Smoke path uses skopeo (tarball -> docker daemon bridge) + the
+      # runner's preinstalled docker. buildah bud/run is deliberately NOT
+      # the smoke runtime: rootless OCI runtimes (crun/newuidmap) are not
+      # guaranteed on hosted runners, while the docker daemon always is.
+      # Boring reliability over cleverness.
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mmdebstrap buildah jq skopeo
+
+      - name: Build OCI tarball (no push)
+        run: ./scripts/build/build-container.sh --profile shopno-os-core
+
+      - name: Locate tarball + manifest
+        id: artifact
+        run: |
+          TARBALL="$(find build/container -maxdepth 1 -name '*.oci.tar' | sort | head -1)"
+          test -n "${TARBALL}" || { echo "No OCI tarball produced"; exit 1; }
+          echo "tarball=${TARBALL}" >> "${GITHUB_OUTPUT}"
+          ls -la build/container/
+
+      # Smoke: the image must boot a shell, refresh its own package index,
+      # and install one package - proving the assembled APT world (Debian
+      # + project repo + keyring) works inside the artifact, not just at
+      # build time. Runs on PRs too: minutes of compute for pre-merge
+      # signal is obviously worth it.
+      - name: Smoke test - load and exercise image
+        run: |
+          TAG="smoke-test:${GITHUB_SHA::8}"
+          skopeo copy "oci-archive:${{ steps.artifact.outputs.tarball }}" "docker-daemon:${TAG}"
+          docker run --rm "${TAG}" bash -c 'apt-get update && apt-get install -y curl && curl --version | head -1'
+          docker rmi "${TAG}" || true
+
+      # --- Push steps: merge-to-dev only (prove on PR, push on merge) ---
+      # Tags are convenience pointers; verification is always digest-based
+      # (ADR-008). edge + short-SHA on every dev push; :DISTRO_VERSION and
+      # stable move only in the release flow, never here.
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push edge + SHA tags
+        if: github.event_name == 'push'
+        run: |
+          SHA_TAG="${GITHUB_SHA::8}"
+          for TAG in edge "${SHA_TAG}"; do
+            skopeo copy "oci-archive:${{ steps.artifact.outputs.tarball }}" \
+              "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
+          done
+
+      # Slice 3 lands here: syft SBOM + grype scan as attached artifacts,
+      # scan metric-first per ADR-005/007 precedent.
+      # Slice 4 lands here: cosign keyless sign + SLSA provenance attest
+      # on digests (never tags), via per-run OIDC - no long-lived secrets.
