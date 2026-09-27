@@ -227,10 +227,24 @@ require_command mmdebstrap buildah jq gpg
 log_step "Assembling APT sources for mmdebstrap"
 
 SOURCES_LIST="${WORKDIR}/sources.list"
+# Debian lines carry an explicit signed-by pointing at the HOST keyring:
+# mmdebstrap runs apt unchrooted (target dir overlaid, host trust store),
+# so verification uses HOST /etc/apt/trusted.gpg.d - which has Debian keys
+# on a Debian box (why local builds passed with bare lines) but only
+# Ubuntu keys on a noble runner (hence NO_PUBKEY there). Explicit beats
+# implicit on every host. (The jadupc line below brings its own keyring,
+# so it never depended on host trust - which is why it fetched fine.)
+DEBIAN_KEYRING="/usr/share/keyrings/debian-archive-keyring.gpg"
+if [[ ! -f "${DEBIAN_KEYRING}" ]]; then
+    log_error "Debian archive keyring not found on host: ${DEBIAN_KEYRING}"
+    log_error "  Install it first (Debian/Ubuntu: debian-archive-keyring package;"
+    log_error "  CI installs the pinned trixie .deb - see container-build.yml)."
+    exit 1
+fi
 {
-    echo "deb ${LB_PARENT_MIRROR_BOOTSTRAP} ${LB_DISTRIBUTION} ${LB_APT_ARCHIVE_AREAS}"
+    echo "deb [signed-by=${DEBIAN_KEYRING}] ${LB_PARENT_MIRROR_BOOTSTRAP} ${LB_DISTRIBUTION} ${LB_APT_ARCHIVE_AREAS}"
     if [[ "${LB_UPDATES:-false}" == "true" ]]; then
-        echo "deb ${LB_PARENT_MIRROR_BOOTSTRAP} ${LB_DISTRIBUTION}-updates ${LB_APT_ARCHIVE_AREAS}"
+        echo "deb [signed-by=${DEBIAN_KEYRING}] ${LB_PARENT_MIRROR_BOOTSTRAP} ${LB_DISTRIBUTION}-updates ${LB_APT_ARCHIVE_AREAS}"
     fi
 } > "${SOURCES_LIST}"
 
