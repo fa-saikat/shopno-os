@@ -63,8 +63,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mmdebstrap buildah jq skopeo
 
+      # Root (same as build.sh): hosted runners disable unprivileged user
+      # namespaces, so mmdebstrap cannot run rootless here - it needs real
+      # privilege, not the userns fallback. Artifacts land root-owned;
+      # clean.sh already gates that case (refuses non-root, verified
+      # removal under sudo).
       - name: Build OCI tarball (no push)
-        run: ./scripts/build/build-container.sh --profile shopno-os-core
+        run: sudo ./scripts/build/build-container.sh --profile shopno-os-core
 
       - name: Locate tarball + manifest
         id: artifact
