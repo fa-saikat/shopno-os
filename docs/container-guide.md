@@ -129,6 +129,8 @@ What this deliberately does *not* prove: novel backdoors sail through CVE matchi
 - Merge to `dev`: adds GHCR login + `edge`/SHA push.
 - Dispatch: any single core-family profile.
 - Smoke runtime is docker via a skopeo bridge (`oci-archive:` → `docker-daemon:`), not `buildah run` — the daemon is guaranteed on hosted runners, rootless OCI runtimes are not. The smoke asserts the assembled APT world works *inside* the artifact (`apt-get update && install curl`).
+- Privilege follows `build.sh`: the mmdebstrap step runs under `sudo` (hosted runners disable unprivileged user namespaces, so rootless is impossible there, not merely slower). Artifacts land root-owned; `clean.sh --container` refuses non-root runs and verifies removal under sudo — the privilege story is one system across both builders, not per-script folklore.
+- Upload steps are `continue-on-error`: preservation must never veto verdicts (artifact quota and network health are environmental, never code defects). Key evidence additionally lands in `$GITHUB_STEP_SUMMARY`, which costs no storage and survives quota exhaustion. Retention is 7 days or the repo policy maximum, whichever is lower.
 
 Full trigger/stage reference lives in `docs/ci-cd.md` §2.3 — this guide covers intent and mechanics, that document covers the deployed pipeline.
 
@@ -143,6 +145,17 @@ test "$(jq -r .output.digest container-manifest.json)" = "$(skopeo inspect docke
 skopeo inspect docker://ghcr.io/<org>/shopno-os:edge | jq '.Labels'
 ```
 
+```bash
+# Signature: keyless, bound to digest by Fulcio/Rekor - needs nothing of yours
+cosign verify ghcr.io/<org>/shopno-os:edge \
+  --certificate-identity-regexp 'https://github.com/<org>/shopno-os.*' \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+# Attestations: SLSA provenance + SBOM, verified against repo identity
+gh attestation verify oci://ghcr.io/<org>/shopno-os:edge --repo <org>/shopno-os
+```
+(Replace `<org>` throughout. The identity regexp scopes trust to workflows in your repo — without it, any GitHub workflow's signature would verify.)
+
 ## 11. Troubleshooting
 
 | Symptom | Likely cause | Fix |
@@ -153,6 +166,7 @@ skopeo inspect docker://ghcr.io/<org>/shopno-os:edge | jq '.Labels'
 | `Permission denied` creating rootfs | User namespaces unavailable, ran without sudo | Re-run with `sudo` (same as `build.sh`); clean leftovers with `sudo clean.sh --container` |
 | Empty digest in manifest | Digest capture regressed | The `--digestfile` + empty-guard is load-bearing; do not "simplify" to `inspect` (proven broken on local-store images) |
 | `FINAL` count collapses | Denylist over-match (e.g. a broad new glob) | Review `container-exclude.txt` diff; dry-run shows per-pattern attribution at debug log level |
+| Checksum verify fails with "no such file" | Downloaded tarball renamed via `-o` while the checksums file references the release filename — verification binds to bytes-on-disk under their published name | Download under the remote filename; never rename before `sha256sum -c` (bitten once on syft/grype installs, hence this row) |
 
 ## 12. What Not to Do
 
