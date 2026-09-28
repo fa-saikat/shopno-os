@@ -28,9 +28,9 @@ Three workflows exist today, all under `.github/workflows/`:
 
 | Workflow | File | Status |
 |---|---|---|
-| Lint | `lint-packages.yml` | Live, green, every push + PR |
+| Lint | `lint-packages.yml` | Live, green, every push + PR except docs-only changes (`paths-ignore`) |
 | Build ISO | `build-iso.yml` | Live, matrix `core` + `desktop-xfce` on PRs, green; gaming dispatch-only |
-| Build Container | `container-build.yml` | Live (slices 1–3); sign/attest slice pending — see §2.3 |
+| Build Container | `container-build.yml` | Live, all slices: prove on PR, push + sign + attest + verify on merge — see §2.3 |
 
 Neither workflow rebuilds on `main`. A tag-triggered `release.yml` (build, sign, publish) is deliberately declined, not pending — see ADR-006; releases run locally per `docs/release-process.md`.
 
@@ -72,20 +72,26 @@ Checkout
 
 ### 2.3 `container-build.yml`
 
-Builds the Phase 4 OCI image from `scripts/build/build-container.sh` (rootless `mmdebstrap` rootfs, subtractive package projection, `buildah` assembly — no layer touched, desktop/gaming refused by guard) and exercises it, per ADR-008:
+Builds the Phase 4 OCI image from `scripts/build/build-container.sh` (privileged `mmdebstrap` rootfs under `sudo` — hosted runners disable unprivileged user namespaces, so rootless is impossible there; subtractive package projection, `buildah` assembly — no layer touched, desktop/gaming refused by guard) and exercises it, per ADR-008. Two jobs, least privilege:
 
 ```
-Checkout
-  → Install build dependencies (mmdebstrap, buildah, jq, skopeo + pinned syft/grype)
-  → Build OCI tarball, sudo (hosted runners disable unprivileged user namespaces)
+build (contents:read only — holds no registry/OIDC rights)
+  → Checkout
+  → Install build dependencies (mmdebstrap, buildah, jq, skopeo + trixie keyring .deb)
+  → Build OCI tarball, sudo
   → Locate tarball + manifest (dir handed back to the runner user - downstream steps run unprivileged)
+  → Smoke test via docker/skopeo bridge (proves the image, not just the build)
+  → Install SBOM/scan tools (pinned syft/grype with checksums — separate step, not build deps)
   → Generate SBOM, syft (blocking - no SBOM means nothing downstream has input)
   → Vulnerability scan, grype (continue-on-error — metric-first, same discipline as the boot gate)
-  → Upload SBOM + SARIF (7-day retention)
-  → Log in to GHCR + push edge + SHA tags (push events only)
+  → Upload build handoff, tarball + manifest + SBOM (push events only, blocking — publish depends on it)
+  → Upload SBOM + SARIF (continue-on-error — preservation never vetoes verdicts)
+publish (push events only, needs: build — the sole holder of packages/id-token/attestations:write)
+  → Download handoff → push edge + SHA tags (digest from the push itself, never re-read from :edge)
+  → Sign digest, keyless cosign → attest SLSA provenance + SBOM → verify signature + attestations (blocking)
 ```
 
-Prove on PR, push on merge: PR runs build, smoke, SBOM, and scan with zero registry writes; merges to `dev` add the GHCR push via the ephemeral per-run `GITHUB_TOKEN` (`packages: write`) — no secrets created, per narrowed ADR-006. Tags are pointers (`edge` + short-SHA now, `DISTRO_VERSION`/`stable` reserved for the release flow); verification is always digest-based. The smoke runtime is docker via a skopeo bridge (`oci-archive:` → `docker-daemon:`), not `buildah run` — rootless OCI runtimes aren't guaranteed on hosted runners, the daemon is. Cosign keyless signing + SLSA provenance attestation on digests land here next (slice 4); insertion points are marked in-file.
+Prove on PR, push on merge: PR runs prove with zero registry writes and the `publish` job skipped — the build job cannot leak an image even on misconfiguration because it holds no write rights (least privilege, not just `if:` guards). Merges to `dev` add the GHCR push via the ephemeral per-run `GITHUB_TOKEN` (`packages: write`) — no secrets created, per narrowed ADR-006. Tags are pointers (`edge` + short-SHA now, `DISTRO_VERSION`/`stable` reserved for the release flow); verification is always digest-based. The smoke runtime is docker via a skopeo bridge (`oci-archive:` → `docker-daemon:`), not `buildah run` — rootless OCI runtimes aren't guaranteed on hosted runners, the daemon is. Slice 4 (sign/attest/verify) is live; first full push-half proof awaits quota recovery (issue #64).
 
 ---
 
@@ -93,7 +99,7 @@ Prove on PR, push on merge: PR runs build, smoke, SBOM, and scan with zero regis
 
 ```
 Push to any branch (incl. dev) — triggers lint, does NOT trigger build-iso
-A PR to dev                    — triggers lint + build-iso matrix; container-build only if it touches the script, denylist, or itself
+A PR to dev                    — triggers lint + build-iso matrix; container-build if it touches an image input (script, denylist, workflow, package lists, core profile, keyring, libs, brand)
 Merge dev to main               — triggers lint, does NOT trigger build-iso
 Manual dispatch                 — does NOT trigger lint, triggers build-iso (any profile) or container-build (core only)
 ```
@@ -102,7 +108,7 @@ This is enforced by the trigger blocks themselves, not just intended:
 
 - `build-iso.yml` listens **only** to `pull_request: branches: [dev]` and `workflow_dispatch`. It has no `push` trigger at all — pushing directly to `dev` never fires it.
 - `lint-packages.yml` listens to `push` and `pull_request`, neither scoped to a branch — it fires on any push (including the fast-forward merge push that lands on `main`) and any PR. It has no `workflow_dispatch`, so manual dispatch never runs lint.
-- `container-build.yml` gates `pull_request: branches: [dev]` on its own paths (script, denylist, itself), fires on `push: branches: [dev]` with the same paths filter, and dispatches any single core-family profile. Registry writes happen on push events only — PR runs prove without publishing, so a PR can never leak an image even on misconfiguration.
+- `container-build.yml` gates `pull_request: branches: [dev]` and `push: branches: [dev]` on image-input paths (build script, denylist, workflow itself, `base/package-lists/`, `editions/core/package-lists/`, core profile, `base/config/archives/`, `scripts/lib/`, `brand/`), and dispatches the chosen core-family profile (`inputs.profile`, defaulting to core). Registry writes happen on push events only — PR runs prove without publishing, and the proving job holds no write/OIDC rights at all, so a PR can never leak an image even on misconfiguration.
 
 Reading the row for "a PR to `dev`" carefully: the matrix resolves from event inputs — `pull_request` events carry none, so the run builds the full `["shopno-os-core", "shopno-os-desktop-xfce"]` set; `workflow_dispatch` builds exactly the chosen profile. Gaming never runs unasked (see [§8](#8-known-limits-measured-not-feared)).
 
@@ -173,7 +179,7 @@ It's `continue-on-error` specifically because the **hosted runner has no `/dev/k
 
 - **`SOURCE_DATE_EPOCH`** — landed: exported in `build.sh` from the HEAD commit timestamp (explicit env wins). Sets up Phase 6 reproducibility work.
 - **Boot-gate promotion** from metric to blocking gate — gated on either a self-hosted KVM runner landing, or N consecutive green `core` boots under TCG establishing the check is reliable in this environment specifically.
-- **Container sign + attest (slice 4)** — `cosign` keyless sign + SLSA provenance on digests; the only Phase 4 piece not yet built.
+- **Container sign + attest + verify (slice 4)** — landed: keyless `cosign` sign + SLSA provenance/SBOM attestations on digests, with in-pipeline verification. First full push-half proof awaits artifact-quota recovery (issue #64).
 - **Matrix build**: landed (`core` + `desktop` on PRs, `gaming` dispatch-only).
 - **Self-hosted runner.** Per `docs/devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before.
 - **No `release.yml`, by decision** (ADR-006): tag-triggered build-sign-publish declined — releases stay local/manual.

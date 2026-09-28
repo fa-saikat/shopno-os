@@ -94,8 +94,9 @@ shopno-os/
 ├── .github/                        # CI/CD - GitHub Actions / Forgejo workflows
 │   ├── workflows/
 │   │   ├── build-iso.yml
-│   │   ├── lint-packages.yml
-│   │   └── release.yml
+│   │   ├── container-build.yml
+│   │   └── lint-packages.yml
+│   │   # (no release.yml — tag-triggered rebuilds declined, ADR-006)
 │   └── ISSUE_TEMPLATE/
 │
 ├── build/                          # Live-build working directories and output ISOs

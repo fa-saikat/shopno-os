@@ -89,7 +89,7 @@ sudo ./scripts/build/clean.sh --container   # root-owned leftovers need it
 2. **Resolve packages.** `profile_package_lists()` (base + core, in order) → strip comments/versions → subtract `container-exclude.txt` patterns → log declared/excluded/final counts. Refuses an empty final set (a vacuous image is a bug, not minimalism). A backstop re-match fails loud if the subtraction loop ever lets a matched package through — it guards loop drift, not pattern coverage (see §6).
 3. **Assemble APT sources.** `mmdebstrap` gets a fully explicit world: Debian suite (+ `-updates` per profile flags) and the project repo line mirroring `base/config/archives/jadupc.list`, with two keyrings — the host's `debian-archive-keyring.gpg` via explicit `signed-by` (mmdebstrap runs apt unchrooted against host trust, which is why bare lines verify on Debian hosts and fail on Ubuntu ones), and a build-time dearmored project key. `deb.jadupc.com` 301-redirects to https while a fresh minbase has no CA certs on first update, so TLS verification is scoped off for that host only — authenticity stays enforced via `signed-by` (no credentials cross that wire).
 4. **Run mmdebstrap** (`--variant=minbase`, `SOURCE_DATE_EPOCH` exported — same determinism story as the ISO side).
-5. **Assemble OCI image** (`buildah bud`, daemonless): generated `Containerfile` (`FROM scratch`, `ADD rootfs.tar /`, five standard `org.opencontainers.image.*` labels from brand + git SHA + SDE date, one vendor label `org.shopno-os.profile`, `CMD ["/bin/bash"]` for debuggability). Rootfs tarball is pinned reproducible (`--sort=name`, clamped mtimes, fixed ownership).
+5. **Assemble OCI image** (`buildah bud --timestamp "${SOURCE_DATE_EPOCH}"`, daemonless): generated `Containerfile` (`FROM scratch`, `ADD rootfs.tar /`, five standard `org.opencontainers.image.*` labels from brand + git SHA + SDE date, one vendor label `org.shopno-os.profile`, `CMD ["/bin/bash"]` for debuggability). Rootfs tarball is input-pinned (`--sort=name`, clamped mtimes, fixed ownership); cross-run digest equality is unmeasured until the D-1 double-build runs, so "reproducible" is not claimed yet.
 6. **Export + manifest.** `buildah push --digestfile` to an OCI tarball (the digest capture that actually works on local-store images — `inspect` reports no digest field there), then `container-manifest.json` in the `build-manifest.json` shape so tooling reads both uniformly.
 
 ## 6. Package Model — Subtractive, Not Parallel
@@ -117,7 +117,7 @@ Each attaches to the digest, in dependency order:
 
 - **SBOM (`syft`, blocking).** No SBOM means nothing downstream has input — a missing SBOM fails the run. SPDX JSON, uploaded as artifact.
 - **Scan (`grype`, metric-first).** Base images always carry CVEs; blocking on day one would veto good builds for upstream noise. Table to logs, SARIF to artifacts, promotion to a gate waits on a trusted baseline (ADR-005 pattern).
-- **Sign (`cosign`, keyless via GitHub OIDC) + provenance (`attest-build-provenance`, SLSA).** Signs the digest, never the tag. No long-lived credential exists at any point (narrowed ADR-006) — per-run OIDC token plus ephemeral `GITHUB_TOKEN`.
+- **Sign (`cosign`, keyless via GitHub OIDC) + provenance (`attest-build-provenance`, SLSA) + SBOM attestation (`attest-sbom`).** Signs the digest, never the tag. No long-lived credential exists at any point (narrowed ADR-006) — per-run OIDC token plus ephemeral `GITHUB_TOKEN`. The pipeline then verifies both (`cosign verify` + `gh attestation verify`, blocking), so a bad or missing signature fails the run instead of passing silently. Provenance scope, stated plainly: it attests workflow + commit, not a hermetic build — do not present it as SLSA Level 3.
 
 What this deliberately does *not* prove: novel backdoors sail through CVE matching green (the XZ lesson — say it unprompted), and keyless means "no key custody," not "no trust" (Fulcio/Rekor operators remain in the loop).
 
@@ -125,12 +125,12 @@ What this deliberately does *not* prove: novel backdoors sail through CVE matchi
 
 `container-build.yml` (ADR-008 — separate file, never folded into `build-iso.yml`):
 
-- PRs (paths-scoped to the script, denylist, itself): build + smoke + SBOM + scan, **zero registry writes**.
-- Merge to `dev`: adds GHCR login + `edge`/SHA push.
-- Dispatch: any single core-family profile.
+- PRs (paths-scoped to image inputs: script, denylist, workflow, package lists, core profile, keyring, libs, brand): build + smoke + SBOM + scan in a least-privilege job, **zero registry writes**, `publish` skipped.
+- Merge to `dev`: the `publish` job (sole holder of write/OIDC rights) downloads the blocking handoff, pushes `edge`/SHA (digest from the push itself), signs, attests provenance + SBOM, and verifies — in that order, so proof always precedes publication.
+- Dispatch: the chosen core-family profile (`inputs.profile`, default core).
 - Smoke runtime is docker via a skopeo bridge (`oci-archive:` → `docker-daemon:`), not `buildah run` — the daemon is guaranteed on hosted runners, rootless OCI runtimes are not. The smoke asserts the assembled APT world works *inside* the artifact (`apt-get update && install curl`).
 - Privilege follows `build.sh`: the mmdebstrap step runs under `sudo` (hosted runners disable unprivileged user namespaces, so rootless is impossible there, not merely slower). Artifacts land root-owned; `clean.sh --container` refuses non-root runs and verifies removal under sudo — the privilege story is one system across both builders, not per-script folklore.
-- Upload steps are `continue-on-error`: preservation must never veto verdicts (artifact quota and network health are environmental, never code defects). Key evidence additionally lands in `$GITHUB_STEP_SUMMARY`, which costs no storage and survives quota exhaustion. Retention is 7 days or the repo policy maximum, whichever is lower.
+- Uploads: the build→publish handoff is blocking and push-only (1-day retention — the publish job consumes it within minutes); SBOM/SARIF evidence uploads are `continue-on-error` with 7-day retention: preservation must never veto verdicts (artifact quota and network health are environmental, never code defects). Key evidence additionally lands in `$GITHUB_STEP_SUMMARY`, which costs no storage and survives quota exhaustion.
 
 Full trigger/stage reference lives in `docs/ci-cd.md` §2.3 — this guide covers intent and mechanics, that document covers the deployed pipeline.
 
