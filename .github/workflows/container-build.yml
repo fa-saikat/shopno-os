@@ -149,7 +149,9 @@ jobs:
       - name: Generate SBOM
         run: |
           syft scan "oci-archive:${{ steps.artifact.outputs.tarball }}" -o spdx-json=build/container/sbom.spdx.json
-          echo "SBOM packages: $(jq '.packages | length' build/container/sbom.spdx.json)"
+          SBOM_COUNT="$(jq '.packages | length' build/container/sbom.spdx.json)"
+          echo "SBOM packages: ${SBOM_COUNT}"
+          echo "- SBOM packages: **${SBOM_COUNT}**" >> "${GITHUB_STEP_SUMMARY}"
 
       # Metric-first (ADR-005): base images always carry CVEs, so a blocking
       # scan on day one would veto good builds for upstream noise. The table
@@ -163,8 +165,16 @@ jobs:
         run: |
           grype "sbom:build/container/sbom.spdx.json" -o table || true
           grype "sbom:build/container/sbom.spdx.json" -o "sarif=build/container/grype.sarif"
+          FINDINGS="$(jq '[.runs[].results // empty | .[]] | length' build/container/grype.sarif)"
+          echo "Grype findings: ${FINDINGS} (metric only - see SARIF artifact)"
+          echo "- Grype findings: **${FINDINGS}** (metric, non-blocking)" >> "${GITHUB_STEP_SUMMARY}"
 
+      # Preservation must never veto verdicts: upload fails only on
+      # environmental causes (quota, network, service health) - never on
+      # anything about the code. Evidence already lives in step logs and
+      # the summary above; artifacts are convenience, not proof.
       - name: Upload SBOM and scan report
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: container-sbom-scan
