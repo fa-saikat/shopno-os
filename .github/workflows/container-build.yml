@@ -121,16 +121,19 @@ jobs:
           # back once, here, instead of sudo-ing each consumer.
           sudo chown -R "$(id -u):$(id -g)" build/container
 
-      # Smoke: the image must boot a shell, refresh its own package index,
-      # and install one package - proving the assembled APT world (Debian
-      # + project repo + keyring) works inside the artifact, not just at
-      # build time. Runs on PRs too: minutes of compute for pre-merge
-      # signal is obviously worth it.
+      # Smoke: the image must refresh its own package indexes (Debian +
+      # baked-in ShopnoOS repo alike), then install and run a package
+      # guaranteed absent from minbase - proving installs work inside the
+      # artifact, not just at build time. `hello` is that package (tiny,
+      # dependency-free, in trixie/main); `curl` is not - it already ships
+      # in the image, so installing it proved nothing. Runs on PRs too:
+      # minutes of compute for pre-merge signal is obviously worth it.
       - name: Smoke test - load and exercise image
         run: |
           TAG="smoke-test:${GITHUB_SHA::8}"
           skopeo copy "oci-archive:${{ steps.artifact.outputs.tarball }}" "docker-daemon:${TAG}"
-          docker run --rm "${TAG}" bash -c 'apt-get update && apt-get install -y curl && curl --version | head -1'
+          docker run --rm "${TAG}" bash -c 'cat /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null'
+          docker run --rm "${TAG}" bash -c 'apt-get update && apt-get install -y --no-install-recommends hello && hello'
           docker rmi "${TAG}" || true
 
       # Anchore tools aren't in noble's repos - pinned GitHub-release
