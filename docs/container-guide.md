@@ -98,6 +98,8 @@ The Golden Rule ("a package lives in exactly one place") still holds: nothing is
 
 The file's own header states its limit honestly: it is incomplete-by-construction and only catches what someone named. The backstop check in the script guards the subtraction *mechanism*; coverage itself is audited by reviewing FINAL counts and, eventually, an artifact-absence check on the built image (tracked follow-up).
 
+Q1, decided: the image ships the ShopnoOS repo (`/etc/apt/sources.list.d/jadupc.list` + keyring at `/usr/share/keyrings/jadupc.gpg`, same URL/suite/components the build itself uses) — baked, not sealed — so derived images install `shopno-os-*` out of the box. Consequence: keyring rotation is an image-rebuild event.
+
 ## 7. Tagging and Versioning
 
 One authority, three pointer types — the `publish.sh` `latest`-symlink pattern reapplied to OCI:
@@ -128,7 +130,7 @@ What this deliberately does *not* prove: novel backdoors sail through CVE matchi
 - PRs (paths-scoped to image inputs: script, denylist, workflow, package lists, core profile, keyring, libs, brand): build + smoke + SBOM + scan in a least-privilege job, **zero registry writes**, `publish` skipped.
 - Merge to `dev`: the `publish` job (sole holder of write/OIDC rights) downloads the blocking handoff, pushes `edge`/SHA (digest from the push itself), signs, attests provenance + SBOM, and verifies — in that order, so proof always precedes publication.
 - Dispatch: the chosen core-family profile (`inputs.profile`, default core).
-- Smoke runtime is docker via a skopeo bridge (`oci-archive:` → `docker-daemon:`), not `buildah run` — the daemon is guaranteed on hosted runners, rootless OCI runtimes are not. The smoke asserts the assembled APT world works *inside* the artifact (`apt-get update && install curl`).
+- Smoke runtime is docker via a skopeo bridge (`oci-archive:` → `docker-daemon:`), not `buildah run` — the daemon is guaranteed on hosted runners, rootless OCI runtimes are not. The smoke logs the image's apt sources, then asserts both sources work *inside* the artifact (`apt-get update` across Debian + ShopnoOS repo, then install-and-run `hello` — a package guaranteed absent from minbase, so the install genuinely proves something).
 - Privilege follows `build.sh`: the mmdebstrap step runs under `sudo` (hosted runners disable unprivileged user namespaces, so rootless is impossible there, not merely slower). Artifacts land root-owned; `clean.sh --container` refuses non-root runs and verifies removal under sudo — the privilege story is one system across both builders, not per-script folklore.
 - Uploads: the build→publish handoff is blocking and push-only (1-day retention — the publish job consumes it within minutes); SBOM/SARIF evidence uploads are `continue-on-error` with 7-day retention: preservation must never veto verdicts (artifact quota and network health are environmental, never code defects). Key evidence additionally lands in `$GITHUB_STEP_SUMMARY`, which costs no storage and survives quota exhaustion.
 
