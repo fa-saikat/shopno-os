@@ -158,7 +158,9 @@ Row 1 (dev push 36472466697): SBOM 648, total 1979, Critical 43
 CORRECTION: no SBOM shift from ca-certificates (still 648) — it was
 already pulled in as a dependency; the explicit include is
 belt-and-braces, baseline unmoved.
-- [ ] **G1–G4. Hardening extras (W12/D7/W13/metrics)** — as time allows
+- [x] **G2. Self-hosted fork-PR warning (D7)** — done: constraint noted
+  in `container-build.yml` header + `ci-cd.md` self-hosted bullet.
+- [ ] **G1/G3/G4. Remaining extras (W12/W13/metrics)** — as time allows
 
 ## Definition of done (from audit §5)
 

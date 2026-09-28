@@ -15,6 +15,10 @@ name: Build Container
 #   happens only after SBOM/scan succeed (W1); the digest comes from the
 #   push itself, never re-read from mutable :edge (W5); cosign + attestation
 #   verification must fail red (W6).
+# Self-hosting constraint (#46, D7): when runs-on moves to a persistent
+# runner, this workflow must never run pull_request from forks on it -
+# the build job executes repo code under sudo, which is arbitrary code
+# execution on that hardware. Gate forks out then, not now.
 on:
   pull_request:
     branches: [dev]

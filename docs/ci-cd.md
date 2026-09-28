@@ -181,7 +181,7 @@ It's `continue-on-error` specifically because the **hosted runner has no `/dev/k
 - **Boot-gate promotion** from metric to blocking gate — gated on either a self-hosted KVM runner landing, or N consecutive green `core` boots under TCG establishing the check is reliable in this environment specifically.
 - **Container sign + attest + verify (slice 4)** — landed: keyless `cosign` sign + SLSA provenance/SBOM attestations on digests, with in-pipeline verification. First full push-half proof awaits artifact-quota recovery (issue #64).
 - **Matrix build**: landed (`core` + `desktop` on PRs, `gaming` dispatch-only).
-- **Self-hosted runner.** Per `docs/devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before.
+- **Self-hosted runner.** Per `docs/devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before. Hard constraint when it lands (D7): persistent runners must never execute `pull_request` from forks — the container build job runs repo code under `sudo`, which is arbitrary code execution on that hardware. Noted in-file in `container-build.yml`.
 - **No `release.yml`, by decision** (ADR-006): tag-triggered build-sign-publish declined — releases stay local/manual.
 - **BIOS serial console gap** (issue #30) — see [§8](#8-known-limits-measured-not-feared).
 - **`lint-packages.yml` has no `workflow_dispatch`** — no way to force a standalone lint run today outside a push or PR.
