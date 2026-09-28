@@ -62,7 +62,6 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: fa-saikat/shopno-os
 
 jobs:
   build:
@@ -70,6 +69,11 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    # A9 (W10): the dispatch input is honored, never dead. PR/push events
+    # carry no inputs (null) so the default keeps them on core; the script's
+    # core-only guard still rejects anything outside v1 scope.
+    env:
+      PROFILE: ${{ github.event.inputs.profile || 'shopno-os-core' }}
     # Rootfs builds take minutes, not the ISO's hour - generous ceiling
     # with room; shrink only on measured evidence, never preemptively.
     timeout-minutes: 60
@@ -103,7 +107,7 @@ jobs:
       # clean.sh already gates that case (refuses non-root, verified
       # removal under sudo).
       - name: Build OCI tarball (no push)
-        run: sudo ./scripts/build/build-container.sh --profile shopno-os-core
+        run: sudo ./scripts/build/build-container.sh --profile "${PROFILE}"
 
       - name: Locate tarball + manifest
         id: artifact
@@ -222,6 +226,11 @@ jobs:
       attestations: write
     timeout-minutes: 20
     steps:
+      # A9 (W11): image path derived from the repo, never hardcoded - a
+      # rename/move keeps working, and the no-hardcode lint rule holds.
+      - name: Resolve image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "${GITHUB_ENV}"
+
       - name: Download build handoff
         uses: actions/download-artifact@v4
         with:
@@ -278,12 +287,12 @@ jobs:
           SHA_TAG="${GITHUB_SHA::8}"
           skopeo copy --digestfile digest.txt \
             "oci-archive:${{ steps.artifact.outputs.tarball }}" \
-            "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SHA_TAG}"
+            "docker://${{ env.IMAGE }}:${SHA_TAG}"
           DIGEST="$(cat digest.txt)"
           test -n "${DIGEST}" || { echo "Empty digest from push"; exit 1; }
           skopeo copy \
-            "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}" \
-            "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:edge"
+            "docker://${{ env.IMAGE }}@${DIGEST}" \
+            "docker://${{ env.IMAGE }}:edge"
           echo "digest=${DIGEST}" >> "${GITHUB_OUTPUT}"
           echo "Pushed digest: ${DIGEST}"
           echo "- Image digest: \`${DIGEST}\`" >> "${GITHUB_STEP_SUMMARY}"
@@ -295,19 +304,19 @@ jobs:
       # move, digests don't (ADR-008).
       - name: Sign image digest (keyless OIDC)
         run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
+          cosign sign --yes "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
 
       - name: Attest build provenance (SLSA)
         uses: actions/attest-build-provenance@v2
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
       - name: Attest SBOM
         uses: actions/attest-sbom@v2
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
           sbom-path: ${{ steps.artifact.outputs.sbom }}
           push-to-registry: true
@@ -319,8 +328,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cosign verify "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}" \
+          cosign verify "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}" \
             --certificate-identity-regexp "^https://github.com/${GITHUB_REPOSITORY}/\\.github/workflows/container-build\\.yml@refs/heads/dev$" \
             --certificate-oidc-issuer https://token.actions.githubusercontent.com
-          gh attestation verify "oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}" \
+          gh attestation verify "oci://${{ env.IMAGE }}@${{ steps.push.outputs.digest }}" \
             --repo "${GITHUB_REPOSITORY}"
