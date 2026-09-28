@@ -96,7 +96,7 @@ sudo ./scripts/build/clean.sh --container   # root-owned leftovers need it
 
 The Golden Rule ("a package lives in exactly one place") still holds: nothing is *declared* in `container-exclude.txt`, only excluded. `base/*` + `editions/core/*` stay the single source of truth; the exclude file is a *projection* onto a different artifact type. New base packages flow into the container by default — the failure mode is inclusion (visible in the SBOM, catchable by gates), never silent drift between competing lists.
 
-The file's own header states its limit honestly: it is incomplete-by-construction and only catches what someone named. The backstop check in the script guards the subtraction *mechanism*; coverage itself is audited by reviewing FINAL counts and, eventually, an artifact-absence check on the built image (tracked follow-up).
+The file's own header states its limit honestly: it is incomplete-by-construction and only catches what someone named. The backstop check in the script guards the subtraction *mechanism*; coverage itself is audited against the built image by the content gate (`tests/smoke/test-container-packages.sh`, ADR-009): denylist absence plus critical set plus count band, all artifact-derived, blocking before publish.
 
 Q1, decided: the image ships the ShopnoOS repo (`/etc/apt/sources.list.d/jadupc.list` + keyring at `/usr/share/keyrings/jadupc.gpg`, same URL/suite/components the build itself uses) — baked, not sealed — so derived images install `shopno-os-*` out of the box. Consequence: keyring rotation is an image-rebuild event.
 
