@@ -46,7 +46,22 @@
     despite quota-blocked upload, by design); trigger proof PR #62
     (touched only base/package-lists, container leg fired, closed
     unmerged).
-- [ ] **A3+A4+A5+A7. Trust reorder as ONE unit (W1/W2/W4/W5 + W6)** — M
+- [x] **A3+A4+A5+A7. Trust reorder as ONE unit (W1/W2/W4/W5 + W6)** — M
+  - A2 paired here (cancel window IS race window): `cancel-in-progress`
+    becomes `${{ github.event_name == 'pull_request' }}`.
+  - Split `build` / `publish` jobs; top-level `permissions: contents: read`
+    only; `publish` gets `packages/id-token/attestations: write`.
+  - Order: build → smoke → SBOM (blocking) → scan (metric) → publish job:
+    push → sign → attest → verify. Handoff upload blocking; only evidence
+    upload stays `continue-on-error`.
+  - A5: digest from `skopeo copy --digestfile`, never re-read `:edge`.
+  - A7: `cosign verify` + `gh attestation verify` in-pipeline, must fail red.
+  - Validate: `actionlint`; PR run shows no write perms + publish skipped;
+    forced SBOM failure leaves GHCR empty; wrong-identity verify goes red
+    (save run URL).
+  - Status: [x] implemented on `ci/container-trust-boundary` — YAML parse
+    OK, actionlint clean (file + repo). PR-run proof pending (publish
+    skipped on PR; push/sign/attest/verify proven on merge to dev).
   - A2 paired here (cancel window IS race window): `cancel-in-progress`
     becomes `${{ github.event_name == 'pull_request' }}`.
   - Split `build` / `publish` jobs; top-level `permissions: contents: read`
