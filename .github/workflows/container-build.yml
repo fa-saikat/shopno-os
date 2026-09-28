@@ -168,19 +168,34 @@ jobs:
 
       # Metric-first (ADR-005): base images always carry CVEs, so a blocking
       # scan on day one would veto good builds for upstream noise. The table
-      # prints for humans; the SARIF uploads for tooling; promotion to a
-      # gate waits on a trusted baseline like everything else here.
+      # prints for humans; the SARIF uploads for tooling; the JSON feeds
+      # the severity breakdown below; promotion to a gate waits on a
+      # trusted baseline like everything else here.
       # NOTE: `|| true` on the table form only - a findings-exit must not
-      # skip the SARIF write in the next line.
+      # skip the artifact writes in the next lines.
+      # Graduation rule (F3, tracked in issue #68): baseline the next 10
+      # dev-push runs in the issue logbook, then remove continue-on-error
+      # and fail on >=1 Critical with a fix available. N consecutive
+      # all-green justifies the flip - never elapsed time or optimism.
       - name: Vulnerability scan (non-blocking metric)
         id: scan
         continue-on-error: true
         run: |
           grype "sbom:build/container/sbom.spdx.json" -o table || true
           grype "sbom:build/container/sbom.spdx.json" -o "sarif=build/container/grype.sarif"
+          grype "sbom:build/container/sbom.spdx.json" -o "json=build/container/grype.json"
           FINDINGS="$(jq '[.runs[].results // empty | .[]] | length' build/container/grype.sarif)"
           echo "Grype findings: ${FINDINGS} (metric only - see SARIF artifact)"
           echo "- Grype findings: **${FINDINGS}** (metric, non-blocking)" >> "${GITHUB_STEP_SUMMARY}"
+          # Severity breakdown for the graduation logbook (#68). Defensive
+          # selectors (`?`, `//`): an unfamiliar schema yields zeros, never
+          # a step failure - and the step is continue-on-error regardless.
+          CRIT="$(jq '[.matches[]? | select(.vulnerability.severity == "Critical")] | length' build/container/grype.json)"
+          CRIT_FIX="$(jq '[.matches[]? | select(.vulnerability.severity == "Critical" and ((.vulnerability.fix.versions // []) | length > 0))] | length' build/container/grype.json)"
+          HIGH="$(jq '[.matches[]? | select(.vulnerability.severity == "High")] | length' build/container/grype.json)"
+          HIGH_FIX="$(jq '[.matches[]? | select(.vulnerability.severity == "High" and ((.vulnerability.fix.versions // []) | length > 0))] | length' build/container/grype.json)"
+          echo "Grype severity: Critical ${CRIT} (${CRIT_FIX} with fix), High ${HIGH} (${HIGH_FIX} with fix)"
+          echo "- Grype severity: Critical **${CRIT}** (${CRIT_FIX} with fix), High **${HIGH}** (${HIGH_FIX} with fix)" >> "${GITHUB_STEP_SUMMARY}"
 
       # Handoff to the publish job (A3/A4). BLOCKING by design: publish
       # `needs: build`, so a failed upload here stops the pipeline before
@@ -212,6 +227,7 @@ jobs:
           path: |
             build/container/sbom.spdx.json
             build/container/grype.sarif
+            build/container/grype.json
 
   # --- Publish: merge-to-dev only (prove on PR, push on merge) ---
   # Runs only after the build job proved the image. Holds the only
