@@ -122,7 +122,7 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" build/container
 
       # Smoke: the image must refresh its own package indexes (Debian +
-      # baked-in ShopnoOS repo alike), then install and run a package
+      # baked-in project repo alike), then install and run a package
       # guaranteed absent from minbase - proving installs work inside the
       # artifact, not just at build time. `hello` is that package (tiny,
       # dependency-free, in trixie/main); `curl` is not - it already ships
@@ -132,7 +132,7 @@ jobs:
         run: |
           TAG="smoke-test:${GITHUB_SHA::8}"
           skopeo copy "oci-archive:${{ steps.artifact.outputs.tarball }}" "docker-daemon:${TAG}"
-          docker run --rm "${TAG}" bash -c 'cat /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null'
+          docker run --rm "${TAG}" bash -c 'cat /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; echo ---; cat /etc/apt/apt.conf.d/* 2>/dev/null'
           docker run --rm "${TAG}" bash -c 'apt-get update && apt-get install -y --no-install-recommends hello && hello'
           docker rmi "${TAG}" || true
 
