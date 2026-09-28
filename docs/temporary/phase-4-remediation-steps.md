@@ -70,21 +70,35 @@
 - [ ] **A8. Fix smoke test (W8/W9)** — S (needs Q1 decision first)
   - Install absent package (`hello`), log artifact apt sources, rewrite comment
     to claim only what is proven.
-- [ ] **A9. Small cleanups (W10/W11)** — S
+- [x] **A9. Small cleanups (W10/W11)** — S
   - `IMAGE_NAME` from `${GITHUB_REPOSITORY,,}`; wire or remove dead
     `inputs.profile`.
+  - Status: [x] done on `ci/container-hygiene` — IMAGE derived per-job
+    (6 refs), PROFILE wired with core default. actionlint clean.
+    Runtime proof on next push run.
 
 ## Phase B (hygiene first) — Script fixes
 
-- [ ] **B1. Remove `load_secrets` (S5)** — S · `build:`
+- [x] **B1. Remove `load_secrets` (S5)** — S · `build:`
   - Delete `source secrets.sh` + `load_secrets`. Validate: `env | grep OS_`
     clean in `--keep-rootfs` run.
-- [ ] **B2. Export `SOURCE_DATE_EPOCH` before dates (S2)** — S
+  - Status: [x] done on `ci/container-hygiene` — grep confirms zero other
+    secrets consumption; `--dry-run` green without the source.
+    Full `env` proof needs a real build (verify).
+- [x] **B2. Export `SOURCE_DATE_EPOCH` before dates (S2)** — S
   - Move export above `BUILD_DATE`. Validate: tarball name date == label date
     on older commit.
-- [ ] **B3. Pin image timestamp (S1)** — S
+  - Status: [x] move done on `ci/container-hygiene` — ordering hygiene
+    only. CORRECTION: `iso_build_date` (common.sh) is wall-clock and
+    ignores SDE, so the move alone cannot equalize the dates. True
+    agreement needs the shared helper to honor SDE — separate proposal,
+    ISO-affecting, not smuggled in here.
+- [x] **B3. Pin image timestamp (S1)** — S
   - `buildah bud --timestamp "${SOURCE_DATE_EPOCH}"`. Validate: `buildah bud
     --help` on runner (verify flag present per brief).
+  - Status: [x] done on `ci/container-hygiene` — flag confirmed on local
+    buildah 1.39.3 (`--timestamp int`). Runner-version proof + digest
+    stability on next CI/dev build (verify).
 
 ## Phase F — Docs / ADR corrections
 
