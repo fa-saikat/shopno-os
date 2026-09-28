@@ -67,9 +67,15 @@
 - [ ] **A6. Assert manifest ↔ registry identity (W7)** — S · experiment decides
   - `test "$(jq -r .output.digest container-manifest.json)" = "${DIGEST}"`.
   - If fail: keep both digests + document, or push via `buildah push`.
-- [ ] **A8. Fix smoke test (W8/W9)** — S (needs Q1 decision first)
+- [x] **A8. Fix smoke test (W8/W9)** — S (needs Q1 decision first)
   - Install absent package (`hello`), log artifact apt sources, rewrite comment
     to claim only what is proven.
+  - Status: [x] done on `ci/container-apt-repo-baked` — Q1 decided baked:
+    repo + keyring ship in-image (single URL/suite definition, host
+    derived never retyped); smoke installs+runs `hello` (index-verified
+    2.10-5, `curl` proven vacuous) and logs in-image sources. Static:
+    bash -n, shellcheck, actionlint clean. Bake + hello proof needs a
+    real build — no sudo here, so CI owns it (verify).
 - [x] **A9. Small cleanups (W10/W11)** — S
   - `IMAGE_NAME` from `${GITHUB_REPOSITORY,,}`; wire or remove dead
     `inputs.profile`.
@@ -147,6 +153,7 @@ double-build recorded; docs match YAML.
 
 ## Open decisions blocking steps (audit §3)
 
-Q1 image apt sources (blocks A8) · Q2 security pocket (blocks B5) ·
+Q1 DECIDED baked (repo + keyring ship in-image; keyring rotation =
+image rebuild) · Q2 security pocket (blocks B5) ·
 Q3 Tier B (blocks C1) · Q4 sign/attest run on real push? (run UI) ·
 Q5 `:DISTRO_VERSION`/`stable` promotion local (blocks E1).
