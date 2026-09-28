@@ -263,6 +263,12 @@ fi
     if [[ "${LB_UPDATES:-false}" == "true" ]]; then
         echo "deb [signed-by=${DEBIAN_KEYRING}] ${LB_PARENT_MIRROR_BOOTSTRAP} ${LB_DISTRIBUTION}-updates ${LB_APT_ARCHIVE_AREAS}"
     fi
+    # Q2/B5: security pocket, unconditional. The core profile sets
+    # LB_SECURITY=false for the ISO path and this script never reads that
+    # flag - a container base that cannot see security updates voids the
+    # supply-chain story above it. Same explicit signed-by; mirror shape
+    # follows profiles/_template (security.debian.org, -security suite).
+    echo "deb [signed-by=${DEBIAN_KEYRING}] http://security.debian.org/debian-security ${LB_DISTRIBUTION}-security ${LB_APT_ARCHIVE_AREAS}"
 } > "${SOURCES_LIST}"
 
 JADUPC_KEY_ASC="${OS_REPO_ROOT}/base/config/archives/jadupc.key"
