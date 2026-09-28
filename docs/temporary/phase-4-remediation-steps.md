@@ -74,8 +74,14 @@
     repo + keyring ship in-image (single URL/suite definition, host
     derived never retyped); smoke installs+runs `hello` (index-verified
     2.10-5, `curl` proven vacuous) and logs in-image sources. Static:
-    bash -n, shellcheck, actionlint clean. Bake + hello proof needs a
-    real build — no sudo here, so CI owns it (verify).
+    bash -n, shellcheck, actionlint clean. CI round 1 found two real
+    issues, both fixed on the branch: hardcoded distro name in the smoke
+    comment (lint red — generic wording now, checker green locally), and
+    mmdebstrap's `--aptopt` persisting to in-image
+    `/etc/apt/apt.conf.d/99mmdebstrap` (manpage-confirmed), which blinded
+    in-image apt — scrubbed post-build, plus explicit `ca-certificates`
+    (FINAL 128→129, SBOM baseline shifts +1) since the baked repo
+    redirects to https. Bake + hello proof rides CI round 2 (verify).
 - [x] **A9. Small cleanups (W10/W11)** — S
   - `IMAGE_NAME` from `${GITHUB_REPOSITORY,,}`; wire or remove dead
     `inputs.profile`.
