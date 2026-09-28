@@ -123,11 +123,18 @@
 
 ## Phase C + D — Content gate + determinism
 
-- [ ] **C1. Decide Tier B (D3, needs Q3)** — M · decision then `build:`
-- [ ] **C2. Artifact-absence + critical + ceiling test (D1/D2)** — M–L · `tests:`
+- [x] **C1. Decide Tier B (D3, needs Q3)** — M · decision then `build:`
+  - Status: [x] Q3 decided deny-by-rule, denylist extended on
+    `tests/container-content-gate` — dry-run 186/67/120 (was 186/58/129).
+- [x] **C2. Artifact-absence + critical + ceiling test (D1/D2)** — M–L · `tests:`
   - New `tests/smoke/test-container-packages.sh` + fixture
     `expected-container-packages.json`; blocking step. Validate: green run +
     red run on deliberately removed denylist entry (save URLs). ADR-009.
+  - Status: [x] implemented on `tests/container-content-gate` — gate
+    pre-handoff, fixture provisional band [450, 700] (`validated: false`,
+    tighten after real builds), ADR-009 written. Static: bash -n,
+    shellcheck, actionlint, fixture JSON valid. Live proof (green +
+    sabotage-red) rides CI.
 - [ ] **D-1. Double-build test (S1–S3)** — M
   - Two builds → diff digests → `diffoscope` if differ; record outcome in guide.
     Reword "deterministic" to measured result.
@@ -188,5 +195,5 @@ double-build recorded; docs match YAML.
 
 Q1 DECIDED baked (repo + keyring ship in-image; keyring rotation =
 image rebuild) · Q2 security pocket (blocks B5) ·
-Q3 Tier B (blocks C1) · Q4 sign/attest run on real push? (run UI) ·
+Q3 DECIDED deny-by-rule (no daemons, no privileged-hardware tooling) · Q4 sign/attest run on real push? (run UI) ·
 Q5 `:DISTRO_VERSION`/`stable` promotion local (blocks E1).
