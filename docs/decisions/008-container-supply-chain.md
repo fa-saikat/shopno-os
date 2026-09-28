@@ -19,3 +19,24 @@ Phase 4 needs a container image plus supply-chain evidence (SBOM, scan, signatur
 - SBOM (`syft`), scan (`grype`, non-blocking first per the established pattern), signature, and SLSA provenance attach to digests in later slices — this ADR is the build/publish/tagging foundation they hang off, not the whole chain.
 - `core` composition only (`base` + `core` edition, subtractive package projection); desktop variants need their own proposal.
 - Reopening the tagging scheme requires a consumer confused by it in practice, not a hypothetical cleaner scheme.
+
+## Amended 2026-09-28 — Trust layout as built (remediation A3+A4+A5+A7, A2)
+
+The pipeline this ADR founded now proves before it publishes, in two
+least-privilege jobs (single `build` + push-gated `publish`), and verifies
+what it signed (`cosign verify` + `gh attestation verify`, blocking).
+Recorded here because the as-built reality differs from the original text
+in five places, each load-bearing:
+
+- Scoped `Verify-Peer=false` for the project-repo host only, justified by
+  `signed-by` on every index and package (transport carries no
+  credentials).
+- Privileged (`sudo`) build on hosted runners instead of rootless —
+  unprivileged user namespaces are disabled there, not merely slower.
+- Docker-daemon smoke runtime (skopeo `oci-archive:` → `docker-daemon:`
+  bridge), since rootless OCI runtimes are not guaranteed on hosted
+  runners.
+- SBOM attestation (`attest-sbom`) in addition to SLSA provenance, both
+  verified in-pipeline.
+- The denylist is incomplete-by-construction; the artifact-absence gate
+  (Phase C) is the real backstop, not the exclude list.
