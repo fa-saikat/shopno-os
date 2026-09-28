@@ -254,10 +254,22 @@ fi
 
 JADUPC_KEY_ASC="${OS_REPO_ROOT}/base/config/archives/jadupc.key"
 JADUPC_KEYRING="${WORKDIR}/jadupc.gpg"
+# Single definition of the project repo, used for the build-time sources
+# above AND the in-image sources below (Q1: baked, not sealed) - one place
+# to change, not a second copy of the URL/suite (see B4 for the deferred
+# jadupc.list parsing).
+JADUPC_URL="http://deb.jadupc.com"
+JADUPC_SUITE="shopno"
+JADUPC_COMPS="main"
+# Host derived from the URL, never retyped: the scoped Verify-Peer opt
+# below must name this exact host.
+JADUPC_HOST="${JADUPC_URL#http://}"
+JADUPC_HOST="${JADUPC_HOST#https://}"
+JADUPC_HOST="${JADUPC_HOST%%/*}"
 require_file "${JADUPC_KEY_ASC}"
 # Dearmor at build time: the repo stores ASCII-armored, apt needs binary.
 gpg --batch --yes --dearmor -o "${JADUPC_KEYRING}" "${JADUPC_KEY_ASC}"
-echo "deb [signed-by=${JADUPC_KEYRING}] http://deb.jadupc.com shopno main" >> "${SOURCES_LIST}"
+echo "deb [signed-by=${JADUPC_KEYRING}] ${JADUPC_URL} ${JADUPC_SUITE} ${JADUPC_COMPS}" >> "${SOURCES_LIST}"
 log_info "Sources: $(wc -l < "${SOURCES_LIST}" | tr -d ' ') lines ($(grep -c '^deb' "${SOURCES_LIST}") repos)"
 
 # ---------------------------------------------------------------------------
@@ -277,7 +289,7 @@ _run mmdebstrap \
     --include="${INCLUDE_CSV}" \
     --aptopt="Dir::Etc::sourcelist \"${SOURCES_LIST}\"" \
     --aptopt="Dir::Etc::sourceparts \"-\"" \
-    --aptopt="Acquire::https::deb.jadupc.com::Verify-Peer \"false\"" \
+    --aptopt="Acquire::https::${JADUPC_HOST}::Verify-Peer \"false\"" \
     "${LB_DISTRIBUTION}" \
     "${ROOTFS_DIR}" \
     "${LB_PARENT_MIRROR_BOOTSTRAP}"
@@ -291,6 +303,16 @@ _run mmdebstrap \
 # escalate to build-time-only global Verify-Peer=false, same argument.
 
 log_success "Rootfs built: $(du -sh "${ROOTFS_DIR}" | cut -f1)"
+
+# Q1 (baked, not sealed): ship the ShopnoOS repo inside the image so
+# derived images can `apt install shopno-os-*` out of the box. Same key
+# dearmored above, same URL/suite/components - installed to the standard
+# keyring path with explicit signed-by, never trusted.gpg.d.
+install -m 0755 -d "${ROOTFS_DIR}/usr/share/keyrings" "${ROOTFS_DIR}/etc/apt/sources.list.d"
+install -m 0644 "${JADUPC_KEYRING}" "${ROOTFS_DIR}/usr/share/keyrings/jadupc.gpg"
+echo "deb [signed-by=/usr/share/keyrings/jadupc.gpg] ${JADUPC_URL} ${JADUPC_SUITE} ${JADUPC_COMPS}" \
+    > "${ROOTFS_DIR}/etc/apt/sources.list.d/jadupc.list"
+log_info "In-image repo: ${JADUPC_URL} ${JADUPC_SUITE} ${JADUPC_COMPS} (keyring: /usr/share/keyrings/jadupc.gpg)"
 
 # Tar the rootfs for the Containerfile ADD. Fully pinned for
 # reproducibility: sorted members, clamped mtimes, fixed ownership -
