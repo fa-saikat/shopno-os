@@ -10,6 +10,7 @@
 2. [Workflows](#2-workflows)
    - [`lint-packages.yml`](#21-lint-packagesyml)
    - [`build-iso.yml`](#22-build-isoyml)
+   - [`container-build.yml`](#23-container-buildyml)
 3. [Trigger Reference](#3-trigger-reference)
 4. [Branch Model — Why `main` Never Rebuilds](#4-branch-model--why-main-never-rebuilds)
 5. [Toolchain Workarounds](#5-toolchain-workarounds)
@@ -23,12 +24,13 @@
 
 ## 1. Overview
 
-Two workflows exist today, both under `.github/workflows/`:
+Three workflows exist today, all under `.github/workflows/`:
 
 | Workflow | File | Status |
 |---|---|---|
 | Lint | `lint-packages.yml` | Live, green, every push + PR |
 | Build ISO | `build-iso.yml` | Live, matrix `core` + `desktop-xfce` on PRs, green; gaming dispatch-only |
+| Build Container | `container-build.yml` | Live (slices 1–3); sign/attest slice pending — see §2.3 |
 
 Neither workflow rebuilds on `main`. A tag-triggered `release.yml` (build, sign, publish) is deliberately declined, not pending — see ADR-006; releases run locally per `docs/release-process.md`.
 
@@ -68,21 +70,39 @@ Checkout
 
 `workflow_dispatch` takes an optional `profile` input (default `shopno-os-core`) for exercising one profile outside the PR path — this is how `desktop-xfce` was first proven and how `gaming-xfce` stays available without ever running unasked.
 
+### 2.3 `container-build.yml`
+
+Builds the Phase 4 OCI image from `scripts/build/build-container.sh` (rootless `mmdebstrap` rootfs, subtractive package projection, `buildah` assembly — no layer touched, desktop/gaming refused by guard) and exercises it, per ADR-008:
+
+```
+Checkout
+  → Install build dependencies (mmdebstrap, buildah, jq, skopeo + pinned syft/grype)
+  → Build OCI tarball, sudo (hosted runners disable unprivileged user namespaces)
+  → Locate tarball + manifest (dir handed back to the runner user - downstream steps run unprivileged)
+  → Generate SBOM, syft (blocking - no SBOM means nothing downstream has input)
+  → Vulnerability scan, grype (continue-on-error — metric-first, same discipline as the boot gate)
+  → Upload SBOM + SARIF (7-day retention)
+  → Log in to GHCR + push edge + SHA tags (push events only)
+```
+
+Prove on PR, push on merge: PR runs build, smoke, SBOM, and scan with zero registry writes; merges to `dev` add the GHCR push via the ephemeral per-run `GITHUB_TOKEN` (`packages: write`) — no secrets created, per narrowed ADR-006. Tags are pointers (`edge` + short-SHA now, `DISTRO_VERSION`/`stable` reserved for the release flow); verification is always digest-based. The smoke runtime is docker via a skopeo bridge (`oci-archive:` → `docker-daemon:`), not `buildah run` — rootless OCI runtimes aren't guaranteed on hosted runners, the daemon is. Cosign keyless signing + SLSA provenance attestation on digests land here next (slice 4); insertion points are marked in-file.
+
 ---
 
 ## 3. Trigger Reference
 
 ```
 Push to any branch (incl. dev) — triggers lint, does NOT trigger build-iso
-A PR to dev                    — triggers both lint and build-iso (core edition)
+A PR to dev                    — triggers lint + build-iso matrix; container-build only if it touches the script, denylist, or itself
 Merge dev to main               — triggers lint, does NOT trigger build-iso
-Manual dispatch                 — does NOT trigger lint, triggers build-iso
+Manual dispatch                 — does NOT trigger lint, triggers build-iso (any profile) or container-build (core only)
 ```
 
 This is enforced by the trigger blocks themselves, not just intended:
 
 - `build-iso.yml` listens **only** to `pull_request: branches: [dev]` and `workflow_dispatch`. It has no `push` trigger at all — pushing directly to `dev` never fires it.
 - `lint-packages.yml` listens to `push` and `pull_request`, neither scoped to a branch — it fires on any push (including the fast-forward merge push that lands on `main`) and any PR. It has no `workflow_dispatch`, so manual dispatch never runs lint.
+- `container-build.yml` gates `pull_request: branches: [dev]` on its own paths (script, denylist, itself), fires on `push: branches: [dev]` with the same paths filter, and dispatches any single core-family profile. Registry writes happen on push events only — PR runs prove without publishing, so a PR can never leak an image even on misconfiguration.
 
 Reading the row for "a PR to `dev`" carefully: the matrix resolves from event inputs — `pull_request` events carry none, so the run builds the full `["shopno-os-core", "shopno-os-desktop-xfce"]` set; `workflow_dispatch` builds exactly the chosen profile. Gaming never runs unasked (see [§8](#8-known-limits-measured-not-feared)).
 
@@ -92,7 +112,7 @@ Reading the row for "a PR to `dev`" carefully: the matrix resolves from event in
 
 Per `docs/release-process.md` §1.5 and `docs/git-guide.md`: `dev` is the authoritative branch; `main` is the stable release target and is **never committed to directly** — it only ever receives fast-forward merges of already-proven `dev` state, plus tags.
 
-Rebuilding on `main` would mean re-proving bits that were already proven on `dev` thirty-plus minutes earlier, for a different channel — exactly the "promotion, not rebuild" principle the project already applies elsewhere (aptly's pointer-swap publish model in `shopnos-devops-integration-plan.md` §3, Phase 3). Release verification on `main` is deferred to the tag-triggered `release.yml`, which does not exist yet (see [§9](#9-tracked-follow-ups)).
+Rebuilding on `main` would mean re-proving bits that were already proven on `dev` thirty-plus minutes earlier, for a different channel — promotion, not rebuild. Release verification on `main` stays local/manual by decision (ADR-006); no tag-triggered workflow exists or is planned.
 
 ---
 
@@ -151,10 +171,11 @@ It's `continue-on-error` specifically because the **hosted runner has no `/dev/k
 
 ## 9. Tracked Follow-ups
 
-- **`SOURCE_DATE_EPOCH`** wiring into `lb_config.sh`, per `shopnos-devops-integration-plan.md` Phase 1 — not started.
+- **`SOURCE_DATE_EPOCH`** — landed: exported in `build.sh` from the HEAD commit timestamp (explicit env wins). Sets up Phase 6 reproducibility work.
 - **Boot-gate promotion** from metric to blocking gate — gated on either a self-hosted KVM runner landing, or N consecutive green `core` boots under TCG establishing the check is reliable in this environment specifically.
-- **Matrix build**: `core` + `desktop` on PRs, `gaming` on dispatch-only (never PR-triggered, given its size — see [§8](#8-known-limits-measured-not-feared)).
-- **Self-hosted runner.** Per `shopnos-devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before.
+- **Container sign + attest (slice 4)** — `cosign` keyless sign + SLSA provenance on digests; the only Phase 4 piece not yet built.
+- **Matrix build**: landed (`core` + `desktop` on PRs, `gaming` dispatch-only).
+- **Self-hosted runner.** Per `docs/devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before.
 - **No `release.yml`, by decision** (ADR-006): tag-triggered build-sign-publish declined — releases stay local/manual.
 - **BIOS serial console gap** (issue #30) — see [§8](#8-known-limits-measured-not-feared).
 - **`lint-packages.yml` has no `workflow_dispatch`** — no way to force a standalone lint run today outside a push or PR.
@@ -166,8 +187,8 @@ It's `continue-on-error` specifically because the **hosted runner has no `/dev/k
 - `docs/architecture.md` §13 — original CI/CD design intent (some entries here supersede it; where they conflict, this document reflects what's actually deployed)
 - `docs/release-process.md` — the manual release checklist this workflow does not yet automate
 - `docs/package-ownership.md`, `docs/branding-guide.md` — what `lint-packages.yml` actually enforces
-- `docs/decisions/001-profile-composition-model.md`, `docs/decisions/002-boot-gate-target-scope.md` — ADRs referenced above
-- `shopnos-devops-integration-plan.md`, `distro-devops-architecture.md` — the broader roadmap these workflows are the first phase of
+- `docs/decisions/001-profile-composition-model.md`, `docs/decisions/002-boot-gate-target-scope.md`, `docs/decisions/008-container-supply-chain.md` — ADRs referenced above
+- `docs/devops-integration-plan.md` (local-only, gitignored), `distro-devops-architecture.md` — the broader roadmap these workflows are the first phase of
 
 ---
 

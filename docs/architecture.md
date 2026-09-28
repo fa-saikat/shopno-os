@@ -772,6 +772,7 @@ Three workflows in `.github/workflows/`:
 |----------|---------|------|
 | `lint-packages.yml` | Every push, every PR | Runs all `tests/lint/` scripts; fails fast on any violation |
 | `build-iso.yml` | PRs targeting `dev`, manual dispatch | Matrix build (`core` + `desktop-xfce`, independent verdicts) with package gate blocking and boot gate metric-first; see `docs/ci-cd.md` |
+| `container-build.yml` | PRs targeting `dev` (paths-scoped), push to `dev`, manual dispatch | OCI image build + smoke + SBOM/scan; GHCR push on merge only; see `docs/ci-cd.md` §2.3 |
 | `release.yml` | — (deliberately not built) | Tag-triggered release automation declined, not deferred: phases run locally per `docs/release-process.md`, CI's role ends at proof |
 
 `build-iso.yml` gates pull requests targeting `dev` — a build proves the PR before it lands. Pushes to `main` intentionally do not rebuild (proven bits are promoted, not re-proven — see `docs/release-process.md` §1.5). Manual dispatch builds any single profile, including `gaming-xfce`, which never runs unasked.
