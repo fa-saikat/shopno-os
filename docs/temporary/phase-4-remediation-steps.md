@@ -41,8 +41,11 @@
     `scripts/lib/**`, `brand/**`. All 6 verified to exist.
   - Validate: `actionlint` + YAML parse; done when PR touching only
     `base/package-lists/shopno-os-utils.list.chroot` triggers workflow.
-  - Status: [x] done on `ci/container-path-filter` — YAML parse OK,
-    actionlint 1.7.7 clean (file + repo). Trigger proof left to the PR run.
+  - Status: [x] done — YAML parse OK, actionlint 1.7.7 clean.
+    Evidence: fix PR #61 (merged as fb09a451, container job success
+    despite quota-blocked upload, by design); trigger proof PR #62
+    (touched only base/package-lists, container leg fired, closed
+    unmerged).
 - [ ] **A3+A4+A5+A7. Trust reorder as ONE unit (W1/W2/W4/W5 + W6)** — M
   - A2 paired here (cancel window IS race window): `cancel-in-progress`
     becomes `${{ github.event_name == 'pull_request' }}`.
