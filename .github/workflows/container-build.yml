@@ -177,10 +177,12 @@ jobs:
 
       # Handoff to the publish job (A3/A4). BLOCKING by design: publish
       # `needs: build`, so a failed upload here stops the pipeline before
-      # any registry write. 1-day retention - the publish job consumes this
-      # within minutes; PR handoffs are never consumed at all (quota is a
-      # recurring cost, keep it minimal).
+      # any registry write. Push-only: publish is the sole consumer, so PR
+      # runs skip this entirely - zero quota burn for bytes nobody
+      # downloads (quota is a recurring cost). 1-day retention - the publish
+      # job consumes this within minutes.
       - name: Upload build handoff (tarball + manifest + SBOM)
+        if: github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
           name: container-build-handoff
