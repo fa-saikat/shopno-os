@@ -336,3 +336,24 @@ jobs:
             --certificate-oidc-issuer https://token.actions.githubusercontent.com
           gh attestation verify "oci://${{ env.IMAGE }}@${{ steps.push.outputs.digest }}" \
             --repo "${GITHUB_REPOSITORY}"
+
+      # A6 (W7): build-record identity vs registry identity. The manifest
+      # holds buildah's local digest; the push produced the registry
+      # digest - equal unless skopeo re-encoded layers on push. Placed
+      # AFTER sign/attest/verify on purpose: a mismatch is a
+      # record-keeping disagreement (fix: record both digests + document
+      # why), never a reason to withhold signing. Blocking so the answer
+      # lands loudly on the first push.
+      - name: Assert manifest digest == pushed digest
+        run: |
+          MANIFEST="$(find handoff -name 'container-manifest.json' | sort | head -1)"
+          test -n "${MANIFEST}" || { echo "No manifest in handoff"; exit 1; }
+          RECORDED="$(jq -r .output.digest "${MANIFEST}")"
+          PUSHED="${{ steps.push.outputs.digest }}"
+          echo "Manifest digest: ${RECORDED}"
+          echo "Pushed digest:   ${PUSHED}"
+          if [[ "${RECORDED}" != "${PUSHED}" ]]; then
+            echo "MISMATCH: skopeo re-encoded the image on push - record both digests in the manifest and document why (remediation plan A6)."
+            exit 1
+          fi
+          echo "Digests agree - single build-to-registry identity."
