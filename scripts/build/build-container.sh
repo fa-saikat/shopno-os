@@ -41,8 +41,6 @@ source "${LIB_DIR}/brand.sh"
 source "${LIB_DIR}/profile.sh"
 # shellcheck source=../lib/iso-name.sh
 source "${LIB_DIR}/iso-name.sh"
-# shellcheck source=../lib/secrets.sh
-source "${LIB_DIR}/secrets.sh"
 
 # ---------------------------------------------------------------------------
 # Args
@@ -80,10 +78,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ---------------------------------------------------------------------------
-# Load profile + secrets, enforce core-only composition (v1 scope)
+# Load profile, enforce core-only composition (v1 scope)
 # ---------------------------------------------------------------------------
 load_profile "${PROFILE_NAME}"
-load_secrets
 
 if [[ "${DISTRO_EDITION}" != "core" || "${DISTRO_FLAVOR}" != "none" ]]; then
     log_error "v1 supports core-family profiles only (edition=core, flavor=none)."
@@ -94,6 +91,13 @@ fi
 # ---------------------------------------------------------------------------
 # Derived paths
 # ---------------------------------------------------------------------------
+# Pin SOURCE_DATE_EPOCH before any derivation (same convention as
+# build.sh): nothing below may read an unpinned clock. Ordering hygiene
+# only - iso_build_date is wall-clock, so tarball-name date still comes
+# from today, not the commit (see remediation plan B2 note).
+export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -C "${OS_REPO_ROOT}" log -1 --pretty=%ct)}"
+log_info "SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
+
 BUILD_DATE="$(iso_build_date)"
 TARBALL_NAME="shopno-os-${DISTRO_VERSION}-core-${DISTRO_ARCH}-${BUILD_DATE}.oci.tar"
 WORKDIR="$(mktemp -d /tmp/shopno-os-container.XXXXXX)"
@@ -267,9 +271,6 @@ else
     log_warn "User namespaces unavailable - mmdebstrap will run privileged (still fine, just needs root)"
 fi
 
-export SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git -C "${OS_REPO_ROOT}" log -1 --pretty=%ct)}"
-log_info "SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH}"
-
 _run mmdebstrap \
     --variant=minbase \
     --architectures="${DISTRO_ARCH}" \
@@ -330,8 +331,11 @@ EOF
 IMAGE_REF="shopno-os-container:${DISTRO_VERSION}-${GIT_SHA}"
 # Vendor namespace sits alongside the reserved org.opencontainers.image.*
 # prefix, never nested inside it (that prefix is the spec's own).
+# Image config timestamp pinned to SOURCE_DATE_EPOCH (pinned above):
+# otherwise every run stamps wall-clock and same-commit digests differ.
 _run buildah bud \
     --format oci \
+    --timestamp "${SOURCE_DATE_EPOCH}" \
     --arch "${DISTRO_ARCH}" \
     "${LABEL_FLAGS[@]}" \
     --label "org.shopno-os.profile=${PROFILE_NAME}" \
