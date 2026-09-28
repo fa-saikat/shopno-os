@@ -121,7 +121,51 @@ jobs:
               "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
           done
 
-      # Slice 3 lands here: syft SBOM + grype scan as attached artifacts,
-      # scan metric-first per ADR-005/007 precedent.
+      # Anchore tools aren't in noble's repos - pinned GitHub-release
+      # binaries with checksum verification (same pinning discipline as
+      # the live-build/keyring .debs above; re-pin deliberately).
+      - name: Install SBOM and scan tools
+        run: |
+          SYFT_VER=1.52.0
+          curl -sL --max-time 120 -o /tmp/syft.tar.gz "https://github.com/anchore/syft/releases/download/v${SYFT_VER}/syft_${SYFT_VER}_linux_amd64.tar.gz"
+          curl -sL --max-time 120 -o /tmp/syft-checksums.txt "https://github.com/anchore/syft/releases/download/v${SYFT_VER}/syft_${SYFT_VER}_checksums.txt"
+          (cd /tmp && grep "syft_${SYFT_VER}_linux_amd64.tar.gz" syft-checksums.txt | sha256sum -c -)
+          sudo tar -xzf /tmp/syft.tar.gz -C /usr/local/bin syft
+          GRYPE_VER=0.119.0
+          curl -sL --max-time 120 -o /tmp/grype.tar.gz "https://github.com/anchore/grype/releases/download/v${GRYPE_VER}/grype_${GRYPE_VER}_linux_amd64.tar.gz"
+          curl -sL --max-time 120 -o /tmp/grype-checksums.txt "https://github.com/anchore/grype/releases/download/v${GRYPE_VER}/grype_${GRYPE_VER}_checksums.txt"
+          (cd /tmp && grep "grype_${GRYPE_VER}_linux_amd64.tar.gz" grype-checksums.txt | sha256sum -c -)
+          sudo tar -xzf /tmp/grype.tar.gz -C /usr/local/bin grype
+          syft version && grype version
+
+      # Blocking: no SBOM means the scan has no input and provenance has
+      # nothing to describe - a missing SBOM is a build defect, not a metric.
+      - name: Generate SBOM
+        run: |
+          syft packages "oci-archive:${{ steps.artifact.outputs.tarball }}" -o spdx-json=build/container/sbom.spdx.json
+          echo "SBOM packages: $(jq '.packages | length' build/container/sbom.spdx.json)"
+
+      # Metric-first (ADR-005): base images always carry CVEs, so a blocking
+      # scan on day one would veto good builds for upstream noise. The table
+      # prints for humans; the SARIF uploads for tooling; promotion to a
+      # gate waits on a trusted baseline like everything else here.
+      # NOTE: `|| true` on the table form only - a findings-exit must not
+      # skip the SARIF write in the next line.
+      - name: Vulnerability scan (non-blocking metric)
+        id: scan
+        continue-on-error: true
+        run: |
+          grype "sbom:build/container/sbom.spdx.json" -o table || true
+          grype "sbom:build/container/sbom.spdx.json" -o "sarif=build/container/grype.sarif"
+
+      - name: Upload SBOM and scan report
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-sbom-scan
+          retention-days: 7
+          path: |
+            build/container/sbom.spdx.json
+            build/container/grype.sarif
+
       # Slice 4 lands here: cosign keyless sign + SLSA provenance attest
       # on digests (never tags), via per-run OIDC - no long-lived secrets.
