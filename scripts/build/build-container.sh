@@ -112,6 +112,12 @@ _cleanup() {
         log_info "Rootfs kept at: ${ROOTFS_DIR}"
         return 0
     fi
+    # S9: an interrupted build between `bud` and the export-step `rmi`
+    # leaves a local image-store entry behind. Guarded for set -u:
+    # IMAGE_REF is only assigned in Step 3, cleanup runs from anywhere.
+    if [[ -n "${IMAGE_REF:-}" ]]; then
+        buildah rmi "${IMAGE_REF}" > /dev/null 2>&1 || true
+    fi
     rm -rf "${WORKDIR}"
 }
 trap '_cleanup' EXIT
@@ -351,13 +357,22 @@ log_step "Assembling OCI image with buildah"
 
 GIT_SHA="$(git -C "${OS_REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
 
-# Standard OCI labels from brand identity; licenses label only when declared
+# Standard OCI labels from brand identity; licenses label only when declared.
+# image.source is the repo URL (GHCR links the package to it), image.url
+# the project site - the two were previously swapped. image.version is the
+# bare version matching :DISTRO_VERSION tags; codename keeps a vendor label.
+# NOTE: URL_SOURCE currently points at the JaduPC org while this repo lives
+# under fa-saikat (same drift as the old hardcoded IMAGE_NAME) - using the
+# var as-is per the no-hardcode rule; fixing the URL itself is separate.
 declare -a LABEL_FLAGS=(
     --label "org.opencontainers.image.title=${DISTRO_NAME} container base"
-    --label "org.opencontainers.image.version=${DISTRO_VERSION} (${DISTRO_CODENAME})"
+    --label "org.opencontainers.image.version=${DISTRO_VERSION}"
     --label "org.opencontainers.image.revision=${GIT_SHA}"
-    --label "org.opencontainers.image.source=${DISTRO_WEBSITE}"
+    --label "org.opencontainers.image.source=${URL_SOURCE}"
+    --label "org.opencontainers.image.url=${DISTRO_WEBSITE}"
+    --label "org.opencontainers.image.vendor=${DISTRO_VENDOR}"
     --label "org.opencontainers.image.created=$(date -u -d "@${SOURCE_DATE_EPOCH}" "+%Y-%m-%dT%H:%M:%SZ")"
+    --label "org.shopno-os.codename=${DISTRO_CODENAME}"
 )
 if [[ -n "${DISTRO_LICENSE:-}" ]]; then
     LABEL_FLAGS+=(--label "org.opencontainers.image.licenses=${DISTRO_LICENSE}")
