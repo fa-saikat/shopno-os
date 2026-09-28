@@ -118,7 +118,7 @@ Tags are convenience pointers; verification is always digest-based. `stable` mov
 Each attaches to the digest, in dependency order:
 
 - **SBOM (`syft`, blocking).** No SBOM means nothing downstream has input — a missing SBOM fails the run. SPDX JSON, uploaded as artifact.
-- **Scan (`grype`, metric-first).** Base images always carry CVEs; blocking on day one would veto good builds for upstream noise. Table to logs, SARIF to artifacts, promotion to a gate waits on a trusted baseline (ADR-005 pattern).
+- **Scan (`grype`, metric-first).** Base images always carry CVEs; blocking on day one would veto good builds for upstream noise. Table to logs, SARIF + JSON to artifacts (JSON feeds the per-severity summary), promotion to a gate waits on a trusted baseline (ADR-005 pattern, graduation tracked in issue #68).
 - **Sign (`cosign`, keyless via GitHub OIDC) + provenance (`attest-build-provenance`, SLSA) + SBOM attestation (`attest-sbom`).** Signs the digest, never the tag. No long-lived credential exists at any point (narrowed ADR-006) — per-run OIDC token plus ephemeral `GITHUB_TOKEN`. The pipeline then verifies both (`cosign verify` + `gh attestation verify`, blocking), so a bad or missing signature fails the run instead of passing silently. Provenance scope, stated plainly: it attests workflow + commit, not a hermetic build — do not present it as SLSA Level 3.
 
 What this deliberately does *not* prove: novel backdoors sail through CVE matching green (the XZ lesson — say it unprompted), and keyless means "no key custody," not "no trust" (Fulcio/Rekor operators remain in the loop).
