@@ -103,11 +103,17 @@
 
 ## Phase F — Docs / ADR corrections
 
-- [ ] **F1. Correct drift (X1–X3, X5)** — S · `docs:`
+- [x] **F1. Correct drift (X1–X3, X5)** — S · `docs:`
   - `ci-cd.md` §2.3 + §9, `architecture.md` tree, `container-guide.md` §8.
-- [ ] **F2. Amend ADR-008 (X4)** — S · `docs:`
+  - Status: [x] done — §2.3 rewritten to two-job reality (sudo, split
+    jobs, verify live, slice 4 + issue #64); §1 lint paths-ignore noted;
+    §3 filter list + least-privilege claim corrected; tree drops
+    `release.yml`, gains `container-build.yml`; guide §§5/8/9 match YAML
+    (timestamp, attest-sbom, provenance limits, handoff retention).
+- [x] **F2. Amend ADR-008 (X4)** — S · `docs:`
   - Appended Amended block: Verify-Peer scope, sudo, docker-daemon smoke,
     attest-sbom, denylist backstop.
+  - Status: [x] done, same style as ADR-006 amendment, dated 2026-09-28.
 
 ## Phase C + D — Content gate + determinism
 
