@@ -134,8 +134,12 @@
 
 ## Deferred (in order)
 
-- [ ] **B4. Read repo from `jadupc.list` (S4)** — M (lint already passes; Golden
+- [x] **B4. Read repo from `jadupc.list` (S4)** — M (lint already passes; Golden
   Rule only)
+  - Status: [x] done on `build/jadupc-canonical-source` — URL/suite/comps
+    parsed from the canonical line (loud refusal on exotic shapes);
+    standalone equivalence test byte-identical to old literals.
+    bash -n, shellcheck, dry-run, hardcoded-names checker clean.
 - [ ] **B5. Security pocket (S6, needs Q2)** — S–M
 - [x] **B6. Labels (S7/S8, verify `URL_SOURCE` first)** — S
   - Status: [x] done, merged as 9defa181 (PR #67) — URL_SOURCE verified
