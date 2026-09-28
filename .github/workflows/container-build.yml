@@ -87,6 +87,10 @@ jobs:
           test -n "${TARBALL}" || { echo "No OCI tarball produced"; exit 1; }
           echo "tarball=${TARBALL}" >> "${GITHUB_OUTPUT}"
           ls -la build/container/
+          # The build ran under sudo, so this dir is root-owned while every
+          # downstream step (SBOM, scan, upload) runs unprivileged. Hand it
+          # back once, here, instead of sudo-ing each consumer.
+          sudo chown -R "$(id -u):$(id -g)" build/container
 
       # Smoke: the image must boot a shell, refresh its own package index,
       # and install one package - proving the assembled APT world (Debian
@@ -144,7 +148,7 @@ jobs:
       # nothing to describe - a missing SBOM is a build defect, not a metric.
       - name: Generate SBOM
         run: |
-          syft packages "oci-archive:${{ steps.artifact.outputs.tarball }}" -o spdx-json=build/container/sbom.spdx.json
+          syft scan "oci-archive:${{ steps.artifact.outputs.tarball }}" -o spdx-json=build/container/sbom.spdx.json
           echo "SBOM packages: $(jq '.packages | length' build/container/sbom.spdx.json)"
 
       # Metric-first (ADR-005): base images always carry CVEs, so a blocking
