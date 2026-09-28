@@ -267,13 +267,20 @@ fi
 
 JADUPC_KEY_ASC="${OS_REPO_ROOT}/base/config/archives/jadupc.key"
 JADUPC_KEYRING="${WORKDIR}/jadupc.gpg"
-# Single definition of the project repo, used for the build-time sources
-# above AND the in-image sources below (Q1: baked, not sealed) - one place
-# to change, not a second copy of the URL/suite (see B4 for the deferred
-# jadupc.list parsing).
-JADUPC_URL="http://deb.jadupc.com"
-JADUPC_SUITE="shopno"
-JADUPC_COMPS="main"
+# Canonical repo definition (B4, Golden Rule): parsed from jadupc.list,
+# the same file live-build consumes - never retyped here. One-line `deb`
+# shape only; anything else fails loud rather than guessing.
+JADUPC_LIST="${OS_REPO_ROOT}/base/config/archives/jadupc.list"
+require_file "${JADUPC_LIST}"
+JADUPC_LINE="$(grep -v '^[[:space:]]*#' "${JADUPC_LIST}" | grep -m1 '^[[:space:]]*deb[[:space:]]' || true)"
+test -n "${JADUPC_LINE}" || { log_error "No deb line in ${JADUPC_LIST}"; exit 1; }
+case "${JADUPC_LINE}" in
+    *"["*) log_error "Bracketed options in ${JADUPC_LIST} are unsupported - keep one-line deb form."; exit 1 ;;
+esac
+read -r _JADUPC_TYPE JADUPC_URL JADUPC_SUITE JADUPC_COMPS <<< "${JADUPC_LINE}"
+test -n "${JADUPC_URL:-}" -a -n "${JADUPC_SUITE:-}" -a -n "${JADUPC_COMPS:-}" \
+    || { log_error "Unparseable deb line in ${JADUPC_LIST}: ${JADUPC_LINE}"; exit 1; }
+log_info "Project repo: ${JADUPC_URL} ${JADUPC_SUITE} ${JADUPC_COMPS} (from jadupc.list)"
 # Host derived from the URL, never retyped: the scoped Verify-Peer opt
 # below must name this exact host.
 JADUPC_HOST="${JADUPC_URL#http://}"
