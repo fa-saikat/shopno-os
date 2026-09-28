@@ -59,21 +59,11 @@
   - Validate: `actionlint`; PR run shows no write perms + publish skipped;
     forced SBOM failure leaves GHCR empty; wrong-identity verify goes red
     (save run URL).
-  - Status: [x] implemented on `ci/container-trust-boundary` — YAML parse
-    OK, actionlint clean (file + repo). PR-run proof pending (publish
-    skipped on PR; push/sign/attest/verify proven on merge to dev).
-  - A2 paired here (cancel window IS race window): `cancel-in-progress`
-    becomes `${{ github.event_name == 'pull_request' }}`.
-  - Split `build` / `publish` jobs; top-level `permissions: contents: read`
-    only; `publish` gets `packages/id-token/attestations: write`.
-  - Order: build → smoke → SBOM (blocking) → scan (metric) → publish job:
-    push → sign → attest → verify. Handoff upload blocking; only evidence
-    upload stays `continue-on-error`.
-  - A5: digest from `skopeo copy --digestfile`, never re-read `:edge`.
-  - A7: `cosign verify` + `gh attestation verify` in-pipeline, must fail red.
-  - Validate: `actionlint`; PR run shows no write perms + publish skipped;
-    forced SBOM failure leaves GHCR empty; wrong-identity verify goes red
-    (save run URL).
+  - Status: [x] implemented, push-half proof BLOCKED on quota recovery —
+    tracked in issue #64. Merge run 36392254792: build proof green
+    (SBOM 648 pkgs, grype 1979), handoff blocked by exhausted quota,
+    publish skipped fail-closed (nothing pushed/unsigned). Re-run after
+    recalc proves push/sign/attest/verify; A7 negative test still owed.
 - [ ] **A6. Assert manifest ↔ registry identity (W7)** — S · experiment decides
   - `test "$(jq -r .output.digest container-manifest.json)" = "${DIGEST}"`.
   - If fail: keep both digests + document, or push via `buildah push`.
