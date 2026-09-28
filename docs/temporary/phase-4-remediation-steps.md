@@ -59,42 +59,46 @@
   - Validate: `actionlint`; PR run shows no write perms + publish skipped;
     forced SBOM failure leaves GHCR empty; wrong-identity verify goes red
     (save run URL).
-  - Status: [x] implemented on `ci/container-trust-boundary` — YAML parse
-    OK, actionlint clean (file + repo). PR-run proof pending (publish
-    skipped on PR; push/sign/attest/verify proven on merge to dev).
-  - A2 paired here (cancel window IS race window): `cancel-in-progress`
-    becomes `${{ github.event_name == 'pull_request' }}`.
-  - Split `build` / `publish` jobs; top-level `permissions: contents: read`
-    only; `publish` gets `packages/id-token/attestations: write`.
-  - Order: build → smoke → SBOM (blocking) → scan (metric) → publish job:
-    push → sign → attest → verify. Handoff upload blocking; only evidence
-    upload stays `continue-on-error`.
-  - A5: digest from `skopeo copy --digestfile`, never re-read `:edge`.
-  - A7: `cosign verify` + `gh attestation verify` in-pipeline, must fail red.
-  - Validate: `actionlint`; PR run shows no write perms + publish skipped;
-    forced SBOM failure leaves GHCR empty; wrong-identity verify goes red
-    (save run URL).
+  - Status: [x] implemented, push-half proof BLOCKED on quota recovery —
+    tracked in issue #64. Merge run 36392254792: build proof green
+    (SBOM 648 pkgs, grype 1979), handoff blocked by exhausted quota,
+    publish skipped fail-closed (nothing pushed/unsigned). Re-run after
+    recalc proves push/sign/attest/verify; A7 negative test still owed.
 - [ ] **A6. Assert manifest ↔ registry identity (W7)** — S · experiment decides
   - `test "$(jq -r .output.digest container-manifest.json)" = "${DIGEST}"`.
   - If fail: keep both digests + document, or push via `buildah push`.
 - [ ] **A8. Fix smoke test (W8/W9)** — S (needs Q1 decision first)
   - Install absent package (`hello`), log artifact apt sources, rewrite comment
     to claim only what is proven.
-- [ ] **A9. Small cleanups (W10/W11)** — S
+- [x] **A9. Small cleanups (W10/W11)** — S
   - `IMAGE_NAME` from `${GITHUB_REPOSITORY,,}`; wire or remove dead
     `inputs.profile`.
+  - Status: [x] done on `ci/container-hygiene` — IMAGE derived per-job
+    (6 refs), PROFILE wired with core default. actionlint clean.
+    Runtime proof on next push run.
 
 ## Phase B (hygiene first) — Script fixes
 
-- [ ] **B1. Remove `load_secrets` (S5)** — S · `build:`
+- [x] **B1. Remove `load_secrets` (S5)** — S · `build:`
   - Delete `source secrets.sh` + `load_secrets`. Validate: `env | grep OS_`
     clean in `--keep-rootfs` run.
-- [ ] **B2. Export `SOURCE_DATE_EPOCH` before dates (S2)** — S
+  - Status: [x] done on `ci/container-hygiene` — grep confirms zero other
+    secrets consumption; `--dry-run` green without the source.
+    Full `env` proof needs a real build (verify).
+- [x] **B2. Export `SOURCE_DATE_EPOCH` before dates (S2)** — S
   - Move export above `BUILD_DATE`. Validate: tarball name date == label date
     on older commit.
-- [ ] **B3. Pin image timestamp (S1)** — S
+  - Status: [x] move done on `ci/container-hygiene` — ordering hygiene
+    only. CORRECTION: `iso_build_date` (common.sh) is wall-clock and
+    ignores SDE, so the move alone cannot equalize the dates. True
+    agreement needs the shared helper to honor SDE — separate proposal,
+    ISO-affecting, not smuggled in here.
+- [x] **B3. Pin image timestamp (S1)** — S
   - `buildah bud --timestamp "${SOURCE_DATE_EPOCH}"`. Validate: `buildah bud
     --help` on runner (verify flag present per brief).
+  - Status: [x] done on `ci/container-hygiene` — flag confirmed on local
+    buildah 1.39.3 (`--timestamp int`). Runner-version proof + digest
+    stability on next CI/dev build (verify).
 
 ## Phase F — Docs / ADR corrections
 
