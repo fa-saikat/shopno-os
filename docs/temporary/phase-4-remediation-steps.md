@@ -140,7 +140,13 @@
     parsed from the canonical line (loud refusal on exotic shapes);
     standalone equivalence test byte-identical to old literals.
     bash -n, shellcheck, dry-run, hardcoded-names checker clean.
-- [ ] **B5. Security pocket (S6, needs Q2)** — S–M
+- [x] **B5. Security pocket (S6, needs Q2)** — S–M
+  - Status: [x] done on `build/security-pocket` — Q2 decided in:
+    `trixie-security` unconditional, same signed-by, template mirror
+    shape. Static clean (bash -n, shellcheck, hardcoded-names checker).
+    Assembly proof rides CI (dry-run exits before sources block).
+    NOTE for #68: grype rows from the merge push onward run against
+    security-pocket package versions — log the discontinuity.
 - [x] **B6. Labels (S7/S8, verify `URL_SOURCE` first)** — S
   - Status: [x] done, merged as 9defa181 (PR #67) — URL_SOURCE verified
     present via brand-loaded urls.env; source/url/vendor split, bare
