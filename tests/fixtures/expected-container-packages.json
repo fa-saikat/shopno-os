@@ -1,0 +1,11 @@
+{
+  "schema_version": "1",
+  "profiles": {
+    "shopno-os-core": {
+      "total_min": 450,
+      "total_max": 700,
+      "critical_packages": ["bash", "apt", "dpkg", "curl", "ca-certificates"],
+      "validated_against_real_image": false
+    }
+  }
+}
