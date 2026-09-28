@@ -5,6 +5,16 @@ name: Build Container
 # deliberately lacks it), disjoint artifact lifecycles (registry-immutable
 # tags vs 7-day ISO retention), disjoint timeout tuning. Prove on PR
 # (build + smoke, no registry writes); push to GHCR on merge to dev.
+#
+# Trust layout (Phase 4 remediation A3+A4+A5+A7, A2):
+# - `build` proves: tarball, smoke, SBOM (blocking), scan (metric). It
+#   holds no write/OIDC rights, so a PR can never leak an image even on
+#   misconfiguration (W4). Its handoff upload is BLOCKING - publish
+#   depends on it.
+# - `publish` (push-only) pushes, signs, attests, then VERIFIES. Push
+#   happens only after SBOM/scan succeed (W1); the digest comes from the
+#   push itself, never re-read from mutable :edge (W5); cosign + attestation
+#   verification must fail red (W6).
 on:
   pull_request:
     branches: [dev]
@@ -37,21 +47,18 @@ on:
         required: false
         default: 'shopno-os-core'
 
-# Successive synchronizes cancel the superseded build - same reasoning as
-# build-iso.yml (no artifact worth keeping from a stale commit).
+# A2 (W2): only PR synchronizes cancel. A newer push must never cancel an
+# older run between its push and sign steps - that window stranded unsigned
+# images. Stale PR builds are still not worth paying for.
 concurrency:
   group: container-build-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# A3 (W4): least privilege at the top level. The build job (which runs sudo
+# on repo code) can never mint an OIDC identity or push an image - write
+# rights live only on the push-gated publish job below.
 permissions:
   contents: read
-  # packages:write only ever used by the push steps (merge only).
-  # PR runs prove without publishing - no registry writes to clean up.
-  packages: write
-  # id-token + attestations: only consumed by the keyless sign/attest
-  # steps (push only). Mints per-run OIDC identity - nothing persists.
-  id-token: write
-  attestations: write
 
 env:
   REGISTRY: ghcr.io
@@ -59,8 +66,10 @@ env:
 
 jobs:
   build:
-    name: Build + smoke-test container (shopno-os-core)
+    name: Build + smoke + SBOM (shopno-os-core)
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     # Rootfs builds take minutes, not the ISO's hour - generous ceiling
     # with room; shrink only on measured evidence, never preemptively.
     timeout-minutes: 60
@@ -120,27 +129,6 @@ jobs:
           docker run --rm "${TAG}" bash -c 'apt-get update && apt-get install -y curl && curl --version | head -1'
           docker rmi "${TAG}" || true
 
-      # --- Push steps: merge-to-dev only (prove on PR, push on merge) ---
-      # Tags are convenience pointers; verification is always digest-based
-      # (ADR-008). edge + short-SHA on every dev push; :DISTRO_VERSION and
-      # stable move only in the release flow, never here.
-      - name: Log in to GHCR
-        if: github.event_name == 'push'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push edge + SHA tags
-        if: github.event_name == 'push'
-        run: |
-          SHA_TAG="${GITHUB_SHA::8}"
-          for TAG in edge "${SHA_TAG}"; do
-            skopeo copy "oci-archive:${{ steps.artifact.outputs.tarball }}" \
-              "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${TAG}"
-          done
-
       # Anchore tools aren't in noble's repos - pinned GitHub-release
       # binaries with checksum verification (same pinning discipline as
       # the live-build/keyring .debs above; re-pin deliberately).
@@ -162,6 +150,8 @@ jobs:
 
       # Blocking: no SBOM means the scan has no input and provenance has
       # nothing to describe - a missing SBOM is a build defect, not a metric.
+      # A4 (W1): this runs BEFORE any registry write, in this job. A failure
+      # here leaves nothing in GHCR by construction.
       - name: Generate SBOM
         run: |
           syft scan "oci-archive:${{ steps.artifact.outputs.tarball }}" -o spdx-json=build/container/sbom.spdx.json
@@ -185,6 +175,21 @@ jobs:
           echo "Grype findings: ${FINDINGS} (metric only - see SARIF artifact)"
           echo "- Grype findings: **${FINDINGS}** (metric, non-blocking)" >> "${GITHUB_STEP_SUMMARY}"
 
+      # Handoff to the publish job (A3/A4). BLOCKING by design: publish
+      # `needs: build`, so a failed upload here stops the pipeline before
+      # any registry write. 1-day retention - the publish job consumes this
+      # within minutes; PR handoffs are never consumed at all (quota is a
+      # recurring cost, keep it minimal).
+      - name: Upload build handoff (tarball + manifest + SBOM)
+        uses: actions/upload-artifact@v4
+        with:
+          name: container-build-handoff
+          retention-days: 1
+          path: |
+            build/container/*.oci.tar
+            build/container/container-manifest.json
+            build/container/sbom.spdx.json
+
       # Preservation must never veto verdicts: upload fails only on
       # environmental causes (quota, network, service health) - never on
       # anything about the code. Evidence already lives in step logs and
@@ -199,14 +204,49 @@ jobs:
             build/container/sbom.spdx.json
             build/container/grype.sarif
 
-      # Slice 4: keyless supply-chain evidence, push events only. Signing
-      # throwaway PR images would spam Rekor (transparency log entries are
-      # forever, PR builds are not) - and there is nothing to attest on an
-      # image that was never pushed. Digest (never tag) throughout: tags
-      # move, digests don't (ADR-008).
-      - name: Install cosign (pinned)
-        if: github.event_name == 'push'
+  # --- Publish: merge-to-dev only (prove on PR, push on merge) ---
+  # Runs only after the build job proved the image. Holds the only
+  # write/OIDC rights in this workflow. Never runs repo code (no checkout,
+  # no build scripts) - it moves bytes, signs digests, and verifies.
+  publish:
+    name: Push + sign + attest + verify
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    timeout-minutes: 20
+    steps:
+      - name: Download build handoff
+        uses: actions/download-artifact@v4
+        with:
+          name: container-build-handoff
+          path: handoff
+
+      # Depth-agnostic lookup: upload-artifact preserves directory structure
+      # under the artifact root, so don't assume a flat layout here.
+      - name: Locate tarball + SBOM
+        id: artifact
         run: |
+          TARBALL="$(find handoff -name '*.oci.tar' | sort | head -1)"
+          test -n "${TARBALL}" || { echo "No OCI tarball in handoff"; exit 1; }
+          MANIFEST="$(find handoff -name 'container-manifest.json' | sort | head -1)"
+          test -n "${MANIFEST}" || { echo "No manifest in handoff"; exit 1; }
+          SBOM="$(find handoff -name 'sbom.spdx.json' | sort | head -1)"
+          test -n "${SBOM}" || { echo "No SBOM in handoff"; exit 1; }
+          echo "tarball=${TARBALL}" >> "${GITHUB_OUTPUT}"
+          echo "sbom=${SBOM}" >> "${GITHUB_OUTPUT}"
+          find handoff -type f | sort
+
+      # Publish needs only skopeo + jq (+ cosign below). No mmdebstrap,
+      # no keyring .deb - nothing here assembles APT sources.
+      - name: Install publish tools (skopeo, jq, cosign pinned)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y skopeo jq
           # No publisher checksums.txt for cosign releases - trust-on-first-
           # use pinned here, hash recorded so any upstream change fails loud.
           COSIGN_SHA256="4629c757b7618056f8ddd7e2625ae9fdd94c0372a65049520bc7d9df9efc7f71"
@@ -214,35 +254,71 @@ jobs:
           echo "${COSIGN_SHA256}  /tmp/cosign" | sha256sum -c -
           sudo install -m 0755 /tmp/cosign /usr/local/bin/cosign
           cosign version
+          skopeo --version
 
-      - name: Resolve pushed digest
-        if: github.event_name == 'push'
-        id: digest
+      # Tags are convenience pointers; verification is always digest-based
+      # (ADR-008). edge + short-SHA on every dev push; :DISTRO_VERSION and
+      # stable move only in the release flow, never here.
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # A5 (W5): the digest comes from the push itself via --digestfile,
+      # never re-read from the mutable :edge tag (a concurrent push could
+      # otherwise make us sign the wrong digest). SHA tag first, then edge
+      # as a copy of the exact digest just pushed.
+      - name: Push SHA + edge tags (digest from push)
+        id: push
         run: |
-          DIGEST="$(skopeo inspect --format '{{.Digest}}' "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:edge")"
-          test -n "${DIGEST}" || { echo "Empty digest from registry"; exit 1; }
+          SHA_TAG="${GITHUB_SHA::8}"
+          skopeo copy --digestfile digest.txt \
+            "oci-archive:${{ steps.artifact.outputs.tarball }}" \
+            "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${SHA_TAG}"
+          DIGEST="$(cat digest.txt)"
+          test -n "${DIGEST}" || { echo "Empty digest from push"; exit 1; }
+          skopeo copy \
+            "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${DIGEST}" \
+            "docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:edge"
           echo "digest=${DIGEST}" >> "${GITHUB_OUTPUT}"
           echo "Pushed digest: ${DIGEST}"
           echo "- Image digest: \`${DIGEST}\`" >> "${GITHUB_STEP_SUMMARY}"
 
+      # Slice 4: keyless supply-chain evidence, push events only. Signing
+      # throwaway PR images would spam Rekor (transparency log entries are
+      # forever, PR builds are not) - and there is nothing to attest on an
+      # image that was never pushed. Digest (never tag) throughout: tags
+      # move, digests don't (ADR-008).
       - name: Sign image digest (keyless OIDC)
-        if: github.event_name == 'push'
         run: |
-          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.digest.outputs.digest }}"
+          cosign sign --yes "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}"
 
       - name: Attest build provenance (SLSA)
-        if: github.event_name == 'push'
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.digest.outputs.digest }}
+          subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
       - name: Attest SBOM
-        if: github.event_name == 'push'
         uses: actions/attest-sbom@v2
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          subject-digest: ${{ steps.digest.outputs.digest }}
-          sbom-path: build/container/sbom.spdx.json
+          subject-digest: ${{ steps.push.outputs.digest }}
+          sbom-path: ${{ steps.artifact.outputs.sbom }}
           push-to-registry: true
+
+      # A7 (W6): verify what was just signed. A bad or missing signature
+      # fails this pipeline - no silent unsigned images. Both checks must
+      # be blocking (no continue-on-error here, ever).
+      - name: Verify signature + attestations
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cosign verify "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}" \
+            --certificate-identity-regexp "^https://github.com/${GITHUB_REPOSITORY}/\\.github/workflows/container-build\\.yml@refs/heads/dev$" \
+            --certificate-oidc-issuer https://token.actions.githubusercontent.com
+          gh attestation verify "oci://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.push.outputs.digest }}" \
+            --repo "${GITHUB_REPOSITORY}"
