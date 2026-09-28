@@ -146,7 +146,15 @@
     assembled the new source with no mmdebstrap errors (pocket fetch
     proven); handoff quota-blocked as usual, publish skipped.
     NOTE for #68: rows from this push onward carry security-pocket
+<<<<<<< HEAD
     versions — discontinuity logged.
+=======
+    versions — discontinuity logged. Row 2 (dev push 36486903101):
+    SBOM 648, total 1929 (-50), Critical 41 (0 with fix, was 2),
+    High 397 (0 with fix, was 25). Textbook pocket effect, same
+    package set, fixable CVEs gone.
+>>>>>>> Stashed changes
+>>>>>>> 1f5019a0 (docs: log pocket effect in remediation plan)
 - [x] **B6. Labels (S7/S8, verify `URL_SOURCE` first)** — S
   - Status: [x] done, merged as 9defa181 (PR #67) — URL_SOURCE verified
     present via brand-loaded urls.env; source/url/vendor split, bare
