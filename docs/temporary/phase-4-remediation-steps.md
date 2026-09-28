@@ -28,21 +28,21 @@
 - Container `push:` is ALSO paths-scoped (same 3 paths) — W3 worse than briefed.
 - Dispatch `inputs.profile` is dead (build step hardcodes `shopno-os-core`).
 - `build-container.sh` has two "Step 2" headers; digest `--digestfile` OK.
-- `actionlint` NOT installed on this machine (verify pending).
+- `actionlint` validated via /tmp/opencode 1.7.7 (not preinstalled).
 
 ---
 
 ## Phase A — Workflow trust fixes (workflow-only)
 
-- [ ] **A1. Complete the path filters (W3)** — S · `ci:` (use `build:` per audit)
+- [x] **A1. Complete the path filters (W3)** — S · `ci:` (use `build:` per audit)
   - Add to BOTH `pull_request` and `push` paths in `container-build.yml`:
     `base/package-lists/**`, `editions/core/package-lists/**`,
     `profiles/shopno-os-core/**`, `base/config/archives/**`,
     `scripts/lib/**`, `brand/**`. All 6 verified to exist.
   - Validate: `actionlint` + YAML parse; done when PR touching only
     `base/package-lists/shopno-os-utils.list.chroot` triggers workflow.
-  - Status: [/] proposed, awaiting approval to apply on
-    `ci/container-path-filter`.
+  - Status: [x] done on `ci/container-path-filter` — YAML parse OK,
+    actionlint 1.7.7 clean (file + repo). Trigger proof left to the PR run.
 - [ ] **A3+A4+A5+A7. Trust reorder as ONE unit (W1/W2/W4/W5 + W6)** — M
   - A2 paired here (cancel window IS race window): `cancel-in-progress`
     becomes `${{ github.event_name == 'pull_request' }}`.

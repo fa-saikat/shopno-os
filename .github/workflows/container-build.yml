@@ -12,12 +12,24 @@ on:
       - 'scripts/build/build-container.sh'
       - 'scripts/build/container-exclude.txt'
       - '.github/workflows/container-build.yml'
+      - 'base/package-lists/**'
+      - 'editions/core/package-lists/**'
+      - 'profiles/shopno-os-core/**'
+      - 'base/config/archives/**'
+      - 'scripts/lib/**'
+      - 'brand/**'
   push:
     branches: [dev]
     paths:
       - 'scripts/build/build-container.sh'
       - 'scripts/build/container-exclude.txt'
       - '.github/workflows/container-build.yml'
+      - 'base/package-lists/**'
+      - 'editions/core/package-lists/**'
+      - 'profiles/shopno-os-core/**'
+      - 'base/config/archives/**'
+      - 'scripts/lib/**'
+      - 'brand/**'
   workflow_dispatch:
     inputs:
       profile:
