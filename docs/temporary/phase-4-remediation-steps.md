@@ -147,10 +147,13 @@
     proven by green --dry-run (trap ran with IMAGE_REF unset).
 - [ ] **E1+E2. Release promotion runbook + GHCR visibility (D4/D6)** — M+S
 - [x] **F3. Grype graduation rule (W13)** — S + tracking issue
-  - Status: [x] done on `ci/grype-graduation-rule` — rule in-workflow
-    (10-push baseline, fail on Critical-with-fix), issue #68 with seed +
-    logbook, severity/fix counts in summary (jq proven on synthetic data,
-    real-schema proof on first CI run).
+  - Status: [x] done, merged (PR #69) — rule in-workflow (10-push
+baseline, fail on Critical-with-fix), issue #68 with seed + logbook.
+Row 1 (dev push 36472466697): SBOM 648, total 1979, Critical 43
+(2 with fix), High 422 (25 with fix). Real-schema jq proven.
+CORRECTION: no SBOM shift from ca-certificates (still 648) — it was
+already pulled in as a dependency; the explicit include is
+belt-and-braces, baseline unmoved.
 - [ ] **G1–G4. Hardening extras (W12/D7/W13/metrics)** — as time allows
 
 ## Definition of done (from audit §5)
