@@ -73,32 +73,33 @@
 - [x] **A9. Small cleanups (W10/W11)** — S
   - `IMAGE_NAME` from `${GITHUB_REPOSITORY,,}`; wire or remove dead
     `inputs.profile`.
-  - Status: [x] done on `ci/container-hygiene` — IMAGE derived per-job
-    (6 refs), PROFILE wired with core default. actionlint clean.
-    Runtime proof on next push run.
+  - Status: [x] done, merged as 1e975650 (PR #65) — IMAGE derived
+    per-job (6 refs), PROFILE wired with core default. actionlint clean.
+    PR proof: build green, publish skipped. Runtime proof on next push.
 
 ## Phase B (hygiene first) — Script fixes
 
 - [x] **B1. Remove `load_secrets` (S5)** — S · `build:`
   - Delete `source secrets.sh` + `load_secrets`. Validate: `env | grep OS_`
     clean in `--keep-rootfs` run.
-  - Status: [x] done on `ci/container-hygiene` — grep confirms zero other
-    secrets consumption; `--dry-run` green without the source.
+  - Status: [x] done, merged as 1e975650 (PR #65) — grep confirms zero
+    other secrets consumption; `--dry-run` green; PR build green.
     Full `env` proof needs a real build (verify).
 - [x] **B2. Export `SOURCE_DATE_EPOCH` before dates (S2)** — S
   - Move export above `BUILD_DATE`. Validate: tarball name date == label date
     on older commit.
-  - Status: [x] move done on `ci/container-hygiene` — ordering hygiene
-    only. CORRECTION: `iso_build_date` (common.sh) is wall-clock and
-    ignores SDE, so the move alone cannot equalize the dates. True
+  - Status: [x] move done, merged as 1e975650 (PR #65) — ordering
+    hygiene only. CORRECTION: `iso_build_date` (common.sh) is wall-clock
+    and ignores SDE, so the move alone cannot equalize the dates. True
     agreement needs the shared helper to honor SDE — separate proposal,
     ISO-affecting, not smuggled in here.
 - [x] **B3. Pin image timestamp (S1)** — S
   - `buildah bud --timestamp "${SOURCE_DATE_EPOCH}"`. Validate: `buildah bud
     --help` on runner (verify flag present per brief).
-  - Status: [x] done on `ci/container-hygiene` — flag confirmed on local
-    buildah 1.39.3 (`--timestamp int`). Runner-version proof + digest
-    stability on next CI/dev build (verify).
+  - Status: [x] done, merged as 1e975650 (PR #65) — flag confirmed on
+    local buildah 1.39.3 AND on the CI runner (PR build ran `bud`
+    green, resolving the runner-version verify). Digest stability still
+    owed a double-build measurement (D-1).
 
 ## Phase F — Docs / ADR corrections
 
