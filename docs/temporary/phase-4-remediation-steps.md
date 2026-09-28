@@ -64,9 +64,13 @@
     (SBOM 648 pkgs, grype 1979), handoff blocked by exhausted quota,
     publish skipped fail-closed (nothing pushed/unsigned). Re-run after
     recalc proves push/sign/attest/verify; A7 negative test still owed.
-- [ ] **A6. Assert manifest ↔ registry identity (W7)** — S · experiment decides
+- [x] **A6. Assert manifest ↔ registry identity (W7)** — S · experiment decides
   - `test "$(jq -r .output.digest container-manifest.json)" = "${DIGEST}"`.
   - If fail: keep both digests + document, or push via `buildah push`.
+  - Status: [x] implemented on `ci/container-identity` — post-verify
+    blocking step with both outcomes messaged (mismatch = record-keeping
+    disagreement, never a signing gate). Executes on the first push with
+    a working handoff (quota-gated, like #64).
 - [x] **A8. Fix smoke test (W8/W9)** — S (needs Q1 decision first)
   - Install absent package (`hello`), log artifact apt sources, rewrite comment
     to claim only what is proven.
@@ -134,8 +138,14 @@
 - [ ] **B4. Read repo from `jadupc.list` (S4)** — M (lint already passes; Golden
   Rule only)
 - [ ] **B5. Security pocket (S6, needs Q2)** — S–M
-- [ ] **B6. Labels (S7/S8, verify `URL_SOURCE` first)** — S
-- [ ] **B7. `rmi` on failure (S9)** — S
+- [x] **B6. Labels (S7/S8, verify `URL_SOURCE` first)** — S
+  - Status: [x] done on `ci/container-identity` — URL_SOURCE verified
+    present via brand-loaded urls.env; source/url/vendor split, bare
+    version, codename vendor label. Noted: URL_SOURCE aims at the JaduPC
+    org while the repo lives at fa-saikat — var used as-is, URL fix separate.
+- [x] **B7. `rmi` on failure (S9)** — S
+  - Status: [x] done on `ci/container-identity` — guarded for set -u,
+    proven by green --dry-run (trap ran with IMAGE_REF unset).
 - [ ] **E1+E2. Release promotion runbook + GHCR visibility (D4/D6)** — M+S
 - [ ] **F3. Grype graduation rule (W13)** — S + tracking issue
 - [ ] **G1–G4. Hardening extras (W12/D7/W13/metrics)** — as time allows
