@@ -92,3 +92,18 @@ lvm2
 mdadm
 cron
 rsyslog
+# Tier-B second pass (review): block-device and inspection tooling of the
+# same class - partition editing, disk health, FUSE mounts, filesystem
+# repair, live-system inspection. A shipped filesystem has no block
+# devices to edit and no running kernel to inspect; the file-scan
+# remainder duplicates the SBOM/grype coverage CI already does better.
+# Deliberate boundary, stated so it never reads as oversight: clients
+# stay (openconnect is a protocol client with no listener), servers and
+# hardware tooling go. e2fsprogs is excludable (Priority: important, not
+# minbase-required - verified, not assumed).
+parted
+smartmontools
+exfat-fuse
+e2fsprogs
+chkrootkit
+lynis
