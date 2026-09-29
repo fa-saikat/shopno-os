@@ -87,7 +87,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # build-container.sh needs: mmdebstrap, buildah, jq, gpg.
       # Smoke path uses skopeo (tarball -> docker daemon bridge) + the
@@ -228,7 +228,7 @@ jobs:
       # job consumes this within minutes.
       - name: Upload build handoff (tarball + manifest + SBOM)
         if: github.event_name == 'push'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: container-build-handoff
           retention-days: 1
@@ -243,7 +243,7 @@ jobs:
       # the summary above; artifacts are convenience, not proof.
       - name: Upload SBOM and scan report
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: container-sbom-scan
           retention-days: 7
@@ -274,7 +274,7 @@ jobs:
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}" >> "${GITHUB_ENV}"
 
       - name: Download build handoff
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: container-build-handoff
           path: handoff
@@ -313,7 +313,7 @@ jobs:
       # (ADR-008). edge + short-SHA on every dev push; :DISTRO_VERSION and
       # stable move only in the release flow, never here.
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -349,14 +349,14 @@ jobs:
           cosign sign --yes "${{ env.IMAGE }}@${{ steps.push.outputs.digest }}"
 
       - name: Attest build provenance (SLSA)
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
         with:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
       - name: Attest SBOM
-        uses: actions/attest-sbom@v2
+        uses: actions/attest-sbom@bd218ad0dbcb3e146bd073d1d9c6d78e08aa8a0b # v2
         with:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}

@@ -1,0 +1,14 @@
+version: 2
+
+# G1: third-party Actions are pinned by commit SHA in all workflow files.
+# This keeps those pins fresh through reviewable PRs (re-pin deliberately,
+# same discipline as the checksummed toolchain .debs) instead of rotting.
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    labels:
+      - dependencies

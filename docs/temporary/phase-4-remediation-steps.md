@@ -200,9 +200,11 @@ belt-and-braces, baseline unmoved.
 - [x] **G2. Self-hosted fork-PR warning (D7)** — done: constraint noted
   in `container-build.yml` header + `ci-cd.md` self-hosted bullet.
 - [x] **G4. Run summary metrics** — done, merged as df4c4429 (PR #77): tarball size beside SBOM count (one `du`, no uploads, no perms). First datapoint: 463M (dev push 36562913980).
-- [ ] **G1/G3. Remaining extras (W12/W13)** — G1 pin actions by SHA +
-  Dependabot; G3 SARIF-to-code-scanning (needs `security-events: write`,
-  isolated review).
+- [x] **G1. Pin actions by SHA + Dependabot** — done on `ci/pin-actions`:
+  11 refs (6 SHAs, resolved live; attest tags peeled from annotated tag
+  objects to commits), weekly Dependabot for github-actions.
+  actionlint clean. G3 deferred with reason (private repo, no GHAS —
+  revisit if public or entitled).
 
 ## Definition of done (from audit §5)
 
