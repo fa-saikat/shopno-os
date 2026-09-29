@@ -201,6 +201,18 @@ jobs:
           echo "Grype severity: Critical ${CRIT} (${CRIT_FIX} with fix), High ${HIGH} (${HIGH_FIX} with fix)"
           echo "- Grype severity: Critical **${CRIT}** (${CRIT_FIX} with fix), High **${HIGH}** (${HIGH_FIX} with fix)" >> "${GITHUB_STEP_SUMMARY}"
 
+      # Content gate (C2, blocking): denylist absence + critical set +
+      # count band, all artifact-derived (ADR-003 style), SBOM cross-check
+      # as second source. Runs BEFORE the handoff - a gate failure must
+      # never reach publish. Provenance: tests/smoke, fixture
+      # expected-container-packages.json (provisional band until real
+      # builds land, then tighten per ADR-009).
+      - name: Content gate - artifact package audit
+        run: |
+          ./tests/smoke/test-container-packages.sh "${{ steps.artifact.outputs.tarball }}" \
+            --profile "${{ env.PROFILE }}" \
+            --sbom build/container/sbom.spdx.json
+
       # Handoff to the publish job (A3/A4). BLOCKING by design: publish
       # `needs: build`, so a failed upload here stops the pipeline before
       # any registry write. Push-only: publish is the sole consumer, so PR

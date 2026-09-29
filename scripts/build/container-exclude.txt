@@ -75,3 +75,20 @@ live-tools
 # Installer / graphical-session packages that slipped the layers
 calamares*
 plymouth*
+
+# Tier-B daemons and privileged-hardware tooling (Q3: deny by rule).
+# A container shares the host kernel and runs no init supervision, no
+# block devices, no physical network to scan - so sshd/cron/syslog have
+# nothing to supervise them, LVM/RAID have no disks, and scanners have no
+# hardware. All verified declared in base/core lists (Q3 review); ufw was
+# already absent, so no pattern needed. Exact names, not globs: nothing
+# else may match these.
+openssh-server
+openvpn
+openvpn-systemd-resolved
+nmap
+tcpdump
+lvm2
+mdadm
+cron
+rsyslog
