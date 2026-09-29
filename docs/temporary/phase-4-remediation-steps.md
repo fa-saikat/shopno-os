@@ -137,7 +137,10 @@
     High 392 (0 fix). Sabotage-red proven on scratch PR #73 (added
     `curl` pattern → gate failed naming it, exit 1, downstream skipped;
     run 36530745851). Fixture tightening to [515, 700] + validated:true
-    is next, as its own PR.
+    is next, as its own PR. Follow-up lesson: the C2 gate files were
+    missing from the path filter (A1 predates them), so fixture-only
+    changes ran nothing anywhere — filter now covers them, standing
+    rule recorded in ci-cd.md.
 - [ ] **D-1. Double-build test (S1–S3)** — M
   - Two builds → diff digests → `diffoscope` if differ; record outcome in guide.
     Reword "deterministic" to measured result.
