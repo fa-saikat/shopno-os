@@ -111,7 +111,7 @@ One authority, three pointer types — the `publish.sh` `latest`-symlink pattern
 | `:<DISTRO_VERSION>` | Release flow only | Ties container to ISO identity (`name.env` is the single version authority — no second scheme) |
 | `:stable` | Release flow only | Promoted pointer, never rebuilt |
 
-Tags are convenience pointers; verification is always digest-based. `stable` moving under you is expected behavior, mirroring how signatures are never generated from a mutable name.
+Tags are convenience pointers; verification is always digest-based. `stable` moving under you is expected behavior, mirroring how signatures are never generated from a mutable name. Promotion mechanics (verify-then-retag, local only) live in `docs/release-process.md` §8.3 — CI never mints these tags.
 
 ## 8. Supply-Chain Evidence (Slices 3–4)
 

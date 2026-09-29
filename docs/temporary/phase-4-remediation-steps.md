@@ -178,7 +178,12 @@
 - [x] **B7. `rmi` on failure (S9)** — S
   - Status: [x] done, merged as 9defa181 (PR #67) — guarded for set -u,
     proven by green --dry-run (trap ran with IMAGE_REF unset).
-- [ ] **E1+E2. Release promotion runbook + GHCR visibility (D4/D6)** — M+S
+- [x] **E1+E2. Release promotion runbook + GHCR visibility (D4/D6)** — M+S
+  - Status: [x] done — `release-process.md` §8.3 (verify-then-retag,
+    local only, short-lived auth; old §§8.3–8.4 renumbered, checklist
+    extended), guide §7 pointer. E2 recorded as first-release UI step.
+    Untested against a real release by construction (runs once per
+    release, by hand).
 - [x] **F3. Grype graduation rule (W13)** — S + tracking issue
   - Status: [x] done, merged (PR #69) — rule in-workflow (10-push
 baseline, fail on Critical-with-fix), issue #68 with seed + logbook.

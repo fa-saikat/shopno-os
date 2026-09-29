@@ -28,7 +28,7 @@ A release is a tagged, signed, published set of ISOs covering all supported prof
 Preparation → Version Bump → Build → Verify → Sign → Publish → Post-Release
 ```
 
-Phases 3–6 run locally, by hand, on a machine holding the GPG key and mirror access — no tag-triggered CI rebuild exists, deliberately: a rebuild would produce different bits than the ones Phase 4 verified, violating the promotion-not-rebuild rule (§1.5). CI's role ends at proof (`build-iso.yml` gates every PR on `dev`); the tag, created in §8.1 *after* building and verifying, marks the proven state and triggers nothing. A `release.yml` automating phases 3–6 is explicitly declined not deferred — the GitHub Release itself is one local command (`gh release create`, §8.3). This document is the authoritative checklist, not a fallback for missing automation.
+Phases 3–6 run locally, by hand, on a machine holding the GPG key and mirror access — no tag-triggered CI rebuild exists, deliberately: a rebuild would produce different bits than the ones Phase 4 verified, violating the promotion-not-rebuild rule (§1.5). CI's role ends at proof (`build-iso.yml` gates every PR on `dev`); the tag, created in §8.1 *after* building and verifying, marks the proven state and triggers nothing. A `release.yml` automating phases 3–6 is explicitly declined not deferred — the GitHub Release itself is one local command (`gh release create`, §8.4). This document is the authoritative checklist, not a fallback for missing automation.
 
 **Release scripts involved:**
 
@@ -455,7 +455,36 @@ Verify the upload completed and the files are accessible:
 curl -I "https://mirror.shopno-oslinux.org/releases/${DISTRO_VERSION}/"
 ```
 
-### 8.3 Create a GitHub / Forgejo release
+### 8.3 Promote the container image (`:DISTRO_VERSION`, `:stable`)
+
+The pipeline publishes every `dev` push as `:edge` + short-SHA only. Release tags are promotion, never rebuild: verify the exact digest from the proven `dev` run, then retag that digest. Signatures bind to digests, so both retags stay valid with nothing re-signed.
+
+Take `DIGEST` from the merge-to-`dev` run's step summary ("Image digest: ...") — the run that built the release commit, not whatever `:edge` points at now:
+
+```bash
+IMAGE="ghcr.io/fa-saikat/shopno-os"
+DIGEST="<digest from the proven dev-push run summary>"
+DISTRO_VERSION="$(grep '^DISTRO_VERSION=' brand/identity/name.env | cut -d'"' -f2)"
+
+# Authenticate the exact bits first (public Rekor/Fulcio — no credentials needed):
+cosign verify "${IMAGE}@${DIGEST}" \
+  --certificate-identity-regexp "^https://github.com/fa-saikat/shopno-os/\.github/workflows/container-build\.yml@refs/heads/dev$" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+
+# Short-lived push auth only (ephemeral `gh` token — nothing long-lived,
+# per ADR-006 as narrowed; cosign never signs here, it only verifies):
+echo "$(gh auth token)" | skopeo login ghcr.io -u "$(gh api user --jq .login)" --password-stdin
+
+# Retag the verified digest — no build, no new bits, ever:
+skopeo copy "docker://${IMAGE}@${DIGEST}" "docker://${IMAGE}:${DISTRO_VERSION}"
+skopeo copy "docker://${IMAGE}@${DIGEST}" "docker://${IMAGE}:stable"
+```
+
+One-time setup (first release only): GHCR packages default to private — flip the `shopno-os` package to public under Package settings so third parties can pull and verify. Every later release inherits visibility.
+
+Rules that make this safe: promote only digests whose push run was fully green (push → sign → attest → verify); `:stable` moving under consumers is expected behavior, mirroring the mirror's `latest` symlinks; if verification fails, stop — do not retag around it.
+
+### 8.4 Create a GitHub / Forgejo release
 
 Create the release on the repository host (one local command — no CI involved):
 
@@ -476,7 +505,7 @@ gh release create "v${DISTRO_VERSION}" \
 - Body: paste the relevant section from `CHANGELOG.md`
 - Attach: all `.iso`, `.sha256`, `.sha512`, `.gpg`, and `SHA256SUMS` files
 
-### 8.4 Update the website download page
+### 8.5 Update the website download page
 
 Update `DISTRO_RELEASE_URL` references on the website to point to the new release. Confirm direct download links resolve correctly for each ISO before announcing.
 
@@ -606,6 +635,7 @@ Copy this section to a tracking issue or document for each release.
 - [ ] Git tag `v${DISTRO_VERSION}` created and pushed
 - [ ] ISOs published to mirror via `publish.sh`
 - [ ] Mirror upload verified accessible via curl
+- [ ] Container digest verified and retagged (`:DISTRO_VERSION`, `:stable` — §8.3, GHCR public from first release)
 - [ ] GitHub/Forgejo release created with changelog and artifacts
 - [ ] Website download page updated
 - [ ] Download links tested directly
