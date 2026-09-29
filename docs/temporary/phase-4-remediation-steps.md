@@ -143,9 +143,14 @@
     missing from the path filter (A1 predates them), so fixture-only
     changes ran nothing anywhere — filter now covers them, standing
     rule recorded in ci-cd.md.
-- [ ] **D-1. Double-build test (S1–S3)** — M
+- [x] **D-1. Double-build test (S1–S3)** — M
   - Two builds → diff digests → `diffoscope` if differ; record outcome in guide.
     Reword "deterministic" to measured result.
+  - Status: [x] measured 2026-09-29 via `scripts/dev/check-container-
+    determinism.sh` (PR #76 merged as 1b86bbab): DOUBLE_BUILD_MATCH,
+    both digests `969e1d173afec19af34bf189e9dfd30bd6e85286a4db096947bd84a1ef3f5b76`.
+    Claim: reproducible given a frozen package set. Cross-day equality
+    remains unclaimed (mirrors move daily).
 
 ## Deferred (in order)
 
