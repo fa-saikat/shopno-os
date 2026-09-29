@@ -139,7 +139,9 @@
     run 36530745851). Fixture tightened to [515, 700] + validated:true.
     Row 4 (dev push 36541743850): SBOM 620, total 1817 (-39 upstream
     drift, same composition — direct comparability holding), Crit 34
-    (0 fix), High 362 (0 fix). Gate green validated:true. Follow-up lesson: the C2 gate files were
+    (0 fix), High 362 (0 fix). Gate green validated:true. Row 6
+    (dev push 36577392049): identical numbers a third time (620/1817/
+    34(0)/362(0)/463M) — stable baseline, no drifting Critical-with-fix. Follow-up lesson: the C2 gate files were
     missing from the path filter (A1 predates them), so fixture-only
     changes ran nothing anywhere — filter now covers them, standing
     rule recorded in ci-cd.md.
