@@ -83,11 +83,9 @@ plymouth*
 # hardware. All verified declared in base/core lists (Q3 review); ufw was
 # already absent, so no pattern needed. Exact names, not globs: nothing
 # else may match these.
-openssh-server
 openvpn
 openvpn-systemd-resolved
 nmap
-tcpdump
 lvm2
 mdadm
 cron
