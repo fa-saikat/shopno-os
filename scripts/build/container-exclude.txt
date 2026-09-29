@@ -90,3 +90,4 @@ lvm2
 mdadm
 cron
 rsyslog
+curl
