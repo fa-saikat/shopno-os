@@ -92,3 +92,55 @@ lvm2
 mdadm
 cron
 rsyslog
+# Tier-B second pass (review): block-device and inspection tooling of the
+# same class - partition editing, disk health, FUSE mounts, filesystem
+# repair, live-system inspection. A shipped filesystem has no block
+# devices to edit and no running kernel to inspect; the file-scan
+# remainder duplicates the SBOM/grype coverage CI already does better.
+# Deliberate boundary, stated so it never reads as oversight: clients
+# stay (openconnect is a protocol client with no listener), servers and
+# hardware tooling go. e2fsprogs is excludable (Priority: important, not
+# minbase-required - verified, not assumed).
+parted
+smartmontools
+exfat-fuse
+e2fsprogs
+chkrootkit
+lynis
+# Hardware-management cluster (same rule): udisks2 hard-Depends parted
+# and hw-probe hard-Depends smartmontools (verified), so denying the
+# tools without their pullers merely re-adds them via resolution while
+# the gate reds on presence. inxi/dosfstools/ntfs-3g go with the same
+# reasoning (inspection and removable-media filesystem tooling).
+udisks2
+hw-probe
+inxi
+dosfstools
+ntfs-3g
+# Chain roots (same rule, found by tracing): gvfs-backends drags
+# gvfs-daemons -> udisks2 -> parted, and testdisk drags ntfs-3g
+# (both hard Depends, verified in archive metadata - recommends are
+# off in mmdebstrap, so only hard chains matter). Deny the roots and
+# the subtrees collapse; nothing retained depends on either. Denying a
+# tool without its chain merely re-resolves while the gate reds - trace
+# with: apt-cache depends --recurse --no-recommends <lists> | grep -B8.
+gvfs-backends
+testdisk
+# Chain root round 2: gvfs-fuse (declared) drags gvfs-daemons ->
+# udisks2 -> parted past the gvfs-backends denial. Same mount-plumbing
+# class, same verdict.
+gvfs-fuse
+# Hardware daemons and monitors (same rule, declaration sweep):
+# modemmanager/upower are hardware daemons with no hardware; iftop/nethogs/
+# nload are network monitors of the denied nmap/tcpdump class; exfatprogs
+# is removable-media filesystem tooling of the denied exfat-fuse class.
+# (bluetooth, bluez*, mtools were already covered above - not repeated.)
+# Deliberate keeps (diagnostic clients and shared libs, not daemons):
+# mtr, traceroute, whois, dnsutils, ncdu, cifs-utils, samba-common-bin,
+# fuse3, curl, wget.
+modemmanager
+upower
+iftop
+nethogs
+nload
+exfatprogs

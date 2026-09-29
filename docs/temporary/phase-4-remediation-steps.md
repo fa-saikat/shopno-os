@@ -126,6 +126,11 @@
 - [x] **C1. Decide Tier B (D3, needs Q3)** — M · decision then `build:`
   - Status: [x] Q3 decided deny-by-rule, denylist extended on
     `tests/container-content-gate` — dry-run 186/67/120 (was 186/58/129).
+    Second pass on `build/tier-b-extension` (review): +parted,
+    smartmontools, exfat-fuse, e2fsprogs, chkrootkit, lynis → 186/73/114;
+    openconnect deliberately kept (client, no listener) with the boundary
+    written into the Tier-B comment block. e2fsprogs verified excludable
+    (Priority: important, not minbase-required).
 - [x] **C2. Artifact-absence + critical + ceiling test (D1/D2)** — M–L · `tests:`
   - New `tests/smoke/test-container-packages.sh` + fixture
     `expected-container-packages.json`; blocking step. Validate: green run +
