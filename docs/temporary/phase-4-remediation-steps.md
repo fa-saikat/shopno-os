@@ -199,7 +199,10 @@ already pulled in as a dependency; the explicit include is
 belt-and-braces, baseline unmoved.
 - [x] **G2. Self-hosted fork-PR warning (D7)** — done: constraint noted
   in `container-build.yml` header + `ci-cd.md` self-hosted bullet.
-- [ ] **G1/G3/G4. Remaining extras (W12/W13/metrics)** — as time allows
+- [x] **G4. Run summary metrics** — done on `ci/run-summary-metrics`: tarball size beside SBOM count (one `du`, no uploads, no perms).
+- [ ] **G1/G3. Remaining extras (W12/W13)** — G1 pin actions by SHA +
+  Dependabot; G3 SARIF-to-code-scanning (needs `security-events: write`,
+  isolated review).
 
 ## Definition of done (from audit §5)
 
