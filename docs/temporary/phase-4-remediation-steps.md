@@ -136,8 +136,10 @@
     Row 3: SBOM 620 (-28), total 1856 (-73), Crit 39 (0 fix),
     High 392 (0 fix). Sabotage-red proven on scratch PR #73 (added
     `curl` pattern → gate failed naming it, exit 1, downstream skipped;
-    run 36530745851). Fixture tightening to [515, 700] + validated:true
-    is next, as its own PR. Follow-up lesson: the C2 gate files were
+    run 36530745851). Fixture tightened to [515, 700] + validated:true.
+    Row 4 (dev push 36541743850): SBOM 620, total 1817 (-39 upstream
+    drift, same composition — direct comparability holding), Crit 34
+    (0 fix), High 362 (0 fix). Gate green validated:true. Follow-up lesson: the C2 gate files were
     missing from the path filter (A1 predates them), so fixture-only
     changes ran nothing anywhere — filter now covers them, standing
     rule recorded in ci-cd.md.
