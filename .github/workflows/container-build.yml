@@ -124,6 +124,9 @@ jobs:
           test -n "${TARBALL}" || { echo "No OCI tarball produced"; exit 1; }
           echo "tarball=${TARBALL}" >> "${GITHUB_OUTPUT}"
           ls -la build/container/
+          # G4: size trend beside the package-count trend in the same summary, at the same cost (one du call, no uploads, no permissions).
+          TARBALL_SIZE="$(du -h "${TARBALL}" | cut -f1)"
+          echo "- Image tarball: **${TARBALL_SIZE}**" >> "${GITHUB_STEP_SUMMARY}"
           # The build ran under sudo, so this dir is root-owned while every
           # downstream step (SBOM, scan, upload) runs unprivileged. Hand it
           # back once, here, instead of sudo-ing each consumer.
