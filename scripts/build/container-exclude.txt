@@ -126,3 +126,21 @@ ntfs-3g
 # with: apt-cache depends --recurse --no-recommends <lists> | grep -B8.
 gvfs-backends
 testdisk
+# Chain root round 2: gvfs-fuse (declared) drags gvfs-daemons ->
+# udisks2 -> parted past the gvfs-backends denial. Same mount-plumbing
+# class, same verdict.
+gvfs-fuse
+# Hardware daemons and monitors (same rule, declaration sweep):
+# modemmanager/upower are hardware daemons with no hardware; iftop/nethogs/
+# nload are network monitors of the denied nmap/tcpdump class; exfatprogs
+# is removable-media filesystem tooling of the denied exfat-fuse class.
+# (bluetooth, bluez*, mtools were already covered above - not repeated.)
+# Deliberate keeps (diagnostic clients and shared libs, not daemons):
+# mtr, traceroute, whois, dnsutils, ncdu, cifs-utils, samba-common-bin,
+# fuse3, curl, wget.
+modemmanager
+upower
+iftop
+nethogs
+nload
+exfatprogs
