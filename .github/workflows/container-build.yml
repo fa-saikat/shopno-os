@@ -32,6 +32,8 @@ on:
       - 'base/config/archives/**'
       - 'scripts/lib/**'
       - 'brand/**'
+      - 'tests/smoke/test-container-packages.sh'
+      - 'tests/fixtures/expected-container-packages.json'
   push:
     branches: [dev]
     paths:
@@ -44,6 +46,8 @@ on:
       - 'base/config/archives/**'
       - 'scripts/lib/**'
       - 'brand/**'
+      - 'tests/smoke/test-container-packages.sh'
+      - 'tests/fixtures/expected-container-packages.json'
   workflow_dispatch:
     inputs:
       profile:
