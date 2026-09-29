@@ -199,7 +199,7 @@ already pulled in as a dependency; the explicit include is
 belt-and-braces, baseline unmoved.
 - [x] **G2. Self-hosted fork-PR warning (D7)** — done: constraint noted
   in `container-build.yml` header + `ci-cd.md` self-hosted bullet.
-- [x] **G4. Run summary metrics** — done on `ci/run-summary-metrics`: tarball size beside SBOM count (one `du`, no uploads, no perms).
+- [x] **G4. Run summary metrics** — done, merged as df4c4429 (PR #77): tarball size beside SBOM count (one `du`, no uploads, no perms). First datapoint: 463M (dev push 36562913980).
 - [ ] **G1/G3. Remaining extras (W12/W13)** — G1 pin actions by SHA +
   Dependabot; G3 SARIF-to-code-scanning (needs `security-events: write`,
   isolated review).
