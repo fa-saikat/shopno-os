@@ -107,3 +107,13 @@ exfat-fuse
 e2fsprogs
 chkrootkit
 lynis
+# Hardware-management cluster (same rule): udisks2 hard-Depends parted
+# and hw-probe hard-Depends smartmontools (verified), so denying the
+# tools without their pullers merely re-adds them via resolution while
+# the gate reds on presence. inxi/dosfstools/ntfs-3g go with the same
+# reasoning (inspection and removable-media filesystem tooling).
+udisks2
+hw-probe
+inxi
+dosfstools
+ntfs-3g
