@@ -134,8 +134,10 @@
     absence OK (Tier-B gone from artifact), critical OK, count 607 in
     band, SBOM cross-check OK (620 vs 607, ~2% counter gap, normal).
     Row 3: SBOM 620 (-28), total 1856 (-73), Crit 39 (0 fix),
-    High 392 (0 fix). Owed: sabotage-red scratch proof; fixture
-    tightening to ~[515, 700] + validated:true.
+    High 392 (0 fix). Sabotage-red proven on scratch PR #73 (added
+    `curl` pattern → gate failed naming it, exit 1, downstream skipped;
+    run 36530745851). Fixture tightening to [515, 700] + validated:true
+    is next, as its own PR.
 - [ ] **D-1. Double-build test (S1–S3)** — M
   - Two builds → diff digests → `diffoscope` if differ; record outcome in guide.
     Reword "deterministic" to measured result.
