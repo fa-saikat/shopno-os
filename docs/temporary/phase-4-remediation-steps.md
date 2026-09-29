@@ -149,7 +149,11 @@
     34(0)/362(0)/463M) — stable baseline, no drifting Critical-with-fix. Follow-up lesson: the C2 gate files were
     missing from the path filter (A1 predates them), so fixture-only
     changes ran nothing anywhere — filter now covers them, standing
-    rule recorded in ci-cd.md.
+    rule recorded in ci-cd.md. Tier-B rounds 2-3 (PR #79): closure-
+    intersect tracing denied gvfs-fuse/testdisk roots plus hardware
+    sweep (deduped 3 pre-existing); merged green on dev push
+    36633604980 — SBOM 454 (-166), total 983 (-834), Crit 29 (0 fix),
+    High 294 (0 fix). Re-tighten fixture after one more green.
 - [x] **D-1. Double-build test (S1–S3)** — M
   - Two builds → diff digests → `diffoscope` if differ; record outcome in guide.
     Reword "deterministic" to measured result.
