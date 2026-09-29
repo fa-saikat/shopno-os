@@ -63,7 +63,7 @@ jobs:
     timeout-minutes: 360
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       # Hosted runners ship ~72GB total with ~19-29GB free; toolchain
       # SDKs we never touch are the cheapest gigabytes to reclaim.
@@ -143,7 +143,7 @@ jobs:
       # log alone rarely contains the root cause for lb/chroot failures.
       - name: Upload artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ env.PROFILE }}-iso
           retention-days: 7
