@@ -117,3 +117,12 @@ hw-probe
 inxi
 dosfstools
 ntfs-3g
+# Chain roots (same rule, found by tracing): gvfs-backends drags
+# gvfs-daemons -> udisks2 -> parted, and testdisk drags ntfs-3g
+# (both hard Depends, verified in archive metadata - recommends are
+# off in mmdebstrap, so only hard chains matter). Deny the roots and
+# the subtrees collapse; nothing retained depends on either. Denying a
+# tool without its chain merely re-resolves while the gate reds - trace
+# with: apt-cache depends --recurse --no-recommends <lists> | grep -B8.
+gvfs-backends
+testdisk
