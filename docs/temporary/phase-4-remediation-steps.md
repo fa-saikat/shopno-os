@@ -64,6 +64,7 @@
     (SBOM 648 pkgs, grype 1979), handoff blocked by exhausted quota,
     publish skipped fail-closed (nothing pushed/unsigned). Re-run after
     recalc proves push/sign/attest/verify; A7 negative test still owed.
+    Quota probe via dispatch 36695536460: still exhausted.
 - [x] **A6. Assert manifest ↔ registry identity (W7)** — S · experiment decides
   - `test "$(jq -r .output.digest container-manifest.json)" = "${DIGEST}"`.
   - If fail: keep both digests + document, or push via `buildah push`.
