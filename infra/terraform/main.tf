@@ -1,4 +1,4 @@
-# ShopnoOS self-hosted runner VM (T1: scaffolding, plan-only proof).
+# Self-hosted ISO-builder runner VM (T1: scaffolding, plan-only proof).
 # No apply yet: cloud-init does not exist until T2, so there is
 # nothing to boot. Token variable is declared (T3) but unused here.
 #
