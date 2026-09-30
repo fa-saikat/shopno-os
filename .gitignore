@@ -67,3 +67,10 @@ roms/
 # docs
 docs/devops-integration-plan.md
 docs/distro-devops-architecture.md
+
+# -------------------------------------------------------------------
+# --- Terraform (self-hosted runner) --------------------------------
+# -------------------------------------------------------------------
+infra/terraform/.terraform/
+infra/terraform/terraform.tfstate*
+infra/terraform/*.tfvars
