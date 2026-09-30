@@ -90,10 +90,41 @@ resource "libvirt_volume" "runner" {
   }
 }
 
+# Cloud-init seed (T2): rendered from cloud-init.yaml with the token
+# from TF_VAR_github_token, so the secret never touches git. Follows
+# the upstream pattern (cloudinit disk -> iso volume -> cdrom).
+resource "libvirt_cloudinit_disk" "runner" {
+  name = "shopno-iso-builder-cloudinit"
+  user_data = templatefile("${path.module}/cloud-init.yaml",
+  { github_token = var.github_token })
+
+  meta_data = <<-EOT
+    instance-id: shopno-iso-builder-001
+    local-hostname: shopno-iso-builder
+  EOT
+
+  network_config = <<-EOT
+    version: 2
+    ethernets:
+      eth0:
+        dhcp4: true
+  EOT
+}
+
+resource "libvirt_volume" "cloudinit" {
+  name = "shopno-iso-builder-cloudinit.iso"
+  pool = var.storage_pool
+  # Format auto-detected as iso from the seed content.
+
+  create = {
+    content = {
+      url = libvirt_cloudinit_disk.runner.path
+    }
+  }
+}
+
 # Locked shape: 8 vCPU / 16 GB RAM / 60 GB disk.
-# T2 adds the cloud-init cdrom disk here; until then this is a
-# defined domain over an unprovisioned disk (plan-only, never
-# applied). Memory is KiB in the 0.9 schema (16 GiB = 16777216).
+# Memory is KiB in the 0.9 schema (16 GiB = 16777216).
 resource "libvirt_domain" "runner" {
   name   = "shopno-iso-builder"
   vcpu   = var.vcpu
@@ -121,6 +152,20 @@ resource "libvirt_domain" "runner" {
         }
         driver = {
           type = "qcow2"
+        }
+      },
+      # Cloud-init seed disk (auto-detected, no driver stanza).
+      {
+        device = "cdrom"
+        source = {
+          volume = {
+            pool   = libvirt_volume.cloudinit.pool
+            volume = libvirt_volume.cloudinit.name
+          }
+        }
+        target = {
+          bus = "sata"
+          dev = "sda"
         }
       }
     ]

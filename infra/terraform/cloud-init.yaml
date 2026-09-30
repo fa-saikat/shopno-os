@@ -1,0 +1,62 @@
+#cloud-config
+# The whole machine (T2). Every stanza maps to a T0 inventory entry
+# or carries a one-line justification. Rendered by templatefile() in
+# main.tf: ${github_token} arrives via TF_VAR_github_token (T3, JIT),
+# never in git. Runner agent pinned v2.337.0 (upstream, 2026-08-26).
+
+hostname: shopno-iso-builder
+manage_etc_hosts: true
+
+users:
+  - name: builder
+    gecos: ISO builder
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    ssh_authorized_keys:
+      # Operator key (gh.pub, ED25519); chosen over dell.pub at T2.
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPlg2seqdhyrcCN9Tty0wtkxsHacAPSoaWMReCNA3h2d fahimabrar.saikat@gmail.com
+
+packages:
+  # T0 verbatim: the proven builder set, no guessing.
+  - live-build # same pin as CI (build-iso.yml); the ISO pipeline
+  - debootstrap
+  - mmdebstrap
+  - xorriso
+  - squashfs-tools
+  - qemu-system-x86 # boot gate; TCG on hosted CI, KVM here
+  - qemu-utils
+  - qemu-guest-agent # host-side domifaddr + clean shutdown
+  - ovmf # UEFI boot-gate leg
+  - buildah # container tooling, matches T0 host set
+  - skopeo
+  - jq # manifest parsing in build/smoke scripts
+  - ca-certificates
+  - gnupg # release signing stays local, but verification needs gpg
+  - openssh-server # sole admin path; explicit though usually preinstalled
+  # T2 additions (ticket-locked, small, standard).
+  - qemu-kvm # /dev/kvm userspace; KVM is the anti-TDG datapoint
+  - unattended-upgrades
+  - fail2ban # sshd jail on by default; nothing to configure for T2
+
+package_update: true
+package_upgrade: true
+
+runcmd:
+  - systemctl enable --now qemu-guest-agent
+  - systemctl enable --now fail2ban
+  # unattended-upgrades enabled with distro defaults; schedule
+  # tuning deferred past first boot (T3 observes, T6 may tune).
+  - systemctl enable --now unattended-upgrades
+  # Runner agent, pinned tarball, owned by the service user.
+  - install -d -o builder -g builder /home/builder/actions-runner
+  - su builder -c 'curl -sL --max-time 300 -o /tmp/actions-runner.tar.gz https://github.com/actions/runner/releases/download/v2.337.0/actions-runner-linux-x64-2.337.0.tar.gz'
+  - su builder -c 'tar xzf /tmp/actions-runner.tar.gz -C /home/builder/actions-runner'
+  - /home/builder/actions-runner/bin/installdependencies.sh
+  - chown -R builder:builder /home/builder/actions-runner
+  # --replace: T5 destroys/re-applies under the same name, so
+  # re-registration must not fail on the stale entry.
+  - su builder -c '/home/builder/actions-runner/config.sh --url https://github.com/fa-saikat/shopno-os --token ${github_token} --name shopno-iso-builder --labels self-hosted,linux,iso-builder,kvm --unattended --replace'
+  - /home/builder/actions-runner/svc.sh install builder
+  - /home/builder/actions-runner/svc.sh start
+
+final_message: "Runner online: check Settings -> Runners for shopno-iso-builder."
