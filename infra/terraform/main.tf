@@ -101,7 +101,7 @@ resource "libvirt_cloudinit_disk" "runner" {
   meta_data = <<-EOT
     # Bump on any seed change: cloud-init runs once per instance-id,
     # so a rebooted overlay would otherwise skip the new config.
-    instance-id: shopno-iso-builder-005
+    instance-id: shopno-iso-builder-009
     local-hostname: shopno-iso-builder
   EOT
 
@@ -147,6 +147,13 @@ resource "libvirt_domain" "runner" {
       type = "none"
     }
   ]
+
+  # host-passthrough: the guest keeps the Ryzen's svm flag, so
+  # nested KVM works. Without it the domain defaults to qemu64 and
+  # the kvm label is a lie (boot gate would fall back to TCG).
+  cpu = {
+    mode = "host-passthrough"
+  }
 
   os = {
     type         = "hvm"
