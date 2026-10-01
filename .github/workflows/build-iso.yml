@@ -45,7 +45,10 @@ permissions:
 jobs:
   build:
     name: Build + smoke-test ${{ matrix.profile }}
-    runs-on: ubuntu-24.04
+    # Self-hosted since T5: builds run on shopno-iso-builder (KVM).
+    # Reverting to ubuntu-24.04 reinstates TCG emulation and the
+    # hosted disk/time ceilings — do not flip casually.
+    runs-on: [self-hosted, linux, iso-builder]
     # Independent profiles, independent verdicts: one red leg must not
     # cancel the other's signal.
     strategy:
