@@ -16,6 +16,13 @@ users:
       # Operator key (gh.pub, ED25519); chosen over dell.pub at T2.
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPlg2seqdhyrcCN9Tty0wtkxsHacAPSoaWMReCNA3h2d fahimabrar.saikat@gmail.com
 
+# No Recommends: headless runner; qemu-system-x86 would otherwise
+# drag qemu-system-gui plus a GTK/gstreamer stack nobody displays.
+apt:
+  conf: |
+    APT::Install-Recommends "false";
+    APT::Install-Suggests "false";
+
 packages:
   # T0 verbatim: the proven builder set, no guessing.
   - live-build # same pin as CI (build-iso.yml); the ISO pipeline
@@ -42,7 +49,9 @@ package_update: true
 package_upgrade: true
 
 runcmd:
-  - systemctl enable --now qemu-guest-agent
+  # No [Install] section upstream, so enable fails; start is enough
+  # (the image preset already enables it — this only covers re-runs).
+  - systemctl start qemu-guest-agent || true
   - systemctl enable --now fail2ban
   # unattended-upgrades enabled with distro defaults; schedule
   # tuning deferred past first boot (T3 observes, T6 may tune).
@@ -56,7 +65,9 @@ runcmd:
   # --replace: T5 destroys/re-applies under the same name, so
   # re-registration must not fail on the stale entry.
   - su builder -c '/home/builder/actions-runner/config.sh --url https://github.com/fa-saikat/shopno-os --token ${github_token} --name shopno-iso-builder --labels self-hosted,linux,iso-builder,kvm --unattended --replace'
-  - /home/builder/actions-runner/svc.sh install builder
-  - /home/builder/actions-runner/svc.sh start
+  # svc.sh resolves the install relative to CWD, so cd first —
+  # absolute-path invocation dies with "Must run from runner root".
+  - cd /home/builder/actions-runner && ./svc.sh install builder
+  - cd /home/builder/actions-runner && ./svc.sh start
 
 final_message: "Runner online: check Settings -> Runners for shopno-iso-builder."

@@ -99,14 +99,19 @@ resource "libvirt_cloudinit_disk" "runner" {
   { github_token = var.github_token })
 
   meta_data = <<-EOT
-    instance-id: shopno-iso-builder-001
+    # Bump on any seed change: cloud-init runs once per instance-id,
+    # so a rebooted overlay would otherwise skip the new config.
+    instance-id: shopno-iso-builder-005
     local-hostname: shopno-iso-builder
   EOT
 
   network_config = <<-EOT
     version: 2
     ethernets:
-      eth0:
+      id0:
+        match:
+          # Kernel driver name, not the virtio model string.
+          driver: virtio_net
         dhcp4: true
   EOT
 }
@@ -114,7 +119,10 @@ resource "libvirt_cloudinit_disk" "runner" {
 resource "libvirt_volume" "cloudinit" {
   name = "shopno-iso-builder-cloudinit.iso"
   pool = var.storage_pool
-  # Format auto-detected as iso from the seed content.
+
+  # No target.format: the provider auto-detects the seed as iso
+  # (forcing qcow2 made the seed unreadable; forcing raw trips a
+  # provider read-back bug). Guest cdrom reads the ISO directly.
 
   create = {
     content = {
@@ -130,6 +138,15 @@ resource "libvirt_domain" "runner" {
   vcpu   = var.vcpu
   memory = var.memory_kib
   type   = "kvm"
+
+  # Unconfined, matching this host's established pattern (existing
+  # domains carry no seclabel): virt-aa-helper emits no .files list
+  # for this layout, so confinement denies every disk open quietly.
+  sec_label = [
+    {
+      type = "none"
+    }
+  ]
 
   os = {
     type         = "hvm"
@@ -187,6 +204,21 @@ resource "libvirt_domain" "runner" {
         vnc = {
           auto_port = true
           listen    = "127.0.0.1"
+        }
+      }
+    ]
+
+    # Guest-agent channel: full guest diagnostics (file reads, exec)
+    # without SSH — the T3 outages proved SSH alone is not enough.
+    channels = [
+      {
+        # No explicit socket path: libvirt auto-allocates it.
+        # (A hardcoded path fails start when the dir is absent.)
+        source = { unix = {} }
+        target = {
+          virt_io = {
+            name = "org.qemu.guest_agent.0"
+          }
         }
       }
     ]
