@@ -12,6 +12,7 @@ users:
     gecos: ISO builder
     sudo: ALL=(ALL) NOPASSWD:ALL
     shell: /bin/bash
+    groups: [kvm] # /dev/kvm is root:kvm; without this the boot gate falls back to TCG
     ssh_authorized_keys:
       # Operator key (gh.pub, ED25519); chosen over dell.pub at T2.
       - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPlg2seqdhyrcCN9Tty0wtkxsHacAPSoaWMReCNA3h2d fahimabrar.saikat@gmail.com
@@ -41,7 +42,8 @@ packages:
   - gnupg # release signing stays local, but verification needs gpg
   - openssh-server # sole admin path; explicit though usually preinstalled
   # T2 additions (ticket-locked, small, standard).
-  - qemu-kvm # /dev/kvm userspace; KVM is the anti-TDG datapoint
+  # No qemu-kvm: the metapackage has no trixie candidate (verified
+  # on host and guest); qemu-system-x86 already carries KVM.
   - unattended-upgrades
   - fail2ban # sshd jail on by default; nothing to configure for T2
 
@@ -49,6 +51,9 @@ package_update: true
 package_upgrade: true
 
 runcmd:
+  # Belt and braces: the users module only sets groups at creation,
+  # so re-runs on a reused overlay would never add kvm back.
+  - usermod -aG kvm builder
   # No [Install] section upstream, so enable fails; start is enough
   # (the image preset already enables it — this only covers re-runs).
   - systemctl start qemu-guest-agent || true
@@ -69,5 +74,9 @@ runcmd:
   # absolute-path invocation dies with "Must run from runner root".
   - cd /home/builder/actions-runner && ./svc.sh install builder
   - cd /home/builder/actions-runner && ./svc.sh start
+  # Restart every boot: the service keeps the supplementary groups
+  # from its first start, so a later group change (kvm above) would
+  # otherwise stay invisible to jobs until a manual restart. T4 proved it.
+  - systemctl restart actions.runner.fa-saikat-shopno-os.shopno-iso-builder.service || true
 
 final_message: "Runner online: check Settings -> Runners for shopno-iso-builder."
