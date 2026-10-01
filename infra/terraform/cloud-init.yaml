@@ -41,6 +41,11 @@ packages:
   - ca-certificates
   - gnupg # release signing stays local, but verification needs gpg
   - openssh-server # sole admin path; explicit though usually preinstalled
+  # T5-proven: the checkout action needs git, prepare-lb-config.sh
+  # needs rsync. The T4 guest had them via Recommends; no-recommends
+  # plus a fresh rebirth exposed the gap (exit 127 on first T5 run).
+  - git
+  - rsync
   # T2 additions (ticket-locked, small, standard).
   # No qemu-kvm: the metapackage has no trixie candidate (verified
   # on host and guest); qemu-system-x86 already carries KVM.
