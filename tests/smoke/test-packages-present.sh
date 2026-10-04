@@ -104,7 +104,11 @@ if [[ -n "${OPT_WORKDIR}" ]]; then
     WORKDIR="${OPT_WORKDIR}"
     mkdir -p "${WORKDIR}"
 else
-    WORKDIR="$(mktemp -d /tmp/shopno-os-pkg-test.XXXXXX)"
+    # TMPDIR-aware: /tmp is often a RAM-backed tmpfs, too small for
+    # multi-GB ISO extraction (desktop needs ~12 GB). Callers with big
+    # images export TMPDIR to disk (CI sets /var/tmp); default keeps
+    # /tmp for small/self-test use.
+    WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/shopno-os-pkg-test.XXXXXX")"
 fi
 
 if [[ "${OPT_KEEP_WORKDIR}" -eq 0 ]]; then

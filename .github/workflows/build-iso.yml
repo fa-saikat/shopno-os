@@ -126,7 +126,11 @@ jobs:
           ls -la build/output/
 
       # Blocking: fast, deterministic, no virtualization involved.
+      # TMPDIR on disk: the test extracts multi-GB ISOs, which does not
+      # fit the RAM-backed /tmp tmpfs on small runners (ENOSPC, T6).
       - name: Smoke test - package presence
+        env:
+          TMPDIR: /var/tmp
         run: ./tests/smoke/test-packages-present.sh "${{ steps.iso.outputs.iso }}"
 
       # Metric-first, not a gate yet (project's own grype pattern, ADR-007):
