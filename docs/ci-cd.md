@@ -51,7 +51,7 @@ No build, no root, no live-build toolchain — finishes in roughly 35 seconds. `
 
 ### 2.2 `build-iso.yml`
 
-Builds one ISO on a GitHub-hosted `ubuntu-24.04` runner and runs both smoke tests against it:
+Builds one ISO on the self-hosted runner (`shopno-iso-builder`: 8 vCPU / 16 GB, nested KVM via host-passthrough) and runs both smoke tests against it:
 
 ```
 Checkout
@@ -62,9 +62,11 @@ Checkout
   → Package-presence smoke test        (blocking)
   → Boot gate smoke test               (continue-on-error — metric-first)
   → Upload artifacts (if: always())
+  → Clean build tree (if: always() — sudo rm; the persistent workspace
+    would otherwise keep root-owned dirs that break the next checkout)
 ```
 
-`--skip-sign`: no GPG key lives on a hosted runner. Signing stays a release-machine step via `scripts/release/sign-iso.sh`; CI proves the bits, a release blesses them. Lint is **not** skipped — `build.sh`'s own lint stage runs as defense in depth even though `lint-packages.yml` already gates the same PR.
+`--skip-sign`: no GPG key lives on any CI runner. Signing stays a release-machine step via `scripts/release/sign-iso.sh`; CI proves the bits, a release blesses them. Lint is **not** skipped — `build.sh`'s own lint stage runs as defense in depth even though `lint-packages.yml` already gates the same PR.
 
 `if: always()` on the artifact upload exists specifically so a **failed** `lb build` still uploads `build.log` — the step log alone is rarely enough to diagnose a chroot or `lb config` failure, and that's exactly the run where you want the full log.
 
@@ -163,15 +165,15 @@ All three fixture profiles (`shopno-os-core`, `shopno-os-desktop-xfce`, `shopno-
 
 This follows the project's own non-blocking-first pattern already established for `grype` scanning in the broader DevOps plan (`distro-devops-architecture.md` §3.7): prove the check locally, run it in CI as a metric, promote to blocking once it's shown to be reliable in the actual CI environment — not the moment it merges.
 
-It's `continue-on-error` specifically because the **hosted runner has no `/dev/kvm`** — QEMU falls back to TCG software emulation, which is measurably slower than the KVM-accelerated boot every local test has run under. `core` (headless) currently boots within the 600-second CI budget under TCG; `desktop-xfce` does not — it exceeds the timeout under TCG despite booting fine locally under KVM. That gap is real, measured, and is the standing justification for eventually moving to a self-hosted KVM-capable runner rather than a reason to distrust the check itself.
+It's `continue-on-error` for history, not hardware: the hosted era had no `/dev/kvm`, so QEMU fell back to TCG software emulation — `core` fit the 600-second budget under TCG while `desktop-xfce` did not. Since T5 the runner provides nested KVM (`KVM acceleration available` in the log) and both legs boot in-budget; promotion to blocking still wants N consecutive greens, not one good day (see [§9](#9-tracked-follow-ups)).
 
 ---
 
 ## 8. Known Limits (Measured, Not Feared)
 
-- **No `/dev/kvm` on hosted runners.** TCG-only. `core` headless is plausible in-budget; `desktop-xfce` is not (see [§7](#7-boot-gate)). This is the measured trigger for a self-hosted runner, not a theoretical concern.
+- **`/dev/kvm` now exists where builds run.** The self-hosted runner exposes nested KVM (host-passthrough CPU, builder in the `kvm` group). The old TCG-only paragraphs above describe the hosted era, kept for why the timeouts are shaped the way they are.
 - **`gaming-xfce` does not run on hosted CI at all.** The gaming ISO is 10GB+ once RetroPie ROM and emulator artifacts are included, and those artifacts cannot be pushed to GitHub — only the RetroPie/emulator *configuration* is tracked in git. Its fixture floor is validated from a real local build instead.
-- **`vm`-hardware target work is deliberately out of scope for now**, not an oversight. CI is scoped to `core` and `desktop` — the most feasible profiles to test on a GitHub-hosted runner — until hardware-specific build work is actually underway.
+- **`vm`-hardware target work is deliberately out of scope for now**, not an oversight. CI is scoped to `core` and `desktop` until hardware-specific build work is actually underway.
 - **The legacy-BIOS boot path has no serial configuration.** `test-iso-boots.sh` exercises the UEFI (`grub-efi`) path only; a `SERIAL` directive is still needed in `base/config/bootloaders/isolinux/` and `syslinux/` before a `--bios legacy` boot would produce anything but a silent hang waiting on a console nothing is feeding (tracked as issue #30).
 
 ---
@@ -179,10 +181,10 @@ It's `continue-on-error` specifically because the **hosted runner has no `/dev/k
 ## 9. Tracked Follow-ups
 
 - **`SOURCE_DATE_EPOCH`** — landed: exported in `build.sh` from the HEAD commit timestamp (explicit env wins). Sets up Phase 6 reproducibility work.
-- **Boot-gate promotion** from metric to blocking gate — gated on either a self-hosted KVM runner landing, or N consecutive green `core` boots under TCG establishing the check is reliable in this environment specifically.
+- **Boot-gate promotion** from metric to blocking gate — the KVM half landed with T5 (both legs green under KVM); promotion still wants N consecutive greens, TCG evidence no longer counts either way.
 - **Container sign + attest + verify (slice 4)** — landed: keyless `cosign` sign + SLSA provenance/SBOM attestations on digests, with in-pipeline verification. First full push-half proof awaits artifact-quota recovery (issue #64).
 - **Matrix build**: landed (`core` + `desktop` on PRs, `gaming` dispatch-only).
-- **Self-hosted runner.** Per `docs/devops-integration-plan.md` §3, this is a one-line change (`runs-on: ubuntu-24.04` → `runs-on: [self-hosted, linux, iso-builder]`) once hosted-runner disk, time, or KVM limits are actually hit and measured — not before. Hard constraint when it lands (D7): persistent runners must never execute `pull_request` from forks — the container build job runs repo code under `sudo`, which is arbitrary code execution on that hardware. Noted in-file in `container-build.yml`.
+- **Self-hosted runner — landed (T5).** ISO builds run on `shopno-iso-builder` (`runs-on: [self-hosted, linux, iso-builder]`); the runner is Terraform-managed per `infra/terraform/README.md` (destroy/apply rebirth proven). Fork rule (D7, enforced on all three workflows): `pull_request` from forks skips every job — untrusted code runs on neither our runners nor our minutes; forks build on their own. **Container stays hosted (T6 decision, reversible):** no measured need (463 MB tarball, no KVM/disk pain) and the ISO cutover soaks first; the fork gate it was waiting for has since landed, so the move is unblocked whenever wanted. Noted in-file in `container-build.yml`.
 - **No `release.yml`, by decision** (ADR-006): tag-triggered build-sign-publish declined — releases stay local/manual.
 - **BIOS serial console gap** (issue #30) — see [§8](#8-known-limits-measured-not-feared).
 - **`lint-packages.yml` has no `workflow_dispatch`** — no way to force a standalone lint run today outside a push or PR.

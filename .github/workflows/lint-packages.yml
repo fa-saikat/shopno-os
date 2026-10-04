@@ -26,6 +26,9 @@ permissions:
 jobs:
   lint:
     name: Lint suites
+    # Same fork rule as the build workflows: untrusted code runs
+    # nowhere on our runners or minutes, even when it's "just lint".
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

@@ -45,6 +45,9 @@ permissions:
 jobs:
   build:
     name: Build + smoke-test ${{ matrix.profile }}
+    # Forks build on their own runners, never on ours (self-hosted or
+    # GitHub's). Push/dispatch events skip the pull_request half safely.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     # Self-hosted since T5: builds run on shopno-iso-builder (KVM).
     # Reverting to ubuntu-24.04 reinstates TCG emulation and the
     # hosted disk/time ceilings — do not flip casually.
@@ -123,7 +126,11 @@ jobs:
           ls -la build/output/
 
       # Blocking: fast, deterministic, no virtualization involved.
+      # TMPDIR on disk: the test extracts multi-GB ISOs, which does not
+      # fit the RAM-backed /tmp tmpfs on small runners (ENOSPC, T6).
       - name: Smoke test - package presence
+        env:
+          TMPDIR: /var/tmp
         run: ./tests/smoke/test-packages-present.sh "${{ steps.iso.outputs.iso }}"
 
       # Metric-first, not a gate yet (project's own grype pattern, ADR-007):
@@ -154,3 +161,11 @@ jobs:
             build/output/*.iso
             build/output/build-manifest.json
             build/${{ env.PROFILE }}/build.log
+
+      # Self-hosted persistence: sudo builds leave root-owned dirs that
+      # break the next job's checkout (EACCES on rmdir, proven in T5).
+      # Hosted runners never notice (fresh VM per job). Upload first,
+      # then flatten unconditionally — logs already shipped above.
+      - name: Clean build tree (self-hosted persistence)
+        if: always()
+        run: sudo rm -rf "build/${{ env.PROFILE }}" build/output
