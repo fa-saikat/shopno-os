@@ -11,13 +11,13 @@ variable "github_token" {
 variable "vcpu" {
   description = "Locked runner shape."
   type        = number
-  default     = 8
+  default     = 4
 }
 
 variable "memory_kib" {
-  description = "Locked runner shape (16 GiB; 0.9 provider takes KiB)."
+  description = "Runner RAM (8 GiB floor: 4 GiB starves /tmp tmpfs and the squashfs build; 0.9 provider takes KiB)."
   type        = number
-  default     = 16777216
+  default     = 8388608
 }
 
 variable "disk_bytes" {
