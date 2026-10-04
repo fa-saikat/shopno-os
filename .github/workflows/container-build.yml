@@ -15,10 +15,12 @@ name: Build Container
 #   happens only after SBOM/scan succeed (W1); the digest comes from the
 #   push itself, never re-read from mutable :edge (W5); cosign + attestation
 #   verification must fail red (W6).
-# Self-hosting constraint (#46, D7): when runs-on moves to a persistent
-# runner, this workflow must never run pull_request from forks on it -
-# the build job executes repo code under sudo, which is arbitrary code
-# execution on that hardware. Gate forks out then, not now.
+# Self-hosting constraint (#46, D7): the build job carries a fork gate
+# (`head.repo.full_name == github.repository`), so pull_request from
+# forks skips it everywhere — no untrusted code runs on our runners
+# or minutes, self-hosted or GitHub's. Forks build on their own.
+# T6 decision (2026-10-04): container stays hosted. No measured need,
+# ISO cutover soaks first; the move is unblocked whenever wanted.
 on:
   pull_request:
     branches: [dev]
@@ -74,6 +76,9 @@ env:
 jobs:
   build:
     name: Build + smoke + SBOM (shopno-os-core)
+    # Forks build on their own runners, never on ours. See the header
+    # comment (D7): this is the gate it was waiting for.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
     permissions:
       contents: read
