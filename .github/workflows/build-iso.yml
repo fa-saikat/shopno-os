@@ -133,26 +133,25 @@ jobs:
           TMPDIR: /var/tmp
         run: ./tests/smoke/test-packages-present.sh "${{ steps.iso.outputs.iso }}"
 
-      # Metric-first, not a gate yet (project's own grype pattern, ADR-007):
-      # the test is proven locally, but this hosted environment (KVM vs TCG
-      # fallback, steal time) is not. Promote to blocking after N consecutive
-      # green runs by removing continue-on-error.
-      # Per-profile timeout: no KVM on hosted runners, so TCG-only. Core
-      # headless fits 600s; desktop XFCE needs up to 1800s (measured —
-      # green inside 1800s on dispatch, red at 600s). The step always
-      # consumes the full timeout (QEMU has no shutdown trigger, so there
-      # is no early exit), hence core keeps its short budget.
-      - name: Smoke test - boot gate (non-blocking)
+      # Graduated to a blocking gate per #42: green on self-hosted KVM
+      # across profiles and runs, so the hosted-TCG hedging below no longer
+      # applies where this runs. Per-profile timeouts stay (600s core,
+      # 1800s desktop, both measured): the step always consumes its full
+      # timeout (QEMU has no shutdown trigger, so there is no early exit).
+      - name: Smoke test - boot gate
         id: boot
-        continue-on-error: true
         run: ./tests/smoke/test-iso-boots.sh "${{ steps.iso.outputs.iso }}" --timeout ${{ matrix.profile == 'shopno-os-core' && '600' || '1800' }}
 
       # architecture.md §13: retained 7 days. ISO + manifest + build log -
       # enough to re-run either smoke test locally without rebuilding.
       # if: always() so a failed build still uploads build.log - the step
       # log alone rarely contains the root cause for lb/chroot failures.
+      # Preservation must never veto verdicts: upload fails only on
+      # environmental causes (quota, network) - never on anything about
+      # the code. Same principle as container-build.yml.
       - name: Upload artifacts
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ env.PROFILE }}-iso

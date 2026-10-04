@@ -1,0 +1,10 @@
+# actionlint configuration.
+# The project runs ISO builds on a self-hosted runner with custom labels
+# (see infra/terraform/ + docs/ci-cd.md); teach the linter so unknown-label
+# diagnostics don't fire on intentional labels.
+self-hosted-runner:
+  labels:
+    - self-hosted
+    - linux
+    - iso-builder
+    - kvm
