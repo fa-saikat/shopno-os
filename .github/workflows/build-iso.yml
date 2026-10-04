@@ -135,12 +135,14 @@ jobs:
 
       # Graduated to a blocking gate per #42: green on self-hosted KVM
       # across profiles and runs, so the hosted-TCG hedging below no longer
-      # applies where this runs. Per-profile timeouts stay (600s core,
-      # 1800s desktop, both measured): the step always consumes its full
-      # timeout (QEMU has no shutdown trigger, so there is no early exit).
+      # applies where this runs. Budgets are evidence-based (early-exit
+      # telemetry: core ~30s, desktop ~80s on KVM) with generous multiples
+      # (~10x core, ~4x desktop) - boring, forgettable, flake-resistant.
+      # The step still consumes its full budget on verdict-less runs only;
+      # polling exits on detection, so typical cost is minutes.
       - name: Smoke test - boot gate
         id: boot
-        run: ./tests/smoke/test-iso-boots.sh "${{ steps.iso.outputs.iso }}" --timeout ${{ matrix.profile == 'shopno-os-core' && '600' || '1800' }}
+        run: ./tests/smoke/test-iso-boots.sh "${{ steps.iso.outputs.iso }}" --timeout 300
 
       # architecture.md §13: retained 7 days. ISO + manifest + build log -
       # enough to re-run either smoke test locally without rebuilding.
