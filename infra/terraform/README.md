@@ -74,3 +74,21 @@ terraform destroy   # everything is disposable by design
 - Token never enters git: `TF_VAR_github_token` env only, and
   never print a full `plan`/`show` (rendered `user_data` carries
   the secret). Filter output to resource lines.
+
+## T5 record (cutover + rebirth)
+
+- Destroy: 2026-10-01, 6 resources removed, virsh clean.
+- Rebirth minutes later: 6 added, runner online in 6 min,
+  service born with kvm groups, plan exit 0 (no changes).
+- Proof run 36845248152 (PR #85): desktop SUCCESS Oct 1
+  (package 1822, boot PASSED, uploaded); core rebuilt Oct 4
+  after a root-owned workspace blocked checkout — package
+  PASSED (784), boot PASSED with the KVM line, upload red
+  solely on artifact quota (`CreateArtifact: quota has been
+  hit`), which is environmental per policy, not a verdict.
+- T4 probes: 36822999141 (green, TCG — stale groups),
+  36826135264 (green, KVM). Core 23 min, +8 GB per build.
+- Operator notes: wipe root-owned `build/` between jobs until
+  T6 automates post-job cleanup; always match lease MAC to
+  `domiflist`; `git`+`rsync` are declared runner deps since
+  no-recommends exposed their absence (exit 127).
