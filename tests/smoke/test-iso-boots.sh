@@ -60,16 +60,29 @@ EOF
     exit 1
 }
 
+# Options taking values consume the next token blindly - without this guard
+# a typo like `--timeout --keep-logs` silently stuffs the flag name into
+# OPT_TIMEOUT and detonates pages later as `keep: unbound variable` inside
+# arithmetic, long after QEMU launched. Fail here instead, with the cause.
+_require_number() {
+    local flag="${1}"
+    local value="${2}"
+    if ! [[ "${value}" =~ ^[0-9]+$ ]]; then
+        log_error "${flag} expects a numeric value, got: '${value}'"
+        _usage
+    fi
+}
+
 [[ -z "${ISO_PATH}" ]] && _usage
 shift || true
 
 while [[ $# -gt 0 ]]; do
     case "${1}" in
-        --timeout)   OPT_TIMEOUT="${2}"; shift ;;
-        --memory)    OPT_MEMORY="${2}"; shift ;;
+        --timeout)   _require_number "--timeout" "${2:-}"; OPT_TIMEOUT="${2}"; shift ;;
+        --memory)    _require_number "--memory" "${2:-}"; OPT_MEMORY="${2}"; shift ;;
         --keep-log)  OPT_KEEP_LOG=1 ;;
-        --ovmf-code) OPT_OVMF_CODE="${2}"; shift ;;
-        --ovmf-vars) OPT_OVMF_VARS="${2}"; shift ;;
+        --ovmf-code) OPT_OVMF_CODE="${2:-}"; shift ;;
+        --ovmf-vars) OPT_OVMF_VARS="${2:-}"; shift ;;
         -h|--help)   _usage ;;
         *) log_error "Unknown option: ${1}"; _usage ;;
     esac
@@ -77,7 +90,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_file "${ISO_PATH}"
-require_command qemu-system-x86_64 timeout
+require_command qemu-system-x86_64
 
 # ---------------------------------------------------------------------------
 # Locate OVMF firmware (UEFI boot - required to exercise the grub-efi path)
@@ -132,10 +145,21 @@ fi
 # ---------------------------------------------------------------------------
 LOG_FILE="$(mktemp /tmp/shopno-os-boot-test.XXXXXX.log)"
 
+QEMU_PID=""
+_cleanup_qemu() {
+    # No orphaned QEMU squatting /dev/kvm on persistent runners - this is
+    # the highest-blast-radius edge case in the file. Called from every
+    # EXIT path below and after the poll loop.
+    if [[ -n "${QEMU_PID}" ]] && kill -0 "${QEMU_PID}" 2>/dev/null; then
+        kill "${QEMU_PID}" 2>/dev/null || true
+        wait "${QEMU_PID}" 2>/dev/null || true
+    fi
+}
+
 if [[ "${OPT_KEEP_LOG}" -eq 0 ]]; then
-    trap 'rm -f "${LOG_FILE}" "${VARS_COPY}"' EXIT
+    trap '_cleanup_qemu; rm -f "${LOG_FILE}" "${VARS_COPY}"' EXIT
 else
-    trap 'rm -f "${VARS_COPY}"; log_info "Boot log kept at: ${LOG_FILE}"' EXIT
+    trap '_cleanup_qemu; rm -f "${VARS_COPY}"; log_info "Boot log kept at: ${LOG_FILE}"' EXIT
 fi
 
 log_step "Booting ISO under QEMU (UEFI): $(basename "${ISO_PATH}")"
@@ -143,8 +167,8 @@ log_info "  Timeout : ${OPT_TIMEOUT}s"
 log_info "  Memory  : ${OPT_MEMORY}MB"
 log_info "  Log     : ${LOG_FILE}"
 
-QEMU_EXIT=0
-timeout "${OPT_TIMEOUT}" qemu-system-x86_64 \
+QEMU_PID=""
+qemu-system-x86_64 \
     -m "${OPT_MEMORY}" \
     -smp 2 \
     "${ACCEL_ARGS[@]}" \
@@ -158,11 +182,28 @@ timeout "${OPT_TIMEOUT}" qemu-system-x86_64 \
     -no-reboot \
     -netdev user,id=n0 \
     -device virtio-net-pci,netdev=n0 \
-    > /dev/null 2>&1 || QEMU_EXIT=$?
+    > /dev/null 2>&1 &
+QEMU_PID=$!
+log_info "  QEMU pid  : ${QEMU_PID}"
 
-if [[ "${QEMU_EXIT}" -eq 124 ]]; then
-    log_warn "QEMU hit the ${OPT_TIMEOUT}s timeout (this is often expected - the guest has no shutdown trigger)"
-fi
+# Poll for the verdict instead of waiting out the timeout: the guest never
+# shuts down, so foreground-timeout always consumed the full budget even
+# when the marker printed in minutes. --timeout is now purely a cap.
+# Detection time is logged - it is the measurement per-edition budgets
+# get retuned from (rule of thumb: budget ~= 2x measured).
+BOOT_START="${SECONDS}"
+while kill -0 "${QEMU_PID}" 2>/dev/null; do
+    if grep -q 'CI_BOOT_OK' "${LOG_FILE}" 2>/dev/null; then
+        log_info "Marker detected after $((SECONDS - BOOT_START))s (budget ${OPT_TIMEOUT}s) - stopping QEMU"
+        break
+    fi
+    if [[ "$((SECONDS - BOOT_START))" -ge "${OPT_TIMEOUT}" ]]; then
+        log_warn "QEMU hit the ${OPT_TIMEOUT}s timeout (this is often expected - the guest has no shutdown trigger)"
+        break
+    fi
+    sleep 10
+done
+_cleanup_qemu
 
 # ---------------------------------------------------------------------------
 # Evaluate the captured log
