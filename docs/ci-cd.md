@@ -60,7 +60,7 @@ Checkout
   → build.sh <profile> --skip-sign --jobs $(nproc)
   → Locate built ISO
   → Package-presence smoke test        (blocking)
-  → Boot gate smoke test               (continue-on-error — metric-first)
+  → Boot gate smoke test               (blocking since #42 graduation)
   → Upload artifacts (if: always())
   → Clean build tree (if: always() — sudo rm; the persistent workspace
     would otherwise keep root-owned dirs that break the next checkout)
@@ -161,11 +161,9 @@ All three fixture profiles (`shopno-os-core`, `shopno-os-desktop-xfce`, `shopno-
 
 ## 7. Boot Gate
 
-`tests/smoke/test-iso-boots.sh` — **`continue-on-error: true`, metric-first, not yet a hard gate**. Boots the ISO headlessly under QEMU/OVMF (UEFI path only — see the BIOS gap in [§9](#9-tracked-follow-ups)) and checks the serial log for the boot-marker service's verdict, gated on `multi-user.target` specifically rather than the edition's default target (full detail on why in `docs/decisions/002-boot-gate-target-scope.md`).
+`tests/smoke/test-iso-boots.sh` — **blocking gate since #42 graduated**. Boots the ISO headlessly under QEMU/OVMF (UEFI path only — see the BIOS gap in [§9](#9-tracked-follow-ups)) and checks the serial log for the boot-marker service's verdict, gated on `multi-user.target` specifically rather than the edition's default target (full detail on why in `docs/decisions/002-boot-gate-target-scope.md`).
 
-This follows the project's own non-blocking-first pattern already established for `grype` scanning in the broader DevOps plan (`distro-devops-architecture.md` §3.7): prove the check locally, run it in CI as a metric, promote to blocking once it's shown to be reliable in the actual CI environment — not the moment it merges.
-
-It's `continue-on-error` for history, not hardware: the hosted era had no `/dev/kvm`, so QEMU fell back to TCG software emulation — `core` fit the 600-second budget under TCG while `desktop-xfce` did not. Since T5 the runner provides nested KVM (`KVM acceleration available` in the log) and both legs boot in-budget; promotion to blocking still wants N consecutive greens, not one good day (see [§9](#9-tracked-follow-ups)).
+This followed the project's own non-blocking-first pattern already established for `grype` scanning in the broader DevOps plan (`distro-devops-architecture.md` §3.7): prove the check locally, run it in CI as a metric, promote to blocking once shown reliable in the actual CI environment — not the moment it merges. Graduation history: the hosted era had no `/dev/kvm`, so QEMU fell back to TCG — `core` fit the 600-second budget under TCG while `desktop-xfce` did not. T5's nested KVM retired that constraint (both legs green, run 37205116920 conducted under the new rule), and #42 closed on that evidence. Per-profile timeouts (600s/1800s) remain as budgets, not verdicts.
 
 ---
 
@@ -181,7 +179,7 @@ It's `continue-on-error` for history, not hardware: the hosted era had no `/dev/
 ## 9. Tracked Follow-ups
 
 - **`SOURCE_DATE_EPOCH`** — landed: exported in `build.sh` from the HEAD commit timestamp (explicit env wins). Sets up Phase 6 reproducibility work.
-- **Boot-gate promotion** from metric to blocking gate — the KVM half landed with T5 (both legs green under KVM); promotion still wants N consecutive greens, TCG evidence no longer counts either way.
+- **Boot-gate promotion** — landed and closed (#42): blocking on both legs since the KVM-backed evidence run; timeouts retained as budgets.
 - **Container sign + attest + verify (slice 4)** — landed: keyless `cosign` sign + SLSA provenance/SBOM attestations on digests, with in-pipeline verification. First full push-half proof awaits artifact-quota recovery (issue #64).
 - **Matrix build**: landed (`core` + `desktop` on PRs, `gaming` dispatch-only).
 - **Self-hosted runner — landed (T5).** ISO builds run on `shopno-iso-builder` (`runs-on: [self-hosted, linux, iso-builder]`); the runner is Terraform-managed per `infra/terraform/README.md` (destroy/apply rebirth proven). Fork rule (D7, enforced on all three workflows): `pull_request` from forks skips every job — untrusted code runs on neither our runners nor our minutes; forks build on their own. **Container stays hosted (T6 decision, reversible):** no measured need (463 MB tarball, no KVM/disk pain) and the ISO cutover soaks first; the fork gate it was waiting for has since landed, so the move is unblocked whenever wanted. Noted in-file in `container-build.yml`.
