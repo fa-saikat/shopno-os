@@ -91,7 +91,9 @@ echo "Reading installed package set from the artifact..."
 if [[ "${RUNTIME}" == "docker" ]]; then
     docker run --rm "${TAG}" dpkg-query -W -f='${Package}\n' | sort -u > "${WORKDIR}/installed.txt"
 else
-    buildah run "${CTR_ID}" dpkg-query -W -f='${Package}\n' | sort -u > "${WORKDIR}/installed.txt"
+    # `--` separator: proven safe on bare metal (the earlier "exec: no
+    # command" failures were a missing crun binary, not this separator).
+    buildah run "${CTR_ID}" -- dpkg-query -W -f='${Package}\n' | sort -u > "${WORKDIR}/installed.txt"
 fi
 INSTALLED="$(wc -l < "${WORKDIR}/installed.txt" | tr -d ' ')"
 echo "Installed packages: ${INSTALLED}"
