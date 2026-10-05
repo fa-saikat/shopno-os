@@ -104,7 +104,7 @@ step_ok()   { log_success "$1"; echo "[$(_timestamp)] OK: $1" >> "${LOG_FILE}"; 
 step_skip() { log_info "$1 (skipped)"; echo "[$(_timestamp)] SKIP: $1" >> "${LOG_FILE}"; }
 step_fail() { log_error "$1"; echo "[$(_timestamp)] FAIL: $1" >> "${LOG_FILE}"; }
 
-echo "ShopnoOS environment setup log - $(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${LOG_FILE}"
+echo "Environment setup log - $(date -u +%Y-%m-%dT%H:%M:%SZ)" > "${LOG_FILE}"
 log_info "Full log: ${LOG_FILE}"
 
 # ---------------------------------------------------------------------------
@@ -390,7 +390,7 @@ else
             fi
             ;;
         "Generate a new key")
-            KEYNAME="$(gum input --header "Key name" --value "ShopnoOS Release Key" < /dev/tty)"
+            KEYNAME="$(gum input --header "Key name" --value "Distribution Release Key" < /dev/tty)"
             KEYMAIL="$(gum input --header "Key email" < /dev/tty)"
             if [[ -n "${KEYMAIL}" ]]; then
                 BATCH="$(mktemp)"
