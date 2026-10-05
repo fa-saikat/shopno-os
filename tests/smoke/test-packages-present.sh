@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 # =============================================================================
 # tests/smoke/test-packages-present.sh
-# ShopnoOS - Package Presence Smoke Test (Phase 2 boot gate, part 2)
+# Package Presence Smoke Test (Phase 2 boot gate, part 2)
 #
 # PURPOSE:
 #   Verifies a built ISO actually contains what its layers declared, by
-#   inspecting the ARTIFACT (not the source lists — that's lint's job):
-#     1. Extract the ISO rootlessly (xorriso) — no loop mounts, no root.
+#   inspecting the ARTIFACT, not the source lists; that's lint's job:
+#     1. Extract the ISO rootlessly using xorriso; no loop mounts, no root.
 #     2. Locate filesystem.squashfs inside the extracted tree.
 #     3. Extract var/lib/dpkg/status from the squashfs rootlessly
 #        (unsquashfs single-file extract) and parse installed Package: names.
 #     4. Compare against tests/fixtures/expected-package-counts.json:
 #        - every critical_packages[] entry for the profile must be present
-#        - installed count must be >= total_min (floor, not exact — tolerant
+#        - installed count must be >= total_min (floor, not exact- tolerant
 #          of upstream Debian dependency churn)
 #
 #   Floor + critical-list (not exact counts) is a deliberate choice: exact
@@ -71,6 +71,19 @@ EOF
 [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]] && _usage
 [[ $# -eq 0 ]] && _usage
 
+# Options taking values consume the next token blindly - validate at parse
+# time so typos fail here with usage, not later as `unbound variable`
+# (missing value) or a bare require_file error. Rejects empty values and
+# values starting with '-' (a flag passed where a value belongs).
+_require_value() {
+    local flag="${1}"
+    local value="${2:-}"
+    if [[ -z "${value}" || "${value}" == -* ]]; then
+        log_error "${flag} expects a value, got: '${value}'"
+        _usage
+    fi
+}
+
 ISO_PATH="${1:-}"
 OPT_PROFILE=""
 OPT_FIXTURE="${SCRIPT_DIR}/../fixtures/expected-package-counts.json"
@@ -82,12 +95,12 @@ shift || true
 
 while [[ $# -gt 0 ]]; do
     case "${1}" in
-        --profile)     OPT_PROFILE="${2}"; shift ;;
-        --fixture)     OPT_FIXTURE="${2}"; shift ;;
-        --squashfs)    OPT_SQUASHFS="${2}"; shift ;;
-        --dpkg-status) OPT_DPKG_STATUS="${2}"; shift ;;
+        --profile)     _require_value "--profile" "${2:-}";     OPT_PROFILE="${2}"; shift ;;
+        --fixture)     _require_value "--fixture" "${2:-}";     OPT_FIXTURE="${2}"; shift ;;
+        --squashfs)    _require_value "--squashfs" "${2:-}";    OPT_SQUASHFS="${2}"; shift ;;
+        --dpkg-status) _require_value "--dpkg-status" "${2:-}"; OPT_DPKG_STATUS="${2}"; shift ;;
         --keep-workdir) OPT_KEEP_WORKDIR=1 ;;
-        --workdir)     OPT_WORKDIR="${2}"; OPT_KEEP_WORKDIR=1; shift ;;
+        --workdir)     _require_value "--workdir" "${2:-}";     OPT_WORKDIR="${2}"; OPT_KEEP_WORKDIR=1; shift ;;
         -h|--help)     _usage ;;
         *) log_error "Unknown option: ${1}"; _usage ;;
     esac
