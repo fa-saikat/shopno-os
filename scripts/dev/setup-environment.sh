@@ -217,6 +217,7 @@ APT_PKGS=(
     qemu-system-x86 ovmf p7zip-full mmdebstrap buildah skopeo
     git rsync curl ca-certificates gnupg shellcheck gh
     qemu-kvm libvirt-daemon-system debian-archive-keyring
+    netavark aardvark-dns
 )
 MISSING_PKGS=()
 for pkg in "${APT_PKGS[@]}"; do
