@@ -148,6 +148,26 @@ if [[ "${ID:-}" != "debian" ]]; then
     step_fail "Debian only (tested base: trixie). Got ID='${ID:-unknown}' - aborting, nothing installed."
     exit 1
 fi
+
+# Virtualization notice (informational only - never blocks): a guest
+# without CPU passthrough has no /dev/kvm, so KVM-dependent steps verify
+# red through no fault of the script. Say so up front, in plain words.
+VIRT_KIND="none"
+if have_cmd systemd-detect-virt; then
+    # NOTE: exit status is useless here (non-zero on bare metal too) -
+    # the printed word is the signal; empty output means "none".
+    VIRT_KIND="$(systemd-detect-virt 2>/dev/null)"
+    [[ -z "${VIRT_KIND}" ]] && VIRT_KIND="none"
+fi
+if [[ "${VIRT_KIND}" != "none" ]]; then
+    log_warn "Running inside a virtual machine (${VIRT_KIND}) - heads up:"
+    log_warn "  - No /dev/kvm unless the host passes the CPU through:"
+    log_warn "    QEMU boot tests fall back to TCG (slow but working)."
+    log_warn "  - Nested libvirt inside here is limited; manage VMs from the host instead."
+    log_warn "  - For the full experience (KVM boot gates, fast builds): bare metal."
+    log_warn "  - Everything else below works identically in a VM."
+    echo "[$(date +%H:%M:%S)] NOTICE: guest virt detected (${VIRT_KIND})" >> "${LOG_FILE}"
+fi
 if ! have_cmd gum; then
     log_info "Installing gum (prompt UI)..."
     if sudo_log apt-get update \
