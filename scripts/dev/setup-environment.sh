@@ -154,9 +154,10 @@ fi
 # red through no fault of the script. Say so up front, in plain words.
 VIRT_KIND="none"
 if have_cmd systemd-detect-virt; then
-    # NOTE: exit status is useless here (non-zero on bare metal too) -
-    # the printed word is the signal; empty output means "none".
-    VIRT_KIND="$(systemd-detect-virt 2>/dev/null)"
+    # NOTE: exit status is useless here (non-zero on bare metal too) and
+    # set -e aborts on a failing substitution - swallow the status, then
+    # treat empty as bare metal. The printed word is the only signal.
+    VIRT_KIND="$(systemd-detect-virt 2>/dev/null || true)"
     [[ -z "${VIRT_KIND}" ]] && VIRT_KIND="none"
 fi
 if [[ "${VIRT_KIND}" != "none" ]]; then
@@ -167,6 +168,25 @@ if [[ "${VIRT_KIND}" != "none" ]]; then
     log_warn "  - For the full experience (KVM boot gates, fast builds): bare metal."
     log_warn "  - Everything else below works identically in a VM."
     echo "[$(date +%H:%M:%S)] NOTICE: guest virt detected (${VIRT_KIND})" >> "${LOG_FILE}"
+fi
+
+# Resource check (warn-only, never blocks): thresholds from measured builds,
+# not round numbers - a desktop ISO working tree + output lands in the low
+# tens of GB, QEMU guests take 2 GB each, squashfs appreciates RAM.
+# Failing here would strand users who only ever build core (~1 GB out);
+# warning loudly is the honest middle.
+FREE_GB="$(df -BG --output=avail "${REPO_ROOT}" 2>/dev/null | tail -1 | tr -dc '0-9')"
+MEM_GB="$(free -g 2>/dev/null | awk '/^Mem:/ {print $2}')"
+NPROC_VAL="$(nproc 2>/dev/null || echo 1)"
+log_info "Resources: disk ${FREE_GB:-?} GB free, RAM ${MEM_GB:-?} GB, CPUs ${NPROC_VAL}"
+if [[ -n "${FREE_GB}" && "${FREE_GB}" -lt 20 ]]; then
+    log_warn "Disk under 20 GB free - core builds fit, desktop/gaming working trees may not. Free space or build core only."
+fi
+if [[ -n "${MEM_GB}" && "${MEM_GB}" -lt 8 ]]; then
+    log_warn "Under 8 GB RAM - QEMU boot tests (2 GB each) plus a build will squeeze. Close browsers, or expect slowness."
+fi
+if [[ "${NPROC_VAL}" -lt 4 ]]; then
+    log_warn "Under 4 CPUs - builds work, slowly. Use --jobs to match what exists."
 fi
 if ! have_cmd gum; then
     log_info "Installing gum (prompt UI)..."
