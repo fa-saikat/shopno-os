@@ -14,9 +14,10 @@
 6. [Build Output](#6-build-output)
 7. [Build Options Reference](#7-build-options-reference)
 8. [Common Build Scenarios](#8-common-build-scenarios)
-9. [Iterating on a Build](#9-iterating-on-a-build)
-10. [Troubleshooting](#10-troubleshooting)
-11. [What Not to Do](#11-what-not-to-do)
+9. [What to (Re)build After a Change](#9-what-to-rebuild-after-a-change)
+10. [Iterating on a Build](#10-iterating-on-a-build)
+11. [Troubleshooting](#11-troubleshooting)
+12. [What Not to Do](#12-what-not-to-do)
 
 ---
 
@@ -126,11 +127,13 @@ LB_MEMTEST="none"
 
 The profile name maps directly to the ISO it produces. `shopno-os-desktop-gnome` produces `shopno-os-<VERSION>-desktop-gnome-amd64-<BUILDDATE>.iso`.
 
+> **Core has no installer.** `shopno-os-core` boots a live session for rescue, inspection, and container-seed use, but nothing installs it to disk (desktop editions ship Calamares for that). This is a known limitation with no users attached, not an oversight — tracked, unscheduled.
+
 **Profile quick reference:**
 
 | Profile | What it builds |
 |---------|---------------|
-| `shopno-os-core` | Minimal CLI ISO, no desktop |
+| `shopno-os-core` | Minimal CLI ISO, no desktop. Live-boot only — no installer (see note below) |
 | `shopno-os-desktop-gnome` | Desktop ISO with GNOME |
 | `shopno-os-desktop-kde` | Desktop ISO with KDE Plasma |
 | `shopno-os-desktop-xfce` | Desktop ISO with XFCE |
@@ -181,7 +184,7 @@ Runs `scripts/dev/lint-packages.sh`, which scans every `.list.chroot` file acros
 
 **Stage 5 - Clean previous build**
 
-Wipes `build/<profile>/` entirely to ensure a reproducible build. Skip with `--no-clean` when iterating (see [Iterating on a Build](#9-iterating-on-a-build)).
+Wipes `build/<profile>/` entirely to ensure a reproducible build. Skip with `--no-clean` when iterating (see [Iterating on a Build](#10-iterating-on-a-build)).
 
 **Stage 6 - Prepare live-build config tree**
 
@@ -264,7 +267,7 @@ The intermediate build directory `build/<profile>/` is left intact after the bui
 
 | Option | Default | Effect |
 |--------|---------|--------|
-| `--no-clean` | off | Skip wiping `build/<profile>/` before starting. Uses the cached chroot from the previous build. Much faster for iteration - see [§9](#9-iterating-on-a-build). |
+| `--no-clean` | off | Skip wiping `build/<profile>/` before starting. Uses the cached chroot from the previous build. Much faster for iteration - see [§10](#10-iterating-on-a-build). |
 | `--dry-run` | off | Print what every stage would do without executing anything. Does not require root. Useful for verifying a profile before committing to a full build. |
 | `--skip-lint` | off | Skip the package duplicate check. Not recommended - lint failures indicate real conflicts that will break the build anyway, just later and with worse error messages. |
 | `--skip-sign` | off | Skip GPG signing and checksum generation. Use during development when no GPG key is configured. |
@@ -330,7 +333,27 @@ sudo ./scripts/build/build.sh shopno-os-desktop-gnome --output-dir /srv/isos/
 
 ---
 
-## 9. Iterating on a Build
+## 9. What to (Re)build After a Change
+
+The rule: *an artifact gets rebuilt when something it consumes changed — nothing else.* CI enforces the same mapping via path filters (`build-iso.yml`, `container-build.yml`), so local discipline and CI agree.
+
+| You changed | Rebuild ISO? | Rebuild container? | Why |
+|---|---|---|---|
+| `base/`, `editions/`, `hardware/` layers | Yes (affected profiles) | Only if `base/` or `editions/core/` | Both consume layers; container sees base+core only |
+| `flavors/` (non-xfce) or desktop-only files | Yes (that profile) | No | Container never sees flavors |
+| `profiles/<name>/`, `brand/` | Yes (that profile / all) | Only if core profile or brand identity | Brand flows into both |
+| `scripts/build/build-container.sh`, `container-exclude.txt` | No | Yes | Container-only inputs |
+| `scripts/build/build.sh`, `prepare-lb-config.sh`, `inject-packages.sh`, `stamp-iso.sh` | Yes | No | ISO pipeline internals |
+| `scripts/lib/` | Yes, and container | Yes | Sourced by both builders — most blast radius per line |
+| `tests/smoke/test-iso-*.sh`, fixtures | Re-run gates, no rebuild needed | — | Tests don't change artifacts |
+| `tests/smoke/test-container-*.sh` | — | Re-run gate, no rebuild needed | Same |
+| `docs/`, `tests/lint/` | No | No | Lint still runs; builds correctly skip |
+
+When in doubt, build the cheaper artifact first (container: minutes; core ISO: ~30 min; desktop ISO: hours) — a green cheap gate before an expensive build is never wasted time.
+
+---
+
+## 10. Iterating on a Build
 
 A full cold build takes 20–30 minutes minimum. When you are iterating on hooks, package lists or overlay files, you do not need to rebuild from scratch each time.
 
@@ -384,7 +407,7 @@ This drops you into the built chroot environment. Useful for verifying package i
 
 ---
 
-## 10. Troubleshooting
+## 11. Troubleshooting
 
 ### `lb build` fails early with a `debootstrap` error
 
@@ -457,7 +480,7 @@ Build artifacts in `build/output/` are not cleaned automatically. Move or delete
 
 ---
 
-## 11. What Not to Do
+## 12. What Not to Do
 
 These mistakes are common enough to document explicitly:
 

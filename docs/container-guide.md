@@ -134,7 +134,7 @@ What this deliberately does *not* prove: novel backdoors sail through CVE matchi
 - Privilege follows `build.sh`: the mmdebstrap step runs under `sudo` (hosted runners disable unprivileged user namespaces, so rootless is impossible there, not merely slower). Artifacts land root-owned; `clean.sh --container` refuses non-root runs and verifies removal under sudo — the privilege story is one system across both builders, not per-script folklore.
 - Uploads: the build→publish handoff is blocking and push-only (1-day retention — the publish job consumes it within minutes); SBOM/SARIF evidence uploads are `continue-on-error` with 7-day retention: preservation must never veto verdicts (artifact quota and network health are environmental, never code defects). Key evidence additionally lands in `$GITHUB_STEP_SUMMARY`, which costs no storage and survives quota exhaustion.
 
-Full trigger/stage reference lives in `docs/ci-cd.md` §2.3 — this guide covers intent and mechanics, that document covers the deployed pipeline.
+Full trigger/stage reference lives in `docs/ci-cd.md` §2.3 — this guide covers intent and mechanics, that document covers the deployed pipeline. For the local question ("I edited X — which artifact do I rebuild?"), see `docs/build-guide.md` §9.
 
 ## 10. Verifying an Image
 
