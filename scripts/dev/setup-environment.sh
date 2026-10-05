@@ -175,7 +175,7 @@ log_step "Step 1/8 - Base build tooling"
 APT_PKGS=(
     live-build debootstrap xorriso squashfs-tools jq gpg
     qemu-system-x86 ovmf p7zip-full mmdebstrap buildah skopeo
-    git rsync curl ca-certificates gnupg shellcheck
+    git rsync curl ca-certificates gnupg shellcheck gh
     qemu-kvm libvirt-daemon-system debian-archive-keyring
 )
 MISSING_PKGS=()
