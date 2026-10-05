@@ -28,6 +28,14 @@ Most small distros are a pile of scripts around `live-build`. ShopnoOS is two pr
 
 ## Quickstart
 
+New machine? Clone, then let the setup script prepare it (Debian trixie
+only — tools, KVM/libvirt, `gh` auth, credentials with import/generate/skip
+choices; `--dry-run` previews without changing anything):
+
+```bash
+./scripts/dev/setup-environment.sh
+```
+
 ```bash
 # Build an ISO (needs Debian host, root, live-build toolchain)
 sudo ./scripts/build/build.sh shopno-os-core
