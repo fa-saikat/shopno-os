@@ -181,6 +181,20 @@ jobs:
           SBOM_COUNT="$(jq '.packages | length' build/container/sbom.spdx.json)"
           echo "SBOM packages: ${SBOM_COUNT}"
           echo "- SBOM packages: **${SBOM_COUNT}**" >> "${GITHUB_STEP_SUMMARY}"
+          # Attestation predicate (16 MiB vendor cap): the full SPDX carries
+          # per-file records no consumer uses (grype matches packages, the
+          # gate checks package presence, attestation binds package
+          # identity). Derive a package-level predicate: drop files and
+          # file-referencing relationships, mark filesAnalyzed false, drop
+          # the now-stale verification codes. All package records survive
+          # byte-identical. Guard fails loud well before the cap.
+          jq 'del(.files) | .packages |= map(.filesAnalyzed = false | del(.packageVerificationCode)) | .relationships |= map(select((.spdxElementId | startswith("SPDXRef-File") | not) and (.relatedSpdxElement | startswith("SPDXRef-File") | not)))' \
+            build/container/sbom.spdx.json > build/container/sbom.attest.spdx.json
+          ATTEST_COUNT="$(jq '.packages | length' build/container/sbom.attest.spdx.json)"
+          test "${ATTEST_COUNT}" = "${SBOM_COUNT}" || { echo "Slim SBOM lost packages (${ATTEST_COUNT} vs ${SBOM_COUNT})"; exit 1; }
+          ATTEST_BYTES="$(stat -c%s build/container/sbom.attest.spdx.json)"
+          test "${ATTEST_BYTES}" -lt 8388608 || { echo "Attest SBOM ${ATTEST_BYTES} bytes, near the 16 MiB predicate cap"; exit 1; }
+          echo "Attest SBOM: ${ATTEST_COUNT} packages, ${ATTEST_BYTES} bytes"
 
       # Metric-first (ADR-005): base images always carry CVEs, so a blocking
       # scan on day one would veto good builds for upstream noise. The table
@@ -241,6 +255,7 @@ jobs:
             build/container/*.oci.tar
             build/container/container-manifest.json
             build/container/sbom.spdx.json
+            build/container/sbom.attest.spdx.json
 
       # Preservation must never veto verdicts: upload fails only on
       # environmental causes (quota, network, service health) - never on
@@ -254,6 +269,7 @@ jobs:
           retention-days: 7
           path: |
             build/container/sbom.spdx.json
+            build/container/sbom.attest.spdx.json
             build/container/grype.sarif
             build/container/grype.json
 
@@ -295,8 +311,13 @@ jobs:
           test -n "${MANIFEST}" || { echo "No manifest in handoff"; exit 1; }
           SBOM="$(find handoff -name 'sbom.spdx.json' | sort | head -1)"
           test -n "${SBOM}" || { echo "No SBOM in handoff"; exit 1; }
-          echo "tarball=${TARBALL}" >> "${GITHUB_OUTPUT}"
-          echo "sbom=${SBOM}" >> "${GITHUB_OUTPUT}"
+          SBOM_ATTEST="$(find handoff -name 'sbom.attest.spdx.json' | sort | head -1)"
+          test -n "${SBOM_ATTEST}" || { echo "No attest SBOM in handoff"; exit 1; }
+          echo "tarball=${TARBALL}" > "${GITHUB_OUTPUT}"
+          {
+            echo "sbom=${SBOM}"
+            echo "sbom_attest=${SBOM_ATTEST}"
+          } >> "${GITHUB_OUTPUT}"
           find handoff -type f | sort
 
       # Publish needs only skopeo + jq (+ cosign below). No mmdebstrap,
@@ -365,7 +386,7 @@ jobs:
         with:
           subject-name: ${{ env.IMAGE }}
           subject-digest: ${{ steps.push.outputs.digest }}
-          sbom-path: ${{ steps.artifact.outputs.sbom }}
+          sbom-path: ${{ steps.artifact.outputs.sbom_attest }}
           push-to-registry: true
 
       # A7 (W6): verify what was just signed. A bad or missing signature
