@@ -131,7 +131,11 @@ _run_container() {
     # "$@" stays quoted: unquoted it re-splits AND re-globs the inner
     # script on the HOST (proven: host /etc/apt/sources.list.d/*.sources
     # leaked into the command, and bare `cat` hung on stdin forever).
-    # stdin closed defensively - a foreground read must never hang the run.
+    # The `--` separator is required back: it was dropped suspecting
+    # buildah rejected it ("exec: no command"), but bare-metal testing
+    # proved the real cause was a missing crun binary - `--` works fine
+    # and protects against leading-dash arguments. Do not remove again
+    # without re-running that experiment.
     if [[ "${RUNTIME}" == "docker" ]]; then
         docker run --rm "${REF}" "$@" < /dev/null
     else

@@ -50,20 +50,51 @@ done
 test -n "${TARBALL}" || { echo "Usage: $0 <tarball> [--profile NAME]" >&2; exit 1; }
 test -f "${TARBALL}" || { echo "Tarball not found: ${TARBALL}" >&2; exit 1; }
 test -f "${FIXTURE}" || { echo "Fixture not found: ${FIXTURE}" >&2; exit 1; }
-command -v skopeo docker jq > /dev/null || { echo "Need skopeo, docker, jq" >&2; exit 1; }
+command -v skopeo > /dev/null || { echo "Need skopeo" >&2; exit 1; }
+command -v jq > /dev/null || { echo "Need jq" >&2; exit 1; }
 
 EXCLUDE_FILE="${REPO_ROOT}/scripts/build/container-exclude.txt"
 test -f "${EXCLUDE_FILE}" || { echo "Exclude file not found" >&2; exit 1; }
 
 TAG="content-gate-test:${RANDOM}"
 WORKDIR="$(mktemp -d /tmp/container-content-gate.XXXXXX)"
-trap 'rm -rf "${WORKDIR}"; docker rmi "${TAG}" > /dev/null 2>&1 || true' EXIT
+RUNTIME=""
+CTR_ID=""
+_cleanup_gate() {
+    rm -rf "${WORKDIR}"
+    if [[ "${RUNTIME}" == "docker" ]]; then
+        docker rmi "${TAG}" > /dev/null 2>&1 || true
+    elif [[ -n "${CTR_ID}" ]]; then
+        buildah rm "${CTR_ID}" > /dev/null 2>&1 || true
+    fi
+}
+trap '_cleanup_gate' EXIT
 
-echo "Loading image into docker..."
-skopeo copy "oci-archive:${TARBALL}" "docker-daemon:${TAG}" > /dev/null
+# Runtime: docker daemon if alive (CI path), else buildah working storage
+# (bare-metal path - the daemon is frequently down there). Same dpkg truth
+# either way. NOTE: no `--` separator on the buildah call below - rejected
+# by this buildah version ("exec: no command"); callers never pass leading
+# flags, so bare "$@"-style args are safe (see test-container-image.sh).
+if docker info > /dev/null 2>&1; then
+    RUNTIME="docker"
+    echo "Loading image into docker..."
+    skopeo copy "oci-archive:${TARBALL}" "docker-daemon:${TAG}" > /dev/null
+else
+    command -v buildah > /dev/null || { echo "Need a live docker daemon or buildah" >&2; exit 1; }
+    RUNTIME="buildah"
+    echo "Docker daemon unreachable - reading via buildah storage..."
+    CTR_ID="$(buildah from "oci-archive:${TARBALL}")"
+    [[ -n "${CTR_ID}" ]] || { echo "buildah from produced no container" >&2; exit 1; }
+fi
 
 echo "Reading installed package set from the artifact..."
-docker run --rm "${TAG}" dpkg-query -W -f='${Package}\n' | sort -u > "${WORKDIR}/installed.txt"
+if [[ "${RUNTIME}" == "docker" ]]; then
+    docker run --rm "${TAG}" dpkg-query -W -f='${Package}\n' | sort -u > "${WORKDIR}/installed.txt"
+else
+    # `--` separator: proven safe on bare metal (the earlier "exec: no
+    # command" failures were a missing crun binary, not this separator).
+    buildah run "${CTR_ID}" -- dpkg-query -W -f='${Package}\n' | sort -u > "${WORKDIR}/installed.txt"
+fi
 INSTALLED="$(wc -l < "${WORKDIR}/installed.txt" | tr -d ' ')"
 echo "Installed packages: ${INSTALLED}"
 
