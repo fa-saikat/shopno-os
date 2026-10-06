@@ -64,7 +64,14 @@
     (SBOM 648 pkgs, grype 1979), handoff blocked by exhausted quota,
     publish skipped fail-closed (nothing pushed/unsigned). Re-run after
     recalc proves push/sign/attest/verify; A7 negative test still owed.
-    Quota probe via dispatch 36695536460: still exhausted.
+    Quota probe via dispatch 36695536460: still exhausted. First publish
+    execution (run 37436712893) got through
+    push, sign, and provenance, then failed Attest SBOM: the 19.9 MB SPDX
+    exceeds the 16 MiB predicate cap (25k file records, no consumer).
+    Fix on `ci/sbom-attest-size`: slim package-level predicate (~1 MB,
+    measured on the real file) + size guard, into handoff and evidence.
+    #64's literal re-run is obsolete (old SBOM would fail identically);
+    this fix's merge push is the new proof run for everything.
 - [x] **A6. Assert manifest ↔ registry identity (W7)** — S · experiment decides
   - `test "$(jq -r .output.digest container-manifest.json)" = "${DIGEST}"`.
   - If fail: keep both digests + document, or push via `buildah push`.
