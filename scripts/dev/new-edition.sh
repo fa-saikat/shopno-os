@@ -18,6 +18,7 @@
 #   ├── config/
 #   │   └── includes.chroot
 #   │       └── etc/shopno-os/edition            (contains: "<name>")
+#   ├── skel/.config/                            (optional edition dotfiles)
 #   └── hooks/
 #       └── chroot/
 #           └── 0010-<name>-setup.hook.chroot (stub)
@@ -69,6 +70,7 @@ log_step "Scaffolding edition: ${EDITION_NAME}"
 mkdir -p \
     "${EDITION_DIR}/package-lists" \
     "${EDITION_DIR}/config/includes.chroot/etc/${ISO_PREFIX}" \
+    "${EDITION_DIR}/skel/.config" \
     "${EDITION_DIR}/hooks/chroot"
 
 # --- edition identifier file ------------------------------------------------
@@ -118,6 +120,10 @@ echo ">>> [${EDITION_NAME}/0010-setup] Done."
 EOF
 chmod +x "${EDITION_DIR}/hooks/chroot/0010-${EDITION_NAME}-setup.hook.chroot"
 log_info "Created: hooks/chroot/0010-${EDITION_NAME}-setup.hook.chroot"
+
+# --- skel placeholder (optional edition dotfiles) --------------------------------
+touch "${EDITION_DIR}/skel/.config/.gitkeep"
+log_info "Created: skel/.config/ (capability dotfiles here → injected to /etc/skel)"
 
 # --- README ------------------------------------------------------------------
 cat > "${EDITION_DIR}/README.md" <<EOF
