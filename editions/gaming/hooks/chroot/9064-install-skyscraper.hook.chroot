@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Install Skyscraper for gaming edition via deb package
+# Track: https://github.com/fa-saikat/shopno-os/issues/99
+# =============================================================================
+set -euo pipefail
+
+PACKAGE_NAME="skyscraper"
+PACKAGE_VERSION="3.21.1-1"
+PACKAGE_ARCH="amd64"
+DOWNLOAD_URL="https://github.com/fa-saikat/skyscraper/releases/download/debian%2F3.21.1-1/${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
+
+DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
+
+if command -v Skyscraper >/dev/null 2>&1; then
+    echo "[ShopnoOS] ${PACKAGE_NAME} already installed ($(Skyscraper -h 2>/dev/null | grep 'Running Skyscraper' || true)), skipping."
+    exit 0
+fi
+
+echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from upstream..."
+
+wget --quiet --show-progress \
+     --timeout=60 \
+     --tries=3 \
+     -O "${DEB_FILE}" \
+     "${DOWNLOAD_URL}"
+
+dpkg -i "${DEB_FILE}" || apt-get install -f -y
+
+rm -f "${DEB_FILE}"
+
+Skyscraper -h 2>/dev/null | grep -q 'Running Skyscraper' \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} installed but binary does not run." >&2; exit 1; }
+
+echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."
