@@ -6,9 +6,10 @@
 set -euo pipefail
 
 PACKAGE_NAME="retropie-rom-manager"
-PACKAGE_VERSION="1.1.0-1"
+PACKAGE_VERSION="2.0.0-1"
 PACKAGE_ARCH="amd64"
-DOWNLOAD_URL="https://dev.jadupc.com/builds/deb/${PACKAGE_NAME}/${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
+DOWNLOAD_URL="https://github.com/fa-saikat/retropie-rom-installer/releases/download/v2.0.0/${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
+
 DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
 
 echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from upstream..."
