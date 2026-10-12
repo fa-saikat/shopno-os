@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Install sysinfo-viewer for gaming edition via deb package
+# =============================================================================
+set -euo pipefail
+
+PACKAGE_NAME="sysinfo-viewer"
+PACKAGE_VERSION="2.0.0-1"
+PACKAGE_ARCH="amd64"
+DOWNLOAD_URL="https://github.com/fa-saikat/sysinfo-viewer/releases/download/v2.0.0/${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
+DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
+
+echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from upstream..."
+
+wget --quiet --show-progress \
+     --timeout=60 \
+     --tries=3 \
+     -O "${DEB_FILE}" \
+     "${DOWNLOAD_URL}"
+
+dpkg -i "${DEB_FILE}" || apt-get install -f -y
+
+rm -f "${DEB_FILE}"
+
+echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."
