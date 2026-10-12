@@ -160,11 +160,25 @@ fi
 log_success "Hooks merged."
 
 # ---------------------------------------------------------------------------
-# Merge skel directories (flavor only - base and editions don't have skel)
+# Merge skel directories (edition + flavor + brand)
+# Order: edition skel, then flavor skel, then brand skel.
+# Mirrors config merge order (edition before flavor); later layers
+# win on the same path. Edition skel is additive-only for
+# capability dotfiles (e.g. .config/antimicrox on gaming);
+# must-win edition tweaks stay in hooks. Brand skel stays last.
 # ---------------------------------------------------------------------------
+EDITION_SKEL_SRC="${OS_REPO_ROOT}/editions/${DISTRO_EDITION}/skel"
+SKEL_DEST="${BUILD_DIR}/config/includes.chroot/etc/skel"
+
+if [[ -d "${EDITION_SKEL_SRC}" ]]; then
+    log_step "Merging skel: edition/${DISTRO_EDITION}"
+    mkdir -p "${SKEL_DEST}"
+    rsync -a "${EDITION_SKEL_SRC}/" "${SKEL_DEST}/"
+    log_success "Skel merged."
+fi
+
 if profile_has_flavor; then
     SKEL_SRC="${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}/skel"
-    SKEL_DEST="${BUILD_DIR}/config/includes.chroot/etc/skel"
 
     if [[ -d "${SKEL_SRC}" ]]; then
         log_step "Merging skel: flavor/${DISTRO_FLAVOR}"

@@ -223,7 +223,7 @@ The `logo.png` used by Plymouth should be:
 
 Files in `brand/skel-branding/` are overlaid onto `/etc/skel` for **all editions** during the build. Use this for global defaults that apply regardless of DE — for example, default file manager bookmarks or a shared GTK bookmark list.
 
-DE-specific skel files (dconf databases, plasma config) belong in `flavors/<n>/skel/`, not here.
+DE-specific skel files (dconf databases, plasma config) belong in `flavors/<n>/skel/`, not here. Edition capability dotfiles (per-user defaults for edition packages) belong in `editions/<n>/skel/`, not here. Merge order is edition skel, then flavor skel, then `brand/skel-branding/` last.
 
 ---
 

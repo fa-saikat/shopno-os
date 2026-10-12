@@ -52,6 +52,8 @@ editions/gaming/
 │       └── etc/
 │           └── shopno-os/
 │               └── edition             ← write your edition name here
+├── skel/                               ← optional capability dotfiles (e.g. .config/antimicrox/), merged into /etc/skel before flavor skel; keep paths disjoint from flavor skel
+│   └── .config/
 └── hooks/
     └── chroot/
 ```

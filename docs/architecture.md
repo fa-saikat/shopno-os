@@ -329,12 +329,14 @@ editions/<name>/
 ├── config/
 │   └── includes.chroot/
 │       └── etc/shopno-os/edition           ← single-line file containing the edition name
+├── skel/                                   ← optional capability dotfiles, overlaid onto /etc/skel (additive only; flavor skel merges after, brand skel last)
+│   └── .config/
 └── hooks/
     └── chroot/
         └── <NNNN>-<purpose>.hook.chroot
 ```
 
-The file `etc/shopno-os/edition` is deployed into the live system so that scripts and tools can identify the running edition at runtime without parsing `/etc/os-release`.
+The file `etc/shopno-os/edition` is deployed into the live system so that scripts and tools can identify the running edition at runtime without parsing `/etc/os-release`. Capability dotfiles (per-user defaults for edition packages such as gamepad mapper profiles) belong in `editions/<n>/skel/` beside their package lists, never in the shared flavor `skel/`.
 
 ---
 
@@ -357,7 +359,7 @@ The experience layer. A flavor defines what the OS *looks and feels like* - the 
 - The display manager for that DE (`gdm3`, `sddm`, `lightdm`)
 - DE-specific application replacements (Dolphin instead of Nautilus in KDE)
 - gschema overrides, dconf defaults, Plasma configuration
-- Per-user skeleton files in `skel/` - copied to `/etc/skel` at build time
+- Per-user skeleton files in `skel/` - generic DE defaults only, copied to `/etc/skel` at build time (capability dotfiles belong in `editions/<n>/skel/`)
 
 **What does NOT belong in a flavor:**
 
@@ -538,6 +540,8 @@ When `build.sh` is invoked with a profile name, `prepare-lb-config.sh` assembles
 
 Package lists are symlinked rather than copied so that editing a source file is immediately reflected in the assembled config without needing to re-run preparation.
 
+Skel directories merge in order `editions/<e>/skel/`, then `flavors/<f>/skel/`, then `brand/skel-branding/`, all into `config/includes.chroot/etc/skel`, so edition capability dotfiles and generic DE defaults compose additively and brand-global defaults apply to every ISO.
+
 ---
 
 ## 6. Build Pipeline
@@ -644,6 +648,8 @@ When multiple layers provide a file at the same path inside `includes.chroot/`, 
 | 4 (highest) | `hardware/<n>/config/includes.chroot/` | All previous layers |
 
 Hooks follow the same order. All base hooks run before all edition hooks, which run before all flavor hooks, which run before all hardware hooks. Within each layer, hooks run in ascending numeric order (`0010-` before `0020-` before `0090-`).
+
+Skel overlays follow the same layering. `editions/<n>/skel/` merges before `flavors/<n>/skel/`, and `brand/skel-branding/` merges last, so on the same `etc/skel` path the later layer wins (brand over flavor over edition) and edition skel stays additive-only for disjoint capability paths while must-win edition tweaks remain in hooks.
 
 This means a hardware hook can undo or override anything set by a base, edition, or flavor hook. This is intentional - hardware-specific setup often requires overriding generic defaults.
 
