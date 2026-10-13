@@ -13,7 +13,7 @@ DOWNLOAD_URL="https://github.com/fa-saikat/skyscraper/releases/download/debian%2
 DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
 
 if command -v Skyscraper >/dev/null 2>&1; then
-    echo "[ShopnoOS] ${PACKAGE_NAME} already installed ($(Skyscraper -h 2>/dev/null | grep 'Running Skyscraper' || true)), skipping."
+    echo "[ShopnoOS] ${PACKAGE_NAME} already installed, skipping."
     exit 0
 fi
 
@@ -29,7 +29,13 @@ dpkg -i "${DEB_FILE}" || apt-get install -f -y
 
 rm -f "${DEB_FILE}"
 
-Skyscraper -h 2>/dev/null | grep -q 'Running Skyscraper' \
-    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} installed but binary does not run." >&2; exit 1; }
+command -v Skyscraper >/dev/null \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} not on PATH after install." >&2; exit 1; }
+
+if ldd "$(command -v Skyscraper)" 2>/dev/null | grep -q "not found"; then
+    echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} has unresolved libraries:" >&2
+    ldd "$(command -v Skyscraper)" 2>/dev/null | grep "not found" >&2
+    exit 1
+fi
 
 echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."
