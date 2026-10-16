@@ -1,0 +1,4 @@
+#!/bin/bash
+# Show the login greeting on demand (terminal emulators don't run pam_motd).
+# Same renderer as login; cli mode adds the user's name and respects NO_COLOR.
+MOTD_MODE=cli exec /etc/update-motd.d/10-welcome
