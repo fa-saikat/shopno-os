@@ -5,10 +5,11 @@
 set -euo pipefail
 
 PACKAGE_NAME="sysinfo-viewer"
-PACKAGE_VERSION="2.0.0-1"
+PACKAGE_VERSION="2.1.0"
 PACKAGE_ARCH="amd64"
-DOWNLOAD_URL="https://github.com/fa-saikat/sysinfo-viewer/releases/download/v2.0.0/${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
-DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
+DEB_VERSION="2.1.0-1"
+DOWNLOAD_URL="https://github.com/fa-saikat/${PACKAGE_NAME}/releases/download/v${PACKAGE_VERSION}/${PACKAGE_NAME}_${DEB_VERSION}_${PACKAGE_ARCH}.deb"
+DEB_FILE="/tmp/${PACKAGE_NAME}_${DEB_VERSION}.deb"
 
 echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from upstream..."
 

@@ -1,0 +1,26 @@
+#!/bin/bash
+# =============================================================================
+# /etc/update-motd.d/10-welcome  (layer: base)
+#
+# Entry point for the login greeting. The look is owned by the edition:
+# an edition that wants one ships /usr/lib/os-motd/theme.sh defining
+# motd_theme(). Editions never stack, so exactly one theme (or none) exists.
+# No theme -> plain fallback from lib.sh.
+# =============================================================================
+LIB=/usr/lib/os-motd
+
+# shellcheck source=/usr/lib/os-motd/lib.sh
+. "$LIB/lib.sh" 2>/dev/null || exit 0
+motd_init
+
+if [ -r "$LIB/theme.sh" ]; then
+    # shellcheck disable=SC1091
+    . "$LIB/theme.sh"
+fi
+
+if declare -F motd_theme >/dev/null; then
+    motd_theme
+else
+    motd_plain
+fi
+exit 0
