@@ -45,7 +45,8 @@ flavors/xfce/
 │       └── ttf-bijoy_1.0.0-2_all.deb
 ├── hooks/
 │   └── chroot/
-│       └── 9075-lightdm.hook.chroot     # Enables and configures LightDM
+│       ├── 9075-lightdm.hook.chroot     # Enables and configures LightDM
+│       └── 9080-default-apps.hook.chroot # Generates /etc/xdg/mimeapps.list
 ├── skel/                                # Copied to /etc/skel — user defaults
 │   └── .config/
 │       └── (XFCE per-user config files)
@@ -87,6 +88,8 @@ All standard XFCE panel plugins are included (`cpugraph`, `netload`, `weather`, 
 | `xscreensaver` | Screensaver daemon and collection |
 
 LightDM is configured via `hooks/chroot/9075-lightdm.hook.chroot`. The hook enables the `lightdm` service, sets the default session to `xfce`, and applies any greeter customizations sourced from `brand/assets/`.
+
+Default apps per file type come from `hooks/chroot/9080-default-apps.hook.chroot`. It walks a ranked list of apps (`PREFERRED`) and makes each one the default for every MIME type its `.desktop` file declares, unless a higher-ranked app already took it. To change a default, reorder that list. To add an app, insert it at the right rank. Users can still override any default from Thunar's "Open With".
 
 ### `shopno-os-input.list.chroot` — Input Methods
 
