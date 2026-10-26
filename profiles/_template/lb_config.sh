@@ -186,8 +186,11 @@ LB_CONFIG_ARGS=(
 
     # -------------------------------------------------------------------------
     # DEBIAN INSTALLER
-    # "live" = no Debian installer on the ISO (Calamares handles installation).
-    # "none" = no installer at all (useful for core/server images).
+    # "none" = no debian-installer on the ISO (Calamares editions install from
+    #          the live session instead).
+    # "live" = debian-installer with the live-installer udeb: it copies the
+    #          live rootfs to disk instead of installing packages from a
+    #          mirror. Used by shopno-os-core (TTY-only, no Calamares).
     # -------------------------------------------------------------------------
     --debian-installer      "none"
 
