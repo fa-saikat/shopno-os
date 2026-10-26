@@ -27,6 +27,12 @@ The `core` edition is ShopnoOS stripped to its functional minimum: a bootable, n
 | KVM / QEMU / Docker   | Power-user tools — lives in `pro` edition |
 | Any DE or WM          | Flavor layer only                         |
 
+## Installing to Disk
+
+Core has no Calamares (it needs a display server). The ISO ships **debian-installer in live mode**, text frontend only: choose **Install ShopnoOS** in the boot menu. d-i asks for disk, user and hostname, then copies the live rootfs to disk and removes the live-only packages (`live-boot`, `live-config`, …). No root password is set by default, so the first user gets `sudo`.
+
+The installer is configured in `profiles/shopno-os-core/profile.env` (`LB_DEBIAN_INSTALLER`, `LB_DEBIAN_INSTALLER_GUI`, `LB_BOOTAPPEND_INSTALL`) and rebranded by `base/hooks/binary/0010-brand-installer.hook.binary` (installer initrd) and `0020-brand-disk-info.hook.binary` (medium label). Decision record: `docs/decisions/0001-core-installer-debian-installer-live.md`.
+
 ## Target Use Cases
 
 - Minimal base for server builds (add your stack post-install)
@@ -38,17 +44,17 @@ The `core` edition is ShopnoOS stripped to its functional minimum: a bootable, n
 ## Build Command
 
 ```bash
-./scripts/build/build.sh abrar-core
+./scripts/build/build.sh shopno-os-core
 ```
 
-Output: `abrar-1.0-core-none-amd64-<YYYYMMDD>.iso`
+Output: `shopno-os-1.0-core-none-amd64-<YYYYMMDD>.iso`
 
 ## Package Lists
 
 | File                           | Contents                                                     |
 | ------------------------------ | ------------------------------------------------------------ |
-| `abrar-core.list.chroot`       | Required CLI packages — always included                      |
-| `abrar-core-tools.list.chroot` | Convenience tools — included by default, can be omitted for minimal builds |
+| `shopno-os-core.list.chroot`       | Required CLI packages — always included                      |
+| `shopno-os-core-tools.list.chroot` | Convenience tools — included by default, can be omitted for minimal builds |
 
 ## Hooks
 

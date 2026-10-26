@@ -108,6 +108,8 @@ This allows the live system to identify its edition at runtime.
 
 Hooks go in `editions/<n>/hooks/chroot/` and are numbered to control execution order. Files must end in `.hook.chroot`.
 
+Hooks that must change the ISO tree rather than the rootfs (for example the debian-installer initrd, which `lb installer` adds after the chroot stage) go in `editions/<n>/hooks/binary/` and end in `.hook.binary`. They run on the build host with `binary/` as the working directory.
+
 ```
 0010-gaming-services.hook.chroot    # runs early
 0050-gaming-groups.hook.chroot      # runs mid-build

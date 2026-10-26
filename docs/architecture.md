@@ -285,7 +285,7 @@ base/
 │   └── includes.chroot/  	← files overlaid verbatim into the chroot
 ├── hooks/
 │   ├── chroot/         	← numbered .hook.chroot files, run inside the chroot
-│   └── binary/         	← run after chroot is squashed, against the binary image
+│   └── binary/         	← numbered .hook.binary files, run on the host in binary/ (after lb installer)
 └── preseed/            	← debconf preseed answers
 ```
 
@@ -526,10 +526,12 @@ When `build.sh` is invoked with a profile name, `prepare-lb-config.sh` assembles
    flavors/gnome/config/includes.chroot/   (flavor layer - can override edition)
    (hardware/generic has no includes)
 
-7. Merge hooks in order:
+7. Merge hooks in order (chroot hooks, then binary hooks, each base → hardware):
    base/hooks/chroot/*
    editions/desktop/hooks/chroot/*
    flavors/gnome/hooks/chroot/*
+   base/hooks/binary/*      (e.g. 0010-brand-installer: rebrands the d-i initrd;
+                             0020-brand-disk-info: rebrands .disk/info)
 
 8. Copy bootloader config from editions/desktop/config/bootloaders/
 
