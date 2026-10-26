@@ -127,7 +127,7 @@ LB_MEMTEST="none"
 
 The profile name maps directly to the ISO it produces. `shopno-os-desktop-gnome` produces `shopno-os-<VERSION>-desktop-gnome-amd64-<BUILDDATE>.iso`.
 
-> **Core installs with debian-installer, not Calamares.** `shopno-os-core` is TTY-only, so it ships debian-installer in live mode (`LB_DEBIAN_INSTALLER="live"`, text frontend only): pick **Install ShopnoOS** in the boot menu, and d-i copies the live rootfs to disk. Desktop editions keep Calamares. The installer's Debian branding is replaced at build time by `base/hooks/binary/0010-brand-installer.hook.binary`. Rationale: `docs/decisions/0001-core-installer-debian-installer-live.md` (#91).
+> **Core installs with debian-installer, not Calamares.** `shopno-os-core` is TTY-only, so it ships debian-installer in live mode (`LB_DEBIAN_INSTALLER="live"`, text frontend only): pick **Install ShopnoOS** in the boot menu, and d-i copies the live rootfs to disk. Desktop editions keep Calamares. The installer's Debian branding is replaced at build time by `base/hooks/binary/0010-brand-installer.hook.binary`. Rationale: `docs/decisions/010-core-installer-debian-installer-live.md` (#91).
 
 **Profile quick reference:**
 

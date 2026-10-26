@@ -1,8 +1,8 @@
-# 0001 — Core edition installs via debian-installer in live mode
+# ADR-010: Core Edition Installs via debian-installer in Live Mode
 
-- **Status:** Accepted
-- **Date:** 2026-10-26
-- **Issue:** #91
+**Status:** Accepted
+**Date:** 2026-10-26
+**Issue:** #91
 
 ## Context
 
@@ -69,7 +69,7 @@ Core installs with **debian-installer (d-i) in live mode**
 7. **Prove it locally first, then in CI.** The install test (install to a
    virtual `qcow2` disk, boot that disk, require the boot marker) must pass on
    a local KVM host before any CI job runs it. In CI it starts as a
-   non-blocking metric and graduates to a gate on measured evidence, like the
+   non-blocking metric and graduates to a gate on measured evidence (ADR-005), like the
    boot gate did (#87).
 
 ## Alternatives considered
