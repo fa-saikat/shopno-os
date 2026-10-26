@@ -31,6 +31,11 @@ COPYRIGHT="${DISTRO_COPYRIGHT}"
 LICENSE="${DISTRO_LICENSE}"
 EOF
 
+# live-build's bootstrap stage replaces the /etc/os-release symlink with a
+# copy of Debian's file (plus IMAGE_ID/BUILD_ID), and the live session reads
+# that copy. Point it back at the file written above.
+ln -sfn ../usr/lib/os-release /etc/os-release
+
 # /etc/lsb-release (LSB compat, expected by many tools)
 cat > /etc/lsb-release <<EOF
 DISTRIB_ID=${DISTRO_NAME}
