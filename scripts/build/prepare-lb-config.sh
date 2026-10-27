@@ -108,8 +108,11 @@ log_success "Config overlays merged."
 # ---------------------------------------------------------------------------
 # Merge hook directories: base → edition → flavor → hardware
 # Hooks are numbered (0010-, 0020-) so ordering across layers is explicit.
+# <layer>/hooks/chroot/*.hook.chroot run inside the rootfs (lb chroot);
+# <layer>/hooks/binary/*.hook.binary run on the host in binary/ (lb binary),
+# after lb installer - the only stage that can touch the installer initrd.
 # ---------------------------------------------------------------------------
-log_step "Merging chroot hooks"
+log_step "Merging hooks"
 
 # live-build >= 20230502 renamed hooks/chroot to hooks/normal for chroot-stage
 # hooks. hooks/chroot is a legacy path and no longer recognized.
@@ -119,6 +122,7 @@ mkdir -p "${HOOKS_DEST}"
 _merge_hooks() {
     local hooks_dir="${1}"
     local label="${2}"
+    local pattern="${3:-*.hook.chroot}"
 
     if [[ ! -d "${hooks_dir}" ]]; then
         log_debug "No hooks directory for ${label} - skipping."
@@ -141,7 +145,7 @@ _merge_hooks() {
         chmod +x "${dest}"
         (( count++ )) || true
         log_debug "  Hook: ${hook_basename}"
-    done < <(find "${hooks_dir}" -maxdepth 1 -name "*.hook.chroot" -print0 | sort -z)
+    done < <(find "${hooks_dir}" -maxdepth 1 -name "${pattern}" -print0 | sort -z)
 
     [[ "${count}" -gt 0 ]] && log_info "  ${label}: ${count} hook(s) merged"
 }
@@ -155,6 +159,17 @@ fi
 
 if profile_has_hardware_overlay; then
     _merge_hooks "${OS_REPO_ROOT}/hardware/${DISTRO_HARDWARE}/hooks/chroot"  "hardware/${DISTRO_HARDWARE}"
+fi
+
+_merge_hooks "${OS_REPO_ROOT}/base/hooks/binary"                             "base (binary)"                        "*.hook.binary"
+_merge_hooks "${OS_REPO_ROOT}/editions/${DISTRO_EDITION}/hooks/binary"       "edition/${DISTRO_EDITION} (binary)"   "*.hook.binary"
+
+if profile_has_flavor; then
+    _merge_hooks "${OS_REPO_ROOT}/flavors/${DISTRO_FLAVOR}/hooks/binary"     "flavor/${DISTRO_FLAVOR} (binary)"     "*.hook.binary"
+fi
+
+if profile_has_hardware_overlay; then
+    _merge_hooks "${OS_REPO_ROOT}/hardware/${DISTRO_HARDWARE}/hooks/binary"  "hardware/${DISTRO_HARDWARE} (binary)" "*.hook.binary"
 fi
 
 log_success "Hooks merged."

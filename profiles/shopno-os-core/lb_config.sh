@@ -35,6 +35,9 @@ lb config noauto \
     --uefi-secure-boot      "${LB_UEFI_SECURE_BOOT}" \
     \
     --bootappend-live       "${LB_BOOTAPPEND_LIVE}" \
+    --bootappend-install    "${LB_BOOTAPPEND_INSTALL}" \
+    --debian-installer      "${LB_DEBIAN_INSTALLER:-none}" \
+    --debian-installer-gui  "${LB_DEBIAN_INSTALLER_GUI:-false}" \
     --memtest               "${LB_MEMTEST}" \
     \
     --debootstrap-options   "--include=apt-transport-https,ca-certificates,openssl" \
@@ -57,7 +60,8 @@ lb config noauto \
     --cache-stages          "${LB_CACHE_STAGES}" \
     \
     --image-name            "${ISO_FILENAME%.iso}" \
-    --color                 "${LB_COLORS}" \
+    --iso-application       "${DISTRO_NAME}" \
+    --color                "${LB_COLORS}" \
     "${@}"  # pass-through any extra flags
 
 log_success "lb config assembled for profile: shopno-os-core"

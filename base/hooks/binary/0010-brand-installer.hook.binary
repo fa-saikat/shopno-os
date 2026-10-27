@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# =============================================================================
+# 0010-brand-installer.hook.binary
+# Layer:   base
+# Stage:   binary (runs on the build host, cwd = binary/)
+# Purpose: Rebrand the debian-installer initrd so the install flow never
+#          presents itself as Debian. No-op when the profile ships no
+#          installer (live-build's `lb installer` stage, which runs before
+#          `lb binary`, is the only thing that puts install/initrd.gz here).
+# Number:  0010 - must run before anything that checksums binary/
+# =============================================================================
+set -euo pipefail
+
+echo ">>> [base/0010-brand-installer] Starting..."
+
+INITRDS=()
+for candidate in install/initrd.gz install/gtk/initrd.gz; do
+    [[ -f "${candidate}" ]] && INITRDS+=("${candidate}")
+done
+
+if [[ "${#INITRDS[@]}" -eq 0 ]]; then
+    echo "  - No debian-installer initrd in binary/ - skipping."
+    exit 0
+fi
+
+# Written by prepare-lb-config.sh from brand/identity/name.env
+# shellcheck source=/dev/null
+source ../config/includes.chroot/etc/shopno-os/build-vars.env
+: "${DISTRO_NAME:?DISTRO_NAME missing from build-vars.env}"
+: "${DISTRO_ID:?DISTRO_ID missing from build-vars.env}"
+
+# --- Template allowlist -----------------------------------------------------
+# "<templates file>|<exact English line>". "Debian" in each line becomes
+# DISTRO_NAME. Translations are left alone. Every entry MUST match: when an
+# installer update rewords one, the build fails here instead of silently
+# shipping the Debian string. Re-audit with:
+#   grep -n Debian <unpacked initrd>/var/lib/dpkg/info/*.templates
+TEMPLATE_LINES=(
+    "main-menu.templates|Description: Debian installer main menu"
+    "cdrom-checker.templates|Description: Insert Debian installation media"
+    "cdrom-checker.templates| Please insert one of the official Debian installation media before"
+    "cdrom-checker.templates|Description: No valid Debian installation media"
+    "cdrom-checker.templates| What you have inserted is no valid Debian installation media. Please try"
+    "cdrom-checker.templates|Description: Insert Debian boot media"
+    "cdrom-checker.templates| Please make sure you have inserted the Debian installation media you"
+)
+
+# Replace one exact line in a file, failing if it is not present.
+_replace_line() {
+    local file="${1}" old="${2}" new="${3}"
+
+    if [[ ! -f "${file}" ]] || ! grep -Fxq -- "${old}" "${file}"; then
+        echo "  ! Expected line not found in ${file#"${WORK}"/}:" >&2
+        echo "      ${old}" >&2
+        return 1
+    fi
+
+    awk -v old="${old}" -v new="${new}" '$0 == old { $0 = new } { print }' \
+        "${file}" > "${file}.new"
+    cat "${file}.new" > "${file}"
+    rm -f "${file}.new"
+}
+
+_brand_initrd() {
+    local initrd="${1}"
+    local initrd_abs
+    initrd_abs="$(readlink -f "${initrd}")"
+
+    WORK="$(mktemp -d)"
+
+    (cd "${WORK}" && gzip -dc "${initrd_abs}" \
+        | cpio -i --make-directories --no-absolute-filenames \
+            --preserve-modification-time --quiet)
+
+    # Templates (loaded at boot by S20templates)
+    local entry file line
+    for entry in "${TEMPLATE_LINES[@]}"; do
+        file="${entry%%|*}"
+        line="${entry#*|}"
+        _replace_line "${WORK}/var/lib/dpkg/info/${file}" "${line}" "${line//Debian/${DISTRO_NAME}}"
+    done
+
+    # /etc/lsb-release: rebrand identity only. Other keys stay, because
+    # localechooser reads X_INSTALLATION_MEDIUM from this file.
+    local lsb="${WORK}/etc/lsb-release"
+    if ! grep -q '^DISTRIB_ID=' "${lsb}" || ! grep -q '^DISTRIB_DESCRIPTION=' "${lsb}"; then
+        echo "  ! ${initrd}: /etc/lsb-release lacks DISTRIB_ID/DISTRIB_DESCRIPTION" >&2
+        return 1
+    fi
+    sed -i \
+        -e "s|^DISTRIB_ID=.*|DISTRIB_ID=${DISTRO_NAME}|" \
+        -e "s|^DISTRIB_DESCRIPTION=.*|DISTRIB_DESCRIPTION=\"${DISTRO_NAME} installer\"|" \
+        "${lsb}"
+
+    # Defaults only. "seen false" keeps the question asked, prefilled.
+    # Deliberately NOT /preseed.cfg: d-i's /sbin/reopen-console treats that
+    # file as "preseeding" and then runs d-i on one console only (often the
+    # serial one), instead of on the screen and serial both. A startup script
+    # loads this file instead; S31 runs after S30initrd-preseed and before
+    # S32env-preseed, so boot parameters (e.g. hostname=) still win.
+    cat > "${WORK}/etc/installer-defaults.cfg" <<EOF
+# ${DISTRO_NAME} installer defaults (base/hooks/binary/0010-brand-installer)
+d-i netcfg/get_hostname string ${DISTRO_ID}
+d-i netcfg/get_hostname seen false
+EOF
+    if [[ -e "${WORK}/preseed.cfg" ]]; then
+        echo "  ! ${initrd}: unexpected /preseed.cfg in the initrd (forces single-console d-i)" >&2
+        return 1
+    fi
+    cat > "${WORK}/lib/debian-installer-startup.d/S31installer-defaults" <<'EOF'
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+. /lib/preseed/preseed.sh
+
+if [ -e /etc/installer-defaults.cfg ]; then
+	preseed_location file:///etc/installer-defaults.cfg
+fi
+EOF
+    chmod 0755 "${WORK}/lib/debian-installer-startup.d/S31installer-defaults"
+
+    # Keep the repacked initrd reproducible when the build pins a timestamp:
+    # clamp everything this hook touched (files and their parent dirs).
+    if [[ -n "${SOURCE_DATE_EPOCH:-}" ]]; then
+        find "${WORK}" -newermt "@${SOURCE_DATE_EPOCH}" \
+            -exec touch -h -d "@${SOURCE_DATE_EPOCH}" {} +
+    fi
+
+    (cd "${WORK}" && find . -print0 | LC_ALL=C sort -z \
+        | cpio -H newc -o0 --reproducible --quiet | gzip -9n) > "${initrd_abs}.new"
+    mv "${initrd_abs}.new" "${initrd_abs}"
+    rm -rf "${WORK}"
+    WORK=""
+
+    echo "  - Branded ${initrd} (${#TEMPLATE_LINES[@]} template lines, lsb-release, installer defaults)"
+}
+
+WORK=""
+trap '[[ -n "${WORK}" ]] && rm -rf "${WORK}"' EXIT
+
+for initrd in "${INITRDS[@]}"; do
+    _brand_initrd "${initrd}"
+done
+
+echo ">>> [base/0010-brand-installer] Done."

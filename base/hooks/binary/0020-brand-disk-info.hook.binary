@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# =============================================================================
+# 0020-brand-disk-info.hook.binary
+# Layer:   base
+# Stage:   binary (runs on the build host, cwd = binary/)
+# Purpose: Rebrand the medium label in .disk/info. live-build's binary_disk
+#          hard-codes "Debian GNU/Linux <ver> "<dist>" - Snapshot <arch> ...".
+#          debian-installer uses this line as the CD's name (apt-cdrom's
+#          "deb cdrom:[...]" label), so it must not say Debian.
+# Number:  0020 - binary_hooks runs after binary_disk, before binary_checksums
+# =============================================================================
+set -euo pipefail
+
+echo ">>> [base/0020-brand-disk-info] Starting..."
+
+INFO=".disk/info"
+
+if [[ ! -f "${INFO}" ]]; then
+    echo "  - No ${INFO} in binary/ - skipping."
+    exit 0
+fi
+
+# Written by prepare-lb-config.sh from brand/identity/name.env
+# shellcheck source=/dev/null
+source ../config/includes.chroot/etc/shopno-os/build-vars.env
+: "${DISTRO_NAME:?DISTRO_NAME missing from build-vars.env}"
+: "${DISTRO_VERSION:?DISTRO_VERSION missing from build-vars.env}"
+: "${DISTRO_CODENAME:?DISTRO_CODENAME missing from build-vars.env}"
+
+# Keep everything after "Snapshot " (arch, LIVE/INSTALL label, build date).
+# Fail when live-build changes the format, instead of shipping it unbranded.
+PATTERN='^Debian GNU/Linux [^ ]+ "[^"]*" - Snapshot (.+)$'
+if ! grep -Eq -- "${PATTERN}" "${INFO}"; then
+    echo "  ! Unexpected ${INFO} format:" >&2
+    echo "      $(cat "${INFO}")" >&2
+    exit 1
+fi
+
+sed -E -i "s|${PATTERN}|${DISTRO_NAME} ${DISTRO_VERSION} \"${DISTRO_CODENAME}\" - \\1|" "${INFO}"
+
+echo "  - ${INFO}: $(cat "${INFO}")"
+echo ">>> [base/0020-brand-disk-info] Done."
