@@ -120,6 +120,40 @@ fi
 EOF
     chmod 0755 "${WORK}/lib/debian-installer-startup.d/S31installer-defaults"
 
+    # apt-setup rewrites /target/etc/apt/sources.list from scratch (a cdrom
+    # entry, plus mirrors only if one was chosen). Put back the live image's
+    # file, which live-build generates from the profile's binary mirrors, minus
+    # its line for the installer pool on the medium. A finish-install hook, not
+    # preseed/late_command, so a user's own preseed can still set late_command.
+    # Must sort after live-installer's 14remove-live-packages (apt purge) and
+    # before cdrom-detect's 15cdrom-detect, which unmounts /cdrom.
+    mkdir -p "${WORK}/usr/lib/finish-install.d"
+    cat > "${WORK}/usr/lib/finish-install.d/14restore-apt-sources" <<'EOF'
+#!/bin/sh
+set -e
+
+squashfs=/cdrom/live/filesystem.squashfs
+mnt=/tmp/live-rootfs
+if [ ! -e "$squashfs" ]; then
+	logger -t restore-apt-sources "no $squashfs; keeping apt-setup's sources.list"
+	exit 0
+fi
+
+mkdir -p "$mnt"
+if ! mount -t squashfs -o loop,ro "$squashfs" "$mnt"; then
+	logger -t restore-apt-sources "cannot mount $squashfs; keeping apt-setup's sources.list"
+	exit 0
+fi
+if [ -s "$mnt/etc/apt/sources.list" ]; then
+	sed '\| file:/run/live/medium |d' "$mnt/etc/apt/sources.list" \
+		> /target/etc/apt/sources.list.new
+	mv /target/etc/apt/sources.list.new /target/etc/apt/sources.list
+	logger -t restore-apt-sources "restored the live image's sources.list"
+fi
+umount -d "$mnt"
+EOF
+    chmod 0755 "${WORK}/usr/lib/finish-install.d/14restore-apt-sources"
+
     # Keep the repacked initrd reproducible when the build pins a timestamp:
     # clamp everything this hook touched (files and their parent dirs).
     if [[ -n "${SOURCE_DATE_EPOCH:-}" ]]; then
@@ -133,7 +167,7 @@ EOF
     rm -rf "${WORK}"
     WORK=""
 
-    echo "  - Branded ${initrd} (${#TEMPLATE_LINES[@]} template lines, lsb-release, installer defaults)"
+    echo "  - Branded ${initrd} (${#TEMPLATE_LINES[@]} template lines, lsb-release, installer defaults, apt sources restore)"
 }
 
 WORK=""
