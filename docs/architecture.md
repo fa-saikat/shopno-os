@@ -530,7 +530,8 @@ When `build.sh` is invoked with a profile name, `prepare-lb-config.sh` assembles
    base/hooks/chroot/*
    editions/desktop/hooks/chroot/*
    flavors/gnome/hooks/chroot/*
-   base/hooks/binary/*      (e.g. 0010-brand-installer: rebrands the d-i initrd;
+   base/hooks/binary/*      (e.g. 0010-brand-installer: rebrands the d-i initrd
+                             and restores apt sources after a d-i install;
                              0020-brand-disk-info: rebrands .disk/info)
 
 8. Copy bootloader config from editions/desktop/config/bootloaders/
@@ -817,6 +818,7 @@ These patterns have caused real problems and are explicitly prevented by the str
 | Constructing ISO names inline | Different scripts produce different names; artifacts become untrackable | All code uses `iso_name()` from `iso-name.sh`; no other construction is permitted |
 | Running `lb build` directly | Skips lint, brand loading, package injection, signing | `build.sh` is the only entry point; CI enforces this |
 | Writing `/etc/os-release` in `includes.chroot/` | Gets overwritten by the stamp hook; creates confusing stale state | Hook generates it at build time; `check-no-hardcoded-names.sh` catches manual copies |
+| Writing `/etc/apt/sources.list` in `includes.chroot/` | live-build rewrites it from the profile's binary mirrors after the chroot stage, so the file never ships (the xfce flavor's copy never did); d-i's `apt-setup` rewrites it again on install | Set `LB_PARENT_MIRROR_BINARY*`, `LB_APT_ARCHIVE_AREAS`, `LB_SECURITY`, `LB_UPDATES`, `LB_BACKPORTS` in `profile.env`; `0010-brand-installer` restores the live file after a d-i install |
 | GPU drivers in `base/` | Installs incompatible drivers on every system; unrecoverable without rebuild | Hardware layer separation enforced by directory structure and lint |
 
 ---
