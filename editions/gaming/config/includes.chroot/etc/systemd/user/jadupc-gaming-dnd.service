@@ -1,6 +1,0 @@
-[Unit]
-Description=Pause notification daemon while in gaming mode
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/jadupc-gaming-dnd.sh
