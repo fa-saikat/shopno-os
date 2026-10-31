@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Install shopno-shell (the gaming session and home screen) via deb package
+# Track: https://github.com/fa-saikat/shopno-os/issues/112
+#
+# Not in an APT repo yet. Until a release URL is set below, a local build takes
+# the .deb from editions/gaming/config/includes.chroot/usr/local/src/shopno-shell/
+# (*.deb is gitignored). Either way the file must match PACKAGE_SHA256.
+# =============================================================================
+set -euo pipefail
+
+PACKAGE_NAME="shopno-shell"
+PACKAGE_VERSION="0.1.0~alpha1"
+# Update together with PACKAGE_VERSION.
+PACKAGE_SHA256="2770207f82abeef4c0a8f8f668498a0a3fb0128656bb3c442527554771914086"
+DOWNLOAD_URL=""
+
+DEB_NAME="${PACKAGE_NAME}_${PACKAGE_VERSION}_all.deb"
+STAGED_DIR="/usr/local/src/${PACKAGE_NAME}"
+DEB_FILE="/tmp/${DEB_NAME}"
+
+if [[ -f "${STAGED_DIR}/${DEB_NAME}" ]]; then
+    echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from the staged .deb..."
+    cp "${STAGED_DIR}/${DEB_NAME}" "${DEB_FILE}"
+elif [[ -n "${DOWNLOAD_URL}" ]]; then
+    echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from upstream..."
+    wget --quiet --show-progress \
+         --timeout=60 \
+         --tries=3 \
+         -O "${DEB_FILE}" \
+         "${DOWNLOAD_URL}"
+else
+    echo "[ShopnoOS] ERROR: no ${DEB_NAME} in ${STAGED_DIR} and no DOWNLOAD_URL set." >&2
+    exit 1
+fi
+# The staged copy must not ship in the image.
+rm -rf "${STAGED_DIR}"
+
+echo "${PACKAGE_SHA256}  ${DEB_FILE}" | sha256sum -c --quiet - \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} checksum mismatch." >&2; exit 1; }
+
+apt-get install -y "${DEB_FILE}"
+
+rm -f "${DEB_FILE}"
+
+for f in /usr/bin/shopno-session /usr/share/xsessions/shopno.desktop; do
+    [[ -e "${f}" ]] \
+        || { echo "[ShopnoOS] ERROR: ${f} missing after installing ${PACKAGE_NAME}." >&2; exit 1; }
+done
+
+echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."
