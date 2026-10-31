@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Install xfce4-shopno-menu-plugin for xfce flavor via deb package
+# Not in an APT repo yet, so the release .deb is pinned by checksum. Moving it
+# to the ShopnoOS APT repo is the long-term fix (see #110, as #9).
+# =============================================================================
+set -euo pipefail
+
+PACKAGE_NAME="xfce4-shopno-menu-plugin"
+PACKAGE_VERSION="0.2.0-1"
+PACKAGE_ARCH="amd64"
+PACKAGE_DIST="debian13"
+# From the release's SHA256SUMS. Update together with PACKAGE_VERSION.
+PACKAGE_SHA256="19fdaa40b662314e665ac21250d62bbd3cb1e0f1fd764e57f63f6c0fb5b7ecde"
+DOWNLOAD_URL="https://github.com/fa-saikat/xfce4-shopno-menu-plugin/releases/download/v0.2.0/${PACKAGE_NAME}_${PACKAGE_VERSION}.${PACKAGE_DIST}_${PACKAGE_ARCH}.deb"
+
+DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
+
+if command -v xfce4-popup-shopno-menu >/dev/null 2>&1; then
+    echo "[ShopnoOS] ${PACKAGE_NAME} already installed, skipping."
+    exit 0
+fi
+
+echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION} from upstream..."
+
+wget --quiet --show-progress \
+     --timeout=60 \
+     --tries=3 \
+     -O "${DEB_FILE}" \
+     "${DOWNLOAD_URL}"
+
+echo "${PACKAGE_SHA256}  ${DEB_FILE}" | sha256sum -c --quiet - \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} checksum mismatch." >&2; exit 1; }
+
+dpkg -i "${DEB_FILE}" || apt-get install -f -y
+
+rm -f "${DEB_FILE}"
+
+command -v xfce4-popup-shopno-menu >/dev/null \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} not on PATH after install." >&2; exit 1; }
+
+if ldd "$(command -v xfce4-popup-shopno-menu)" 2>/dev/null | grep -q "not found"; then
+    echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} has unresolved libraries:" >&2
+    ldd "$(command -v xfce4-popup-shopno-menu)" 2>/dev/null | grep "not found" >&2
+    exit 1
+fi
+
+echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."

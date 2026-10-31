@@ -253,8 +253,7 @@ xfce4-mailwatch-plugin  xfce4-netload-plugin    xfce4-notifyd
 xfce4-panel-profiles    xfce4-places-plugin     xfce4-power-manager
 xfce4-screenshooter     xfce4-sensors-plugin    xfce4-smartbookmark-plugin
 xfce4-systemload-plugin xfce4-terminal          xfce4-timer-plugin
-xfce4-wavelan-plugin    xfce4-weather-plugin    xfce4-whiskermenu-plugin
-xfce4-xkb-plugin
+xfce4-wavelan-plugin    xfce4-weather-plugin    xfce4-xkb-plugin
 ```
 
 Bluetooth GUI frontend (the core stack is in base, CLI tools are in desktop):
