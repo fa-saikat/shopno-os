@@ -105,12 +105,14 @@ LB_CONFIG_ARGS=(
     # MIRROR CONFIGURATION
     # Build-time mirrors (chroot stage) and live-system mirrors (binary stage)
     # are set separately so the built ISO points to the right production mirror.
+    # The binary mirrors are --parent-*: in a non-derivative build live-build
+    # writes the shipped /etc/apt/sources.list from those, not --mirror-binary.
     # -------------------------------------------------------------------------
     --mirror-bootstrap      "${LB_MIRROR_BOOTSTRAP}"
     --mirror-chroot         "${LB_MIRROR_CHROOT}"
     --mirror-chroot-security "${LB_MIRROR_CHROOT_SECURITY}"
-    --mirror-binary         "${LB_MIRROR_BINARY}"
-    --mirror-binary-security "${LB_MIRROR_BINARY_SECURITY}"
+    --parent-mirror-binary  "${LB_PARENT_MIRROR_BINARY}"
+    --parent-mirror-binary-security "${LB_PARENT_MIRROR_BINARY_SECURITY}"
 
     # -------------------------------------------------------------------------
     # APT ARCHIVE AREAS

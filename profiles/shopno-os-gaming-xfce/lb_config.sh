@@ -60,6 +60,8 @@ lb config --binary-image        "${LB_BINARY_IMAGES}" \
         --archive-areas         "${LB_APT_ARCHIVE_AREAS}" \
         --parent-archive-areas  "${LB_APT_ARCHIVE_AREAS}" \
         --mirror-bootstrap      "${LB_PARENT_MIRROR_BOOTSTRAP}" \
+        --parent-mirror-binary  "${LB_PARENT_MIRROR_BINARY}" \
+        --parent-mirror-binary-security "${LB_PARENT_MIRROR_BINARY_SECURITY}" \
         --apt-source-archives   "${LB_APT_SOURCE_ARCHIVES}" \
         --backports             "${LB_BACKPORTS}" \
         --security              "${LB_SECURITY}" \

@@ -29,6 +29,8 @@ lb config noauto \
     --distribution          "${LB_DISTRIBUTION}" \
     --parent-distribution   "${LB_PARENT_DISTRIBUTION}" \
     --mirror-bootstrap      "${LB_PARENT_MIRROR_BOOTSTRAP}" \
+    --parent-mirror-binary  "${LB_PARENT_MIRROR_BINARY}" \
+    --parent-mirror-binary-security "${LB_PARENT_MIRROR_BINARY_SECURITY}" \
     \
     --binary-images         "${LB_BINARY_IMAGES}" \
     --bootloaders           "${LB_BOOTLOADERS}" \
