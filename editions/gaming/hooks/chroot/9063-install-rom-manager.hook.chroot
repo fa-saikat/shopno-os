@@ -2,13 +2,18 @@
 # =============================================================================
 # Install retropie-rom-manager for gaming edition via deb package
 # Track: https://github.com/fa-saikat/shopno-os/issues/9
+#
+# Not in an APT repo yet, so the release .deb is pinned by checksum. It
+# recommends udisks2 (USB mounting in Add ROM), which base already installs.
 # =============================================================================
 set -euo pipefail
 
 PACKAGE_NAME="retropie-rom-manager"
-PACKAGE_VERSION="2.0.0-1"
+PACKAGE_VERSION="2.3.0-1"
 PACKAGE_ARCH="amd64"
-DOWNLOAD_URL="https://github.com/fa-saikat/retropie-rom-installer/releases/download/v2.0.0/${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
+# From the release's SHA256SUMS. Update together with PACKAGE_VERSION.
+PACKAGE_SHA256="5937d6aee697c2a7b163d90c9bb7d4a26913713d3f07673d9100238adf52951e"
+DOWNLOAD_URL="https://github.com/fa-saikat/retropie-rom-manager/releases/download/v2.3.0/${PACKAGE_NAME}_${PACKAGE_VERSION}_${PACKAGE_ARCH}.deb"
 
 DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
 
@@ -20,8 +25,14 @@ wget --quiet --show-progress \
      -O "${DEB_FILE}" \
      "${DOWNLOAD_URL}"
 
+echo "${PACKAGE_SHA256}  ${DEB_FILE}" | sha256sum -c --quiet - \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} checksum mismatch." >&2; exit 1; }
+
 dpkg -i "${DEB_FILE}" || apt-get install -f -y
 
 rm -f "${DEB_FILE}"
+
+command -v "${PACKAGE_NAME}" >/dev/null \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} not on PATH after install." >&2; exit 1; }
 
 echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."
