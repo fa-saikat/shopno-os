@@ -45,6 +45,7 @@ flavors/xfce/
 │       └── ttf-bijoy_1.0.0-2_all.deb
 ├── hooks/
 │   └── chroot/
+│       ├── 9063-install-shopno-menu.hook.chroot # Installs Shopno Menu (start menu) from its release .deb
 │       ├── 9075-lightdm.hook.chroot     # Enables and configures LightDM
 │       └── 9080-default-apps.hook.chroot # Generates /etc/xdg/mimeapps.list
 ├── skel/                                # Copied to /etc/skel — user defaults
@@ -73,7 +74,6 @@ The full XFCE4 shell plus the complete suite of panel plugins and supporting app
 | `xfce4-notifyd` | Notification daemon |
 | `xfce4-power-manager` | Battery and power management |
 | `xfce4-screenshooter` | Screenshot tool |
-| `xfce4-whiskermenu-plugin` | Application menu |
 | `tumbler` | Thumbnail service for Thunar |
 | `xfce4-panel-profiles` | Panel layout import/export |
 
