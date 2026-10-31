@@ -46,7 +46,7 @@
       <property name="&lt;Primary&gt;&lt;Alt&gt;t" type="string" value="xfce4-terminal"/>
       <property name="&lt;Primary&gt;&lt;Alt&gt;b" type="string" value="ibus engine m17n:bn:bijoyUnicode"/>
       <property name="&lt;Primary&gt;&lt;Alt&gt;e" type="string" value="ibus engine xkb:us::eng"/>
-      <property name="&lt;Alt&gt;F2" type="string" value="xfce4-popup-whiskermenu"/>
+      <property name="&lt;Alt&gt;F2" type="string" value="xfce4-popup-shopno-menu"/>
       <property name="F12" type="string" value="sh -c /usr/local/bin/keyboard-layout-switcher"/>
     </property>
   </property>
