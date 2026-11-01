@@ -129,7 +129,7 @@ The `.gitignore` handles most of this automatically, but know the rules:
 | What | Why |
 |---|---|
 | `build/` directory | Live-build artifacts - gigabytes of generated files |
-| `*.iso` files | Binary artifacts - use GitHub Releases for these |
+| `*.iso` files | Binary artifacts - published to the download mirror (`release-process.md` §8.2), never to GitHub |
 | `*.deb` files | Binaries - use wget hooks or APT repo instead |
 | `*.key`, `*.pem`, `*.asc` | Signing keys - never, under any circumstances |
 | `build.log` | Generated at build time |
