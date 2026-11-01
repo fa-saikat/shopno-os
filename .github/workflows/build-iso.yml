@@ -47,7 +47,9 @@ jobs:
     name: Build + smoke-test ${{ matrix.profile }}
     # Forks build on their own runners, never on ours (self-hosted or
     # GitHub's). Push/dispatch events skip the pull_request half safely.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Only in the development repo: JaduPC/shopno-os is a mirror (mirror.yml)
+    # and must never lint, build or publish from its copy of these files.
+    if: github.repository == 'fa-saikat/shopno-os' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     # Self-hosted since T5: builds run on shopno-iso-builder (KVM).
     # Reverting to ubuntu-24.04 reinstates TCG emulation and the
     # hosted disk/time ceilings — do not flip casually.
