@@ -179,7 +179,7 @@ DISTRO_VERSION="1.1"          ← bump this
 DISTRO_ID="shopno-os"
 DISTRO_ID_LIKE="debian"
 DISTRO_WEBSITE="https://shopno.jadupc.com"
-DISTRO_BUGTRACKER="https://github.com/JaduPC/shopno-os/issues"
+DISTRO_BUGTRACKER="https://github.com/fa-saikat/shopno-os/issues"
 ```
 
 **Version format rules** (enforced by `brand.sh` at build time):

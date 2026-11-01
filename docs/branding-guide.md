@@ -61,7 +61,7 @@ DISTRO_VERSION="1.0"
 DISTRO_ID="shopno"
 DISTRO_ID_LIKE="debian"
 DISTRO_WEBSITE="https://shopno.jadupc.com"
-DISTRO_BUGTRACKER="https://github.com/JaduPC/shopno-os/issues"
+DISTRO_BUGTRACKER="https://github.com/fa-saikat/shopno-os/issues"
 ```
 
 | Variable | Purpose | Constraints |
@@ -112,7 +112,7 @@ URL_TELEGRAM=""
 
 # Development
 URL_SOURCE="https://github.com/JaduPC/shopno-os"
-URL_BUGTRACKER="https://github.com/JaduPC/shopno-os/issues"
+URL_BUGTRACKER="https://github.com/fa-saikat/shopno-os/issues"
 URL_CI=""
 
 # Mirrors
