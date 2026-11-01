@@ -78,7 +78,9 @@ jobs:
     name: Build + smoke + SBOM (shopno-os-core)
     # Forks build on their own runners, never on ours. See the header
     # comment (D7): this is the gate it was waiting for.
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Only in the development repo: JaduPC/shopno-os is a mirror (mirror.yml)
+    # and must never lint, build or publish from its copy of these files.
+    if: github.repository == 'fa-saikat/shopno-os' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -280,7 +282,7 @@ jobs:
   publish:
     name: Push + sign + attest + verify
     needs: build
-    if: github.event_name == 'push'
+    if: github.repository == 'fa-saikat/shopno-os' && github.event_name == 'push'
     runs-on: ubuntu-24.04
     permissions:
       contents: read

@@ -28,7 +28,9 @@ jobs:
     name: Lint suites
     # Same fork rule as the build workflows: untrusted code runs
     # nowhere on our runners or minutes, even when it's "just lint".
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Only in the development repo: JaduPC/shopno-os is a mirror (mirror.yml)
+    # and must never lint, build or publish from its copy of these files.
+    if: github.repository == 'fa-saikat/shopno-os' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
