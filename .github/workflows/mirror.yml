@@ -1,0 +1,62 @@
+name: Mirror to JaduPC
+
+# fa-saikat/shopno-os is the development repo (issues, PRs, CI/CD).
+# JaduPC/shopno-os is the public face: website, Pages, downloads.
+# This pushes `main` and `dev` there verbatim after every push here.
+#
+# Auth: MIRROR_DEPLOY_KEY is the private half of an ed25519 deploy key
+# that has write access on JaduPC/shopno-os (and nothing else).
+#
+# The mirror is one-way and force-pushed, so never commit to main/dev on
+# JaduPC/shopno-os directly. Website content there belongs on a branch
+# this workflow doesn't touch (e.g. gh-pages).
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+concurrency:
+  group: mirror-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  mirror:
+    # This file is mirrored too; don't run it on the mirror itself.
+    if: github.repository == 'fa-saikat/shopno-os'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Push to JaduPC/shopno-os
+        env:
+          MIRROR_DEPLOY_KEY: ${{ secrets.MIRROR_DEPLOY_KEY }}
+          EVENT: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          key="$RUNNER_TEMP/mirror_key"
+          install -m 600 /dev/null "$key"
+          printf '%s\n' "$MIRROR_DEPLOY_KEY" > "$key"
+          export GIT_SSH_COMMAND="ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+
+          if [ "$EVENT" = push ]; then
+            branches="$REF_NAME"
+          else
+            branches="main dev"
+          fi
+
+          refspecs=()
+          for b in $branches; do
+            refspecs+=("refs/remotes/origin/$b:refs/heads/$b")
+          done
+
+          git push --force git@github.com:JaduPC/shopno-os.git "${refspecs[@]}"
+          rm -f "$key"
