@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Install shopno-update-helper for xfce flavor via deb package
+# GTK updater for apt packages and Flatpak apps. Replaces the old yad-based
+# update-helper scripts. Not in an APT repo yet, so the .deb is pinned by
+# checksum. Moving it to the ShopnoOS APT repo is the long-term fix (as with #9).
+# =============================================================================
+set -euo pipefail
+
+PACKAGE_NAME="shopno-update-helper"
+PACKAGE_VERSION="0.1.1-1"
+PACKAGE_ARCH="amd64"
+PACKAGE_DIST="debian13"
+# From the v0.1.1 GitHub release's SHA256SUMS. Update together with PACKAGE_VERSION.
+PACKAGE_SHA256="ff2d2fb363c989f3423af8d20e6ee551b5ebbcbaeaa46df1bf8080ca00437bf4"
+DOWNLOAD_URL="https://dev.jadupc.com/builds/deb/${PACKAGE_NAME}/${PACKAGE_NAME}_${PACKAGE_VERSION}.${PACKAGE_DIST}_${PACKAGE_ARCH}.deb"
+
+DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
+
+if command -v shopno-update-helper >/dev/null 2>&1; then
+    echo "[ShopnoOS] ${PACKAGE_NAME} already installed, skipping."
+    exit 0
+fi
+
+echo "[ShopnoOS] Installing ${PACKAGE_NAME} ${PACKAGE_VERSION}..."
+
+wget --quiet --show-progress \
+     --timeout=60 \
+     --tries=3 \
+     -O "${DEB_FILE}" \
+     "${DOWNLOAD_URL}"
+
+echo "${PACKAGE_SHA256}  ${DEB_FILE}" | sha256sum -c --quiet - \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} checksum mismatch." >&2; exit 1; }
+
+dpkg -i "${DEB_FILE}" || apt-get install -f -y
+
+rm -f "${DEB_FILE}"
+
+command -v shopno-update-helper >/dev/null \
+    || { echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} not on PATH after install." >&2; exit 1; }
+
+if ldd "$(command -v shopno-update-helper)" 2>/dev/null | grep -q "not found"; then
+    echo "[ShopnoOS] ERROR: ${PACKAGE_NAME} has unresolved libraries:" >&2
+    ldd "$(command -v shopno-update-helper)" 2>/dev/null | grep "not found" >&2
+    exit 1
+fi
+
+echo "[ShopnoOS] ${PACKAGE_NAME} installed successfully."

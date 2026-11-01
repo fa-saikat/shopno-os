@@ -1,199 +1,324 @@
-<?xml version="1.0" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE Menu
   PUBLIC '-//freedesktop//DTD Menu 1.0//EN'
   'http://standards.freedesktop.org/menu-spec/menu-1.0.dtd'>
 <Menu>
 	<Name>Xfce</Name>
-	<MergeFile type="parent">/etc/xdg/menus/xfce-applications.menu</MergeFile>
-	<AppDir>/home/jadupc/.local/share/applications</AppDir>
+	<DefaultAppDirs />
+	<DefaultDirectoryDirs />
+	<DefaultMergeDirs />
 	<Include>
-		<Filename>xfce4-run.desktop</Filename>
+		<Category>X-Xfce-Toplevel</Category>
 	</Include>
+	<MergeFile type="parent">/etc/xdg/menus/xfce-applications.menu</MergeFile>
 	<Menu>
-		<Name>System</Name>
-		<Exclude>
-			<Filename>xfce4-terminal.desktop</Filename>
-		</Exclude>
-		<AppDir>/home/jadupc/.local/share/applications</AppDir>
-		<Exclude>
-			<Filename>users.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>time.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>thunar.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>hardinfo.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-sensors.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>gnome-nettool.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>lightdm-gtk-greeter-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>htop.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>gdebi.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>thunar-bulk-rename.desktop</Filename>
-		</Exclude>
-		<Exclude>
+		<Name>Settings</Name>
+		<Directory>xfce-settings.directory</Directory>
+		<Menu>
+			<Name>Screensavers</Name>
+			<Directory>xfce-screensavers.directory</Directory>
+			<Layout>
+				<Merge type="menus" />
+				<Merge type="files" />
+			</Layout>
+		</Menu>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>xfce-settings-manager.desktop</Filename>
+			<Separator />
+			<Filename>org.bluesabre.Mugshot.desktop</Filename>
+			<Filename>xfce4-accessibility-settings.desktop</Filename>
+			<Filename>nm-connection-editor.desktop</Filename>
+			<Filename>xfce-ui-settings.desktop</Filename>
+			<Filename>blueman-adapters.desktop</Filename>
+			<Filename>blueman-manager.desktop</Filename>
+			<Filename>xfce4-clipman-settings.desktop</Filename>
+			<Filename>xfce4-color-settings.desktop</Filename>
+			<Filename>xfce4-mime-settings.desktop</Filename>
+			<Filename>xfce-backdrop-settings.desktop</Filename>
+			<Filename>xfce-display-settings.desktop</Filename>
+			<Filename>org.freedesktop.IBus.Setup.desktop</Filename>
+			<Filename>im-config.desktop</Filename>
+			<Filename>xfce-keyboard-settings.desktop</Filename>
+			<Filename>kvantummanager.desktop</Filename>
+			<Filename>lightdm-settings.desktop</Filename>
+			<Filename>menulibre.desktop</Filename>
+			<Filename>xfce-mouse-settings.desktop</Filename>
+			<Filename>xfce4-notifyd-config.desktop</Filename>
+			<Filename>panel-preferences.desktop</Filename>
+			<Filename>org.xfce.PanelProfiles.desktop</Filename>
+			<Filename>xfce4-power-manager-settings.desktop</Filename>
 			<Filename>system-config-printer.desktop</Filename>
-		</Exclude>
-	</Menu>
-	<Menu>
-		<Name>Graphics</Name>
-		<Exclude>
-			<Filename>display-im6.q16.desktop</Filename>
-		</Exclude>
-		<AppDir>/home/jadupc/.local/share/applications</AppDir>
+			<Filename>thunar-volman-settings.desktop</Filename>
+			<Menuname>Screensavers</Menuname>
+			<Filename>xfce-session-settings.desktop</Filename>
+			<Filename>xfce4-settings-editor.desktop</Filename>
+			<Filename>shares.desktop</Filename>
+			<Filename>org.xfce.mousepad-settings.desktop</Filename>
+			<Filename>thunar-settings.desktop</Filename>
+			<Filename>time.desktop</Filename>
+			<Filename>com.jadupc.ShopnoUpdateHelper.desktop</Filename>
+			<Filename>users.desktop</Filename>
+			<Filename>org.pulseaudio.pavucontrol.desktop</Filename>
+			<Filename>xfce-wm-settings.desktop</Filename>
+			<Filename>xfce-wmtweaks-settings.desktop</Filename>
+			<Filename>xfce-workspaces-settings.desktop</Filename>
+			<Filename>xfce4-terminal-settings.desktop</Filename>
+			<Filename>xscreensaver-settings.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
 	</Menu>
 	<Menu>
 		<Name>Accessories</Name>
-		<Exclude>
-			<Filename>lightdm-gtk-greeter-settings.desktop</Filename>
-		</Exclude>
-		<AppDir>/home/jadupc/.local/share/applications</AppDir>
-		<Exclude>
+		<Directory>xfce-accessories.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>xfce4-about.desktop</Filename>
+			<Filename>xfce4-appfinder.desktop</Filename>
+			<Filename>io.github.kolunmi.Bazaar.desktop</Filename>
 			<Filename>thunar-bulk-rename.desktop</Filename>
-		</Exclude>
-		<Exclude>
+			<Filename>xfce4-clipman.desktop</Filename>
 			<Filename>org.gnome.DiskUtility.desktop</Filename>
-		</Exclude>
-		<Include>
 			<Filename>xfce4-file-manager.desktop</Filename>
-		</Include>
-		<Exclude>
-			<Filename>speedcrunch.desktop</Filename>
-		</Exclude>
-		<Exclude>
+			<Filename>com.github.FontManager.FontManager.desktop</Filename>
+			<Filename>com.github.FontManager.FontViewer.desktop</Filename>
+			<Filename>galculator.desktop</Filename>
+			<Filename>hardinfo2.desktop</Filename>
+			<Filename>kvantummanager.desktop</Filename>
+			<Filename>menulibre.desktop</Filename>
+			<Filename>org.xfce.mousepad.desktop</Filename>
+			<Filename>gnome-nettool.desktop</Filename>
+			<Filename>xfce4-run.desktop</Filename>
+			<Filename>xfce4-screenshooter.desktop</Filename>
+			<Filename>xfce4-sensors.desktop</Filename>
+			<Filename>xfce4-terminal-emulator.desktop</Filename>
 			<Filename>thunar.desktop</Filename>
-		</Exclude>
-		<Exclude>
+			<Filename>vim.desktop</Filename>
+			<Filename>com.microsoft.VSCode.UrlHandler.desktop</Filename>
 			<Filename>xarchiver.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfburn.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-taskmanager.desktop</Filename>
-		</Exclude>
+			<Merge type="files" />
+		</Layout>
 	</Menu>
 	<Menu>
-		<Name>Settings</Name>
-		<AppDir>/home/jadupc/.local/share/applications</AppDir>
-		<Exclude>
-			<Filename>org.bluesabre.Mugshot.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>software-properties-drivers.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>nm-connection-editor.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-ui-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-color-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-mime-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-backdrop-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-display-settings.desktop</Filename>
-		</Exclude>
-		<Include>
-			<Filename>xfce4-accessibility-settings.desktop</Filename>
-		</Include>
-		<Exclude>
-			<Filename>blueman-adapters.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-clipman-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>thunar-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-keyboard-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>lightdm-gtk-greeter-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-mouse-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-notifyd-config.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>panel-preferences.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>org.xfce.PanelProfiles.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-power-manager-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>thunar-volman-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xscreensaver-properties.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-session-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-settings-editor.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>software-properties-gtk.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-wm-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-wmtweaks-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce-workspaces-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>blueman-manager.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>menulibre.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>alacarte.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>system-config-printer.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>users.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>time.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>xfce4-terminal-settings.desktop</Filename>
-		</Exclude>
-		<Exclude>
-			<Filename>im-config.desktop</Filename>
-		</Exclude>
+		<Name>Development</Name>
+		<Directory>xfce-development.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>arduino.desktop</Filename>
+			<Filename>codeblocks.desktop</Filename>
+			<Filename>geany.desktop</Filename>
+			<Filename>yad-icon-browser.desktop</Filename>
+			<Filename>python3.13.desktop</Filename>
+			<Filename>sublime_text.desktop</Filename>
+			<Filename>turbowarp-desktop.desktop</Filename>
+			<Filename>com.microsoft.VSCode.desktop</Filename>
+			<Filename>com.microsoft.VSCode.UrlHandler.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
 	</Menu>
+	<Menu>
+		<Name>Education</Name>
+		<Directory>xfce-education.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Menu>
+		<Name>Games</Name>
+		<Directory>xfce-games.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>org.gnome.TwentyFortyEight.desktop</Filename>
+			<Filename>org.gnome.Chess.desktop</Filename>
+			<Filename>pinball.desktop</Filename>
+			<Filename>net.sourceforge.extremetuxracer.desktop</Filename>
+			<Filename>org.gnome.Nibbles.desktop</Filename>
+			<Filename>org.gnome.Sudoku.desktop</Filename>
+			<Filename>org.gnome.Taquin.desktop</Filename>
+			<Filename>xmoto.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Menu>
+		<Name>Graphics</Name>
+		<Directory>xfce-graphics.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>simple-scan.desktop</Filename>
+			<Filename>org.gnome.Evince.desktop</Filename>
+			<Filename>gimp.desktop</Filename>
+			<Filename>org.inkscape.Inkscape.desktop</Filename>
+			<Filename>org.gnome.Evince-previewer.desktop</Filename>
+			<Filename>org.xfce.ristretto.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Menu>
+		<Name>Network</Name>
+		<Directory>xfce-network.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>google-chrome.desktop</Filename>
+			<Filename>com.google.Chrome.desktop</Filename>
+			<Filename>com.jadupc.support.desktop</Filename>
+			<Filename>xfce4-mail-reader.desktop</Filename>
+			<Filename>xfce4-web-browser.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Menu>
+		<Name>Multimedia</Name>
+		<Directory>xfce-multimedia.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>mpv.desktop</Filename>
+			<Filename>vlc.desktop</Filename>
+			<Filename>org.pulseaudio.pavucontrol.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Menu>
+		<Name>Office</Name>
+		<Directory>xfce-office.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>onlyoffice-docs.desktop</Filename>
+			<Filename>org.gnome.Evince.desktop</Filename>
+			<Filename>onlyoffice-desktopeditors.desktop</Filename>
+			<Filename>onlyoffice-presentation.desktop</Filename>
+			<Filename>org.gnome.Evince-previewer.desktop</Filename>
+			<Filename>onlyoffice-sheet.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Menu>
+		<Name>Other</Name>
+		<Directory>xfce-other.directory</Directory>
+		<Include>
+			<Filename>panel-desktop-handler.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>gnome-disk-image-mounter.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>gnome-disk-image-writer.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>org.freedesktop.IBus.Panel.Emojier.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>org.freedesktop.IBus.Panel.Extension.Gtk3.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>ibus-setup-ibus-avro.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>org.freedesktop.IBus.Panel.Wayland.Gtk3.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>NeoHtop.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>nm-applet.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>xdg-desktop-portal-gtk.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>vlc-opencda.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>vlc-openbd.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>vlc-opendvd.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>vlc-openvcd.desktop</Filename>
+		</Include>
+		<Include>
+			<Filename>org.gnome.Zenity.desktop</Filename>
+		</Include>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>xarchiver.desktop</Filename>
+			<Filename>thunar-bulk-rename.desktop</Filename>
+			<Filename>panel-desktop-handler.desktop</Filename>
+			<Filename>gnome-disk-image-mounter.desktop</Filename>
+			<Filename>gnome-disk-image-writer.desktop</Filename>
+			<Filename>org.freedesktop.IBus.Panel.Emojier.desktop</Filename>
+			<Filename>org.freedesktop.IBus.Panel.Extension.Gtk3.desktop</Filename>
+			<Filename>ibus-setup-ibus-avro.desktop</Filename>
+			<Filename>org.freedesktop.IBus.Panel.Wayland.Gtk3.desktop</Filename>
+			<Filename>NeoHtop.desktop</Filename>
+			<Filename>nm-applet.desktop</Filename>
+			<Filename>xdg-desktop-portal-gtk.desktop</Filename>
+			<Filename>vlc-opencda.desktop</Filename>
+			<Filename>vlc-openbd.desktop</Filename>
+			<Filename>vlc-opendvd.desktop</Filename>
+			<Filename>vlc-openvcd.desktop</Filename>
+			<Filename>org.gnome.Zenity.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Menu>
+		<Name>Science</Name>
+		<Directory>xfce-science.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Menu>
+		<Name>System</Name>
+		<Directory>xfce-system.directory</Directory>
+		<Layout>
+			<Merge type="menus" />
+			<Filename>thunar-bulk-rename.desktop</Filename>
+			<Filename>gdebi.desktop</Filename>
+			<Filename>gparted.desktop</Filename>
+			<Filename>hardinfo2.desktop</Filename>
+			<Filename>htop.desktop</Filename>
+			<Filename>lightdm-settings.desktop</Filename>
+			<Filename>xfce4-session-logout.desktop</Filename>
+			<Filename>gnome-nettool.desktop</Filename>
+			<Filename>system-config-printer.desktop</Filename>
+			<Filename>hplj1020.desktop</Filename>
+			<Filename>xfce4-sensors.desktop</Filename>
+			<Filename>shares.desktop</Filename>
+			<Filename>sysinfo-viewer.desktop</Filename>
+			<Filename>thunar.desktop</Filename>
+			<Filename>time.desktop</Filename>
+			<Filename>timeshift-gtk.desktop</Filename>
+			<Filename>users.desktop</Filename>
+			<Filename>xfce4-terminal.desktop</Filename>
+			<Merge type="files" />
+		</Layout>
+	</Menu>
+	<Layout>
+		<Filename>xfce4-run.desktop</Filename>
+		<Separator />
+		<Filename>xfce4-terminal-emulator.desktop</Filename>
+		<Filename>xfce4-file-manager.desktop</Filename>
+		<Filename>xfce4-mail-reader.desktop</Filename>
+		<Filename>xfce4-web-browser.desktop</Filename>
+		<Separator />
+		<Menuname>Settings</Menuname>
+		<Separator />
+		<Menuname>Accessories</Menuname>
+		<Menuname>Development</Menuname>
+		<Menuname>Education</Menuname>
+		<Menuname>Games</Menuname>
+		<Menuname>Graphics</Menuname>
+		<Menuname>Network</Menuname>
+		<Menuname>Multimedia</Menuname>
+		<Menuname>Office</Menuname>
+		<Menuname>Other</Menuname>
+		<Menuname>Science</Menuname>
+		<Menuname>System</Menuname>
+		<Separator />
+		<Filename>xfce4-about.desktop</Filename>
+		<Filename>xfce4-session-logout.desktop</Filename>
+	</Layout>
 </Menu>
