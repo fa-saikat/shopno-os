@@ -374,9 +374,10 @@ GIT_SHA="$(git -C "${OS_REPO_ROOT}" rev-parse --short HEAD 2>/dev/null || echo "
 # image.source is the repo URL (GHCR links the package to it), image.url
 # the project site - the two were previously swapped. image.version is the
 # bare version matching :DISTRO_VERSION tags; codename keeps a vendor label.
-# NOTE: URL_SOURCE currently points at the JaduPC org while this repo lives
-# under fa-saikat (same drift as the old hardcoded IMAGE_NAME) - using the
-# var as-is per the no-hardcode rule; fixing the URL itself is separate.
+# NOTE: URL_SOURCE is the public repo, JaduPC/shopno-os, a one-way mirror
+# of fa-saikat/shopno-os where CI pushes the image from (ghcr.io/fa-saikat/
+# shopno-os). GHCR only auto-links a package to a repo with the same owner,
+# so this label records the public source but won't link the package page.
 declare -a LABEL_FLAGS=(
     --label "org.opencontainers.image.title=${DISTRO_NAME} container base"
     --label "org.opencontainers.image.version=${DISTRO_VERSION}"
