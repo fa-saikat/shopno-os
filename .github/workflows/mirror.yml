@@ -5,7 +5,9 @@ name: Mirror to JaduPC
 # This pushes `main` and `dev` there verbatim after every push here.
 #
 # Auth: MIRROR_DEPLOY_KEY is the private half of an ed25519 deploy key
-# that has write access on JaduPC/shopno-os (and nothing else).
+# that has write access on JaduPC/shopno-os (and nothing else). It is a
+# secret of the `mirror` environment, which only main and dev may deploy
+# to, so a workflow pushed on any other branch can't read it.
 #
 # The mirror is one-way and force-pushed, so never commit to main/dev on
 # JaduPC/shopno-os directly. Website content there belongs on a branch
@@ -26,6 +28,7 @@ jobs:
   mirror:
     # This file is mirrored too; don't run it on the mirror itself.
     if: github.repository == 'fa-saikat/shopno-os'
+    environment: mirror
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:

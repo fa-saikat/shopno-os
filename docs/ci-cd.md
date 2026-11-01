@@ -107,7 +107,7 @@ push to main/dev (or workflow_dispatch → both branches)
   → git push --force <branch> → JaduPC/shopno-os over SSH
 ```
 
-Auth is a write-enabled deploy key on `JaduPC/shopno-os`; its private half is the `MIRROR_DEPLOY_KEY` Actions secret here. It can write to that one repo and nothing else. The job is guarded by `github.repository == 'fa-saikat/shopno-os'`, so the mirrored copy of the workflow is a no-op on the mirror.
+Auth is a write-enabled deploy key on `JaduPC/shopno-os`; its private half is the `MIRROR_DEPLOY_KEY` secret of the `mirror` environment here. It can write to that one repo and nothing else. The environment only accepts deployments from `main` and `dev`, so a workflow pushed on any other branch can't read the key. The job is guarded by `github.repository == 'fa-saikat/shopno-os'`, so the mirrored copy of the workflow is a no-op on the mirror.
 
 The push is forced, so `main`/`dev` on the mirror always match this repo exactly. Never commit to those branches on `JaduPC/shopno-os`. Website/Pages content lives on a branch this workflow doesn't touch.
 
