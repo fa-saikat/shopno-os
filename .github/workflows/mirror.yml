@@ -58,7 +58,12 @@ jobs:
           if [ "$EVENT" = push ]; then
             case "$REF" in
               refs/heads/*) refspecs+=("refs/remotes/origin/${REF#refs/heads/}:$REF") ;;
-              refs/tags/*)  refspecs+=("$REF:$REF") ;;
+              refs/tags/*)
+                # actions/checkout rewrites the triggering tag as a
+                # lightweight tag; re-fetch the real (annotated, signed)
+                # tag object so the mirror gets it intact.
+                git fetch --quiet --force origin "+$REF:$REF"
+                refspecs+=("$REF:$REF") ;;
               *) echo "unexpected ref: $REF" >&2; exit 1 ;;
             esac
           else
