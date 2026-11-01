@@ -99,15 +99,15 @@ Prove on PR, push on merge: PR runs prove with zero registry writes and the `pub
 
 ### 2.4 `mirror.yml`
 
-Mirrors `main` and `dev` one-way to [`JaduPC/shopno-os`](https://github.com/JaduPC/shopno-os), the public face of the project (website, GitHub Pages, distribution downloads). This repo (`fa-saikat/shopno-os`) stays the primary: issues, PRs, CI/CD and maintenance all happen here.
+Mirrors `main`, `dev` and `v*` release tags one-way to [`JaduPC/shopno-os`](https://github.com/JaduPC/shopno-os), the public face of the project (website, GitHub Pages, distribution downloads). This repo (`fa-saikat/shopno-os`) stays the primary: issues, PRs, CI/CD and maintenance all happen here.
 
 ```
-push to main/dev (or workflow_dispatch → both branches)
-  → Checkout, full history
-  → git push --force <branch> → JaduPC/shopno-os over SSH
+push to main/dev or a v* tag (or workflow_dispatch → both branches + all v* tags)
+  → Checkout, full history and tags
+  → git push --force <ref> → JaduPC/shopno-os over SSH
 ```
 
-Auth is a write-enabled deploy key on `JaduPC/shopno-os`; its private half is the `MIRROR_DEPLOY_KEY` secret of the `mirror` environment here. It can write to that one repo and nothing else. The environment only accepts deployments from `main` and `dev`, so a workflow pushed on any other branch can't read the key. Every workflow's jobs are guarded by `github.repository == 'fa-saikat/shopno-os'`, so the mirrored copies are no-ops on the mirror: no lint, no ISO build, and no container build or GHCR publish under JaduPC. Any new workflow needs the same guard.
+Auth is a write-enabled deploy key on `JaduPC/shopno-os`; its private half is the `MIRROR_DEPLOY_KEY` secret of the `mirror` environment here. It can write to that one repo and nothing else. The environment only accepts deployments from `main`, `dev` and `v*` tags, so a workflow pushed on any other ref can't read the key. Every workflow's jobs are guarded by `github.repository == 'fa-saikat/shopno-os'`, so the mirrored copies are no-ops on the mirror: no lint, no ISO build, and no container build or GHCR publish under JaduPC. Any new workflow needs the same guard.
 
 The push is forced, so `main`/`dev` on the mirror always match this repo exactly. Never commit to those branches on `JaduPC/shopno-os`. Website/Pages content lives on a branch this workflow doesn't touch.
 

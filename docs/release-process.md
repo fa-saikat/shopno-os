@@ -405,7 +405,7 @@ git checkout main
 git merge dev
 ```
 
-The tag must be created after the version bump commit and before publishing. Tags trigger nothing in CI by design (ADR-006 declined tag-triggered release automation — releases stay local).
+The tag must be created after the version bump commit and before publishing. Tags trigger no builds by design (ADR-006 declined tag-triggered release automation — releases stay local). The only thing a `v*` tag push does is `mirror.yml` copying the tag to JaduPC/shopno-os, which §8.4 needs.
 
 ```bash
 git tag -a "v${DISTRO_VERSION}" -m "Release ${DISTRO_VERSION} (${DISTRO_CODENAME})"
@@ -486,10 +486,18 @@ Rules that make this safe: promote only digests whose push run was fully green (
 
 ### 8.4 Create a GitHub / Forgejo release
 
-Create the release on the repository host (one local command — no CI involved):
+Create the release on the public repo, JaduPC/shopno-os, which hosts the downloads (one local command — no CI involved). First confirm the tag has reached the mirror (`mirror.yml` copies it within a minute of §8.1's push):
+
+```bash
+git ls-remote --tags https://github.com/JaduPC/shopno-os.git "v${DISTRO_VERSION}"
+```
+
+`--verify-tag` makes `gh` refuse rather than invent an unsigned tag on the mirror's default branch if the tag hasn't arrived:
 
 ```bash
 gh release create "v${DISTRO_VERSION}" \
+    --repo JaduPC/shopno-os \
+    --verify-tag \
     --title "ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})" \
     --notes-file CHANGELOG.md \
     /srv/release/staging/*.iso \
