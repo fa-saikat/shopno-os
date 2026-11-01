@@ -46,6 +46,7 @@ flavors/xfce/
 ├── hooks/
 │   └── chroot/
 │       ├── 9063-install-shopno-menu.hook.chroot # Installs Shopno Menu (start menu) from its release .deb
+│       ├── 9064-install-shopno-update-helper.hook.chroot # Installs Shopno Update Helper (apt + Flatpak updater) from its .deb
 │       ├── 9075-lightdm.hook.chroot     # Enables and configures LightDM
 │       └── 9080-default-apps.hook.chroot # Generates /etc/xdg/mimeapps.list
 ├── skel/                                # Copied to /etc/skel — user defaults
