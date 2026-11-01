@@ -8,11 +8,11 @@
 set -euo pipefail
 
 PACKAGE_NAME="shopno-update-helper"
-PACKAGE_VERSION="0.1.0-1"
+PACKAGE_VERSION="0.1.1-1"
 PACKAGE_ARCH="amd64"
 PACKAGE_DIST="debian13"
-# From the v0.1.0 GitHub release's SHA256SUMS. Update together with PACKAGE_VERSION.
-PACKAGE_SHA256="8ef34ff9715061bc260fcd8b9429405ca70d514d1a01690fbdebec3cfdab0c51"
+# From the v0.1.1 GitHub release's SHA256SUMS. Update together with PACKAGE_VERSION.
+PACKAGE_SHA256="ff2d2fb363c989f3423af8d20e6ee551b5ebbcbaeaa46df1bf8080ca00437bf4"
 DOWNLOAD_URL="https://dev.jadupc.com/builds/deb/${PACKAGE_NAME}/${PACKAGE_NAME}_${PACKAGE_VERSION}.${PACKAGE_DIST}_${PACKAGE_ARCH}.deb"
 
 DEB_FILE="/tmp/${PACKAGE_NAME}_${PACKAGE_VERSION}.deb"
