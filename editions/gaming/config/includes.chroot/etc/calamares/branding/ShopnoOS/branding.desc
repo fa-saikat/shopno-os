@@ -14,7 +14,7 @@ strings:
     shortVersionedName:  ShopnoOS GAMING
     bootloaderEntryName: ShopnoOS GAMING
     productUrl:          https://dev.jadupc.com/builds/iso/ShopnoOS-Beta-amd64.hybrid.iso
-    knownIssuesUrl:      https://github.com/JaduPC/shopno-os
+    knownIssuesUrl:      https://github.com/fa-saikat/shopno-os/issues
 
 images:
     productLogo:         "logo.png"

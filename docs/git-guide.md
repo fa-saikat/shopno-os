@@ -88,7 +88,7 @@ flavor(xfce): install ttf-bijoy via wget hook
 
 Upstream does not publish to any Debian repo. Installing via dpkg -i
 from a direct download until we package and host it ourselves.
-Tracked in: https://github.com/JaduPC/shopno-os/issues/2
+Tracked in: https://github.com/fa-saikat/shopno-os/issues/2
 ```
 
 ---
