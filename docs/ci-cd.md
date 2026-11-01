@@ -11,6 +11,7 @@
    - [`lint-packages.yml`](#21-lint-packagesyml)
    - [`build-iso.yml`](#22-build-isoyml)
    - [`container-build.yml`](#23-container-buildyml)
+   - [`mirror.yml`](#24-mirroryml)
 3. [Trigger Reference](#3-trigger-reference)
 4. [Branch Model — Why `main` Never Rebuilds](#4-branch-model--why-main-never-rebuilds)
 5. [Toolchain Workarounds](#5-toolchain-workarounds)
@@ -95,6 +96,20 @@ publish (push events only, needs: build — the sole holder of packages/id-token
 ```
 
 Prove on PR, push on merge: PR runs prove with zero registry writes and the `publish` job skipped — the build job cannot leak an image even on misconfiguration because it holds no write rights (least privilege, not just `if:` guards). Merges to `dev` add the GHCR push via the ephemeral per-run `GITHUB_TOKEN` (`packages: write`) — no secrets created, per narrowed ADR-006. Tags are pointers (`edge` + short-SHA now, `DISTRO_VERSION`/`stable` reserved for the release flow); verification is always digest-based. The smoke runtime is docker via a skopeo bridge (`oci-archive:` → `docker-daemon:`), not `buildah run` — rootless OCI runtimes aren't guaranteed on hosted runners, the daemon is. Slice 4 (sign/attest/verify) is live; first full push-half proof awaits quota recovery (issue #64).
+
+### 2.4 `mirror.yml`
+
+Mirrors `main` and `dev` one-way to [`JaduPC/shopno-os`](https://github.com/JaduPC/shopno-os), the public face of the project (website, GitHub Pages, distribution downloads). This repo (`fa-saikat/shopno-os`) stays the primary: issues, PRs, CI/CD and maintenance all happen here.
+
+```
+push to main/dev (or workflow_dispatch → both branches)
+  → Checkout, full history
+  → git push --force <branch> → JaduPC/shopno-os over SSH
+```
+
+Auth is a write-enabled deploy key on `JaduPC/shopno-os`; its private half is the `MIRROR_DEPLOY_KEY` Actions secret here. It can write to that one repo and nothing else. The job is guarded by `github.repository == 'fa-saikat/shopno-os'`, so the mirrored copy of the workflow is a no-op on the mirror.
+
+The push is forced, so `main`/`dev` on the mirror always match this repo exactly. Never commit to those branches on `JaduPC/shopno-os`. Website/Pages content lives on a branch this workflow doesn't touch.
 
 ---
 
