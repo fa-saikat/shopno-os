@@ -486,9 +486,9 @@ Rules that make this safe: promote only digests whose push run was fully green (
 
 ### 8.4 Create a GitHub / Forgejo release
 
-Publish the same release, with the same files, in both repos (local commands — no CI involved):
+Publish the same release in both repos (local commands — no CI involved). GitHub releases carry **source code only**: GitHub attaches the `Source code (zip)` and `(tar.gz)` archives of the tag automatically. ISOs, checksums and signatures are never uploaded to GitHub; they live on the download mirror (§8.2), and the release notes link there.
 
-- **JaduPC/shopno-os**: the public download point. The website and README link here.
+- **JaduPC/shopno-os**: the public release page. The website and README link here.
 - **fa-saikat/shopno-os**: the development repo, next to the issues and PRs that went into the release.
 
 First confirm the tag has reached the mirror (`mirror.yml` copies it within a minute of §8.1's push):
@@ -505,22 +505,16 @@ for repo in JaduPC/shopno-os fa-saikat/shopno-os; do
         --repo "${repo}" \
         --verify-tag \
         --title "ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})" \
-        --notes-file CHANGELOG.md \
-        /srv/release/staging/*.iso \
-        /srv/release/staging/*.sha256 \
-        /srv/release/staging/*.sha512 \
-        /srv/release/staging/*.gpg \
-        /srv/release/staging/SHA256SUMS \
-        /srv/release/staging/SHA512SUMS
+        --notes-file CHANGELOG.md
 done
 ```
 
-Later edits (notes, a replaced asset) go to both repos.
+Later edits to the notes go to both repos.
 
 - Tag: `v${DISTRO_VERSION}`
 - Title: `ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})`
-- Body: paste the relevant section from `CHANGELOG.md`
-- Attach: all `.iso`, `.sha256`, `.sha512`, `.gpg`, and `SHA256SUMS` files
+- Body: the relevant section from `CHANGELOG.md`, plus a link to the ISO downloads on the mirror
+- Assets: none uploaded; GitHub's own source zip/tar.gz only
 
 ### 8.5 Update the website download page
 
