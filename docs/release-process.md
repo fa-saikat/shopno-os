@@ -486,27 +486,36 @@ Rules that make this safe: promote only digests whose push run was fully green (
 
 ### 8.4 Create a GitHub / Forgejo release
 
-Create the release on the public repo, JaduPC/shopno-os, which hosts the downloads (one local command — no CI involved). First confirm the tag has reached the mirror (`mirror.yml` copies it within a minute of §8.1's push):
+Publish the same release, with the same files, in both repos (local commands — no CI involved):
+
+- **JaduPC/shopno-os**: the public download point. The website and README link here.
+- **fa-saikat/shopno-os**: the development repo, next to the issues and PRs that went into the release.
+
+First confirm the tag has reached the mirror (`mirror.yml` copies it within a minute of §8.1's push):
 
 ```bash
 git ls-remote --tags https://github.com/JaduPC/shopno-os.git "v${DISTRO_VERSION}"
 ```
 
-`--verify-tag` makes `gh` refuse rather than invent an unsigned tag on the mirror's default branch if the tag hasn't arrived:
+`--verify-tag` makes `gh` refuse rather than invent an unsigned tag on the default branch if the tag isn't there:
 
 ```bash
-gh release create "v${DISTRO_VERSION}" \
-    --repo JaduPC/shopno-os \
-    --verify-tag \
-    --title "ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})" \
-    --notes-file CHANGELOG.md \
-    /srv/release/staging/*.iso \
-    /srv/release/staging/*.sha256 \
-    /srv/release/staging/*.sha512 \
-    /srv/release/staging/*.gpg \
-    /srv/release/staging/SHA256SUMS \
-    /srv/release/staging/SHA512SUMS
+for repo in JaduPC/shopno-os fa-saikat/shopno-os; do
+    gh release create "v${DISTRO_VERSION}" \
+        --repo "${repo}" \
+        --verify-tag \
+        --title "ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})" \
+        --notes-file CHANGELOG.md \
+        /srv/release/staging/*.iso \
+        /srv/release/staging/*.sha256 \
+        /srv/release/staging/*.sha512 \
+        /srv/release/staging/*.gpg \
+        /srv/release/staging/SHA256SUMS \
+        /srv/release/staging/SHA512SUMS
+done
 ```
+
+Later edits (notes, a replaced asset) go to both repos.
 
 - Tag: `v${DISTRO_VERSION}`
 - Title: `ShopnoOS ${DISTRO_VERSION} (${DISTRO_CODENAME})`
